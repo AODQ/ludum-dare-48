@@ -1,0 +1,6 @@
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
+
+
+find_package(RAYLIB REQUIRED)
+
+message(STATUS "Found raylib in ${RAYLIB_INCLUDE_DIR}")
