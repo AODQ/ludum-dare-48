@@ -6,13 +6,38 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH ON CACHE INTERNAL "")
 set(CMAKE_C_COMPILER "emcc")
 set(CMAKE_CXX_COMPILER "emcc")
 
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY")
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-SET(PLATFORM Web CACHE STRING "Forcing PLATFORM_WEB because EMSCRIPTEN was detected")
+## set cmake C flags for emcc
+set(
+  CMAKE_C_FLAGS
+  "${CMAKE_C_FLAGS} -Os -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY"
+)
 
-set(USE_EXTERNAL_GLFW ON CACHE INTERNAL "")
-set(PLATFORM "Web" CACHE INTERNAL "")
-set(EMSCRIPTEN ON CACHE INTERNAL "")
+# Since WASM is used, ALLOW_MEMORY_GROWTH has no extra overheads
+set(
+  CMAKE_C_FLAGS
+  "${CMAKE_C_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --no-heap-copy"
+)
+
+set(
+  CMAKE_C_FLAGS
+  "${CMAKE_C_FLAGS} --shell-file ${CMAKE_SOURCE_DIR}/src/shell.html"
+)
+
+# set executable to HTML for webasm
+set(CMAKE_EXECUTABLE_SUFFIX ".html")
+
+# Remove the -rdynamic flag because otherwise emscripten does not generate
+# HTML+JS+WASM files, only a non-working and fat HTML
+string(
+  REPLACE
+    "-rdynamic" ""
+    CMAKE_SHARED_LIBRARY_LINK_C_FLAGS
+    "${CMAKE_SHARED_LIBRARY_LINK_C_FLAGS}"
+)
 
 # add ccache if found
 find_program(CCACHE_FOUND ccache)
@@ -28,16 +53,6 @@ project (
   LANGUAGES C CXX
   DESCRIPTION "2021 ludum dare"
 )
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-## requires out of source builds
-file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
-if (EXISTS "${LOC_PATH}")
-  message(FATAL_ERROR "build must be out of source")
-endif()
 
 # adds dependencies in correct order
 add_subdirectory(third-party)
