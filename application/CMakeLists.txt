@@ -29,7 +29,9 @@ include(GNUInstallDirs)
 
 # install additional wasm/js files
 install(
-  FILES ludum-dare-client.js ludum-dare-client.html
+  FILES
+    ${CMAKE_BINARY_DIR}/application/ludum-dare-client.js
+    ${CMAKE_BINARY_DIR}/application/ludum-dare-client.wasm
   DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT core
 )

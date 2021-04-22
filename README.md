@@ -1,0 +1,2 @@
+building:
+  - using `emccmake cmake`
