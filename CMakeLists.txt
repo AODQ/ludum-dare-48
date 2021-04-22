@@ -1,9 +1,14 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 cmake_policy(VERSION 3.0)
 
-if (!CMAKE_TOOLCHAIN_FILE)
-  message(FATAL_ERROR "provide the toolchain file for Emscripten.cmake")
-endif()
+set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF CACHE INTERNAL "")
+
+set(CMAKE_C_COMPILER "emcc")
+set(CMAKE_CXX_COMPILER "emcc")
+
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY")
+
+SET(PLATFORM Web CACHE STRING "Forcing PLATFORM_WEB because EMSCRIPTEN was detected")
 
 set(USE_EXTERNAL_GLFW ON CACHE INTERNAL "")
 set(PLATFORM "Web" CACHE INTERNAL "")
@@ -17,7 +22,6 @@ if(CCACHE_FOUND)
   message("*-- CCACHE found, will use")
 endif()
 
-# TODO
 project (
   ludum-dare
   VERSION 0.0

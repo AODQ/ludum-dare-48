@@ -8,9 +8,21 @@
 #include <utility>
 #include <vector>
 
-int main(int argc, char const ** argv) {
+int main() {
 
-  printf("Hello\n");
+  InitWindow(640, 480, "whatever");
+  SetTargetFPS(60);
+
+  while (!WindowShouldClose()) {
+
+    BeginDrawing();
+      ClearBackground(RAYWHITE);
+
+      DrawCircleV(Vector2{100.0f, 100.0f}, 50, MAROON);
+    EndDrawing();
+  }
+
+  CloseWindow();
 
   return 0;
 }
