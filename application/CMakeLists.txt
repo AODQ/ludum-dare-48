@@ -1,9 +1,12 @@
 add_executable(ludum-dare-client)
 
+target_include_directories(ludum-dare-client PUBLIC "include/")
+
 target_sources(
   ludum-dare-client
   PRIVATE
     src/source.cpp
+    src/scene.cpp
 )
 
 set_target_properties(
