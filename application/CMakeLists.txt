@@ -6,8 +6,6 @@ target_sources(
     src/source.cpp
 )
 
-#target_compile_features(pulcher-client PRIVATE cxx_std_20)
-
 set_target_properties(
   ludum-dare-client
   PROPERTIES
