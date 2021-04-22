@@ -16,12 +16,20 @@ set_target_properties(
 target_link_libraries(
   ludum-dare-client
   PRIVATE
-    raylib
+    raylib glfw
 )
 
 install(
   TARGETS ludum-dare-client
-  RUNTIME
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-    COMPONENT core
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT core
+)
+
+include(GNUInstallDirs)
+
+# install additional wasm/js files
+install(
+  FILES ludum-dare-client.js ludum-dare-client.html
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT core
 )
