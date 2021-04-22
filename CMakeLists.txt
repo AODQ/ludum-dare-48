@@ -27,6 +27,8 @@ set(
   "${CMAKE_C_FLAGS} --shell-file ${CMAKE_SOURCE_DIR}/src/shell.html"
 )
 
+set(CMAKE_EXE_LINKER_FLAGS "-s USE_GLFW=3")
+
 # set executable to HTML for webasm
 set(CMAKE_EXECUTABLE_SUFFIX ".html")
 
