@@ -23,6 +23,31 @@ void ld::Miner::moveTowards(int32_t x, int32_t y)
   self.yPosition -= ld::sgn(self.yPosition - y);
 }
 
+bool ld::Miner::animationFinishesThisFrame()
+{
+  auto & self = *this;
+  return ((self.animationIdx + 5) % (4 * 60) < self.animationIdx);
+}
+
+void ld::Miner::reduceEnergy(int32_t units)
+{
+  auto & self = *this;
+  self.energy = std::max(0, self.energy - std::abs(units));
+
+  if (self.energy == 0) { self.kill(); }
+}
+
+void ld::Miner::kill()
+{
+  auto & self = *this;
+  if (self.aiState == ld::Miner::AiState::Dying) { return; }
+
+  self.aiState = ld::Miner::AiState::Dying;
+  self.aiStateInternal.dying = {};
+  self.animationState = ld::Miner::AnimationState::Dying;
+  self.animationIdx = 0;
+}
+
 namespace {
 void UpdateMinerCargo(ld::Miner & miner) {
   miner.currentCargoCapacity = 0;
@@ -63,7 +88,8 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
     miner.animationIdx = 0;
   }
 
-  if ((miner.animationIdx + 5) % (4 * 60) < miner.animationIdx) {
+  if (miner.animationFinishesThisFrame()) {
+    miner.reduceEnergy(1);
     rock.receiveDamage(-1);
     UpdateMinerInventory(miner, rock);
     ld::SoundPlay(ld::SoundType::RockHit);
@@ -91,6 +117,10 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState) {
     miner.animationIdx = 0;
   }
 
+  if (miner.animationFinishesThisFrame()) {
+    miner.reduceEnergy(1);
+  }
+
   if (
     miner.xPosition == state.targetTileX && miner.yPosition == state.targetTileY
   ) {
@@ -110,8 +140,11 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState) {
         miner.aiStateInternal.surfaced.waitTimer = -1;
       }
     }
+  }
 
-    state.waitTimer -= 1;
+  // update energy
+  miner.energy = std::max(0, miner.energy-1);
+  if (miner.energy == 0) {
   }
 }
 
@@ -206,7 +239,8 @@ void ld::MinerGroup::Update(ld::GameState & state) {
   // TODO update mining / fighting
 
   // simple dumb ai right now
-  for (auto & miner : self.miners) {
+  for (int64_t i = 0; i < self.miners.size(); ++ i) {
+    auto & miner = self.miners[i];
 
     switch (miner.aiState) {
       case ld::Miner::AiState::Mining:
@@ -221,6 +255,13 @@ void ld::MinerGroup::Update(ld::GameState & state) {
       break;
       case ld::Miner::AiState::Traversing:
         UpdateMinerAiTraversing(miner, state);
+      break;
+      case ld::Miner::AiState::Dying:
+        if (miner.animationFinishesThisFrame()) {
+          self.miners.erase(self.miners.begin() + i);
+          i -= 1;
+          continue;
+        }
       break;
     }
   }

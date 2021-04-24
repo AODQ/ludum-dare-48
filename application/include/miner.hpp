@@ -18,7 +18,7 @@ namespace ld {
       // position is in texels, not tiles
       int32_t xPosition = 0, yPosition = 0;
       int32_t prevXPosition = 0, prevYPosition = 0;
-      int32_t energy = 100;
+      int32_t energy = 5;
       std::array<ld::Item, Idx(ld::ItemType::Size)> inventory = {{
         { .type = ld::ItemType::Pickaxe1, .owns = false },
         { .type = ld::ItemType::Pickaxe2, .owns = false },
@@ -26,6 +26,10 @@ namespace ld {
       }};
 
       void moveTowards(int32_t x, int32_t y);
+
+      bool animationFinishesThisFrame();
+      void reduceEnergy(int32_t units);
+      void kill();
 
       uint32_t cargoCapacity = 5u;
       uint32_t currentCargoCapacity = 0u;
@@ -48,6 +52,7 @@ namespace ld {
         Mining,
         Fighting,
         Idling,
+        Dying,
       };
 
       AnimationState animationState = AnimationState::Idling;
@@ -61,6 +66,7 @@ namespace ld {
         Traversing,
         Idling,
         Surfaced,
+        Dying,
       };
 
       enum class AiStateSurfaced {
@@ -90,6 +96,9 @@ namespace ld {
         struct Idling {
         };
 
+        struct Dying {
+        };
+
         struct Surfaced {
           AiStateSurfaced state = AiStateSurfaced::Surfacing;
 
@@ -101,6 +110,7 @@ namespace ld {
         Traversing traversing;
         Idling     idling;
         Surfaced   surfaced;
+        Dying      dying;
       };
 
       AiState aiState;
