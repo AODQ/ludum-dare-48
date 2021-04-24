@@ -5,13 +5,13 @@ target_include_directories(ludum-dare-client PUBLIC "include/")
 target_sources(
   ludum-dare-client
   PRIVATE
+    src/button.cpp
+    src/camera.cpp
     src/mine.cpp
     src/miner.cpp
     src/renderer.cpp
     src/scene.cpp
     src/source.cpp
-    src/camera.cpp
-    src/button.cpp
 )
 
 set_target_properties(
