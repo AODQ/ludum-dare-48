@@ -24,6 +24,7 @@ void ld::RenderInitialize()
 {
   // -- load textures
   textures[Idx(ld::TextureType::Rock)] = ::LoadTexture("resources/rocks.png");
+  textures[Idx(ld::TextureType::Gem)] = ::LoadTexture("resources/gems.png");
   textures[Idx(ld::TextureType::Miner)] = ::LoadTexture("resources/miner.png");
   textures[Idx(ld::TextureType::SurfacedFg)] =
     ::LoadTexture("resources/surfaced-foreground.png");
@@ -60,7 +61,7 @@ void ld::RenderScene(ld::GameState const & state)
 
   // render surfaced miners TODO
 
-  { // -- render foreground rocks
+  { // -- render foreground rocks & gems
 
     // TODO only render in view instead of all
 
@@ -83,6 +84,29 @@ void ld::RenderScene(ld::GameState const & state)
       , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
       , Color { 255, 255, 255, 255 }
       );
+
+      if (!rock.isMined() && rock.gem != ld::RockGemType::Empty) {
+
+        constexpr std::array<::Vector2, Idx(ld::RockGemType::Size)> offsets = {
+          ::Vector2 { 0, 0, }, // none
+          ::Vector2 { 0, 0, }, // tin
+          ::Vector2 { 0, 1, }, // ruby
+          ::Vector2 { 1, 0, }, // emerald
+          ::Vector2 { 1, 1, }, // sapphire
+        };
+
+        ::DrawTextureRec(
+          ld::TextureGet(ld::TextureType::Gem)
+        , ::Rectangle {
+            .x = offsets[Idx(rock.gem)].x * 32.0f,
+            .y = offsets[Idx(rock.gem)].y * 32.0f,
+            .width = 32.0f,
+            .height = 32.0f,
+          }
+        , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
+        , Color { 255, 255, 255, 255 }
+        );
+      }
     }
   }
 

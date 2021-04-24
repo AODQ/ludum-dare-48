@@ -104,7 +104,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
   }
 }
 
-void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState) {
+void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & /*gameState*/) {
   auto & state = miner.aiStateInternal.traversing;
   miner.moveTowards(state.targetTileX, state.targetTileY);
 

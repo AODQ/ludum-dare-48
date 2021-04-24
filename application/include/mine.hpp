@@ -19,7 +19,7 @@ namespace ld {
   };
 
   enum class RockGemType {
-    Empty, Tin,
+    Empty, Tin, Ruby, Emerald, Sapphire,
     Size,
   };
 

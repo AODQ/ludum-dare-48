@@ -83,7 +83,7 @@ ld::MineChasm ld::MineChasm::Initialize(
         * (Idx(RockTier::Size) - 2)
       ));
 
-      rock.gem  = ld::RockGemType::Empty;
+      rock.gem = static_cast<ld::RockGemType>(::GetRandomValue(0, 4));
 
       // first row is walkable
       if (row < 1) {
