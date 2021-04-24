@@ -65,7 +65,7 @@ ld::MineChasm ld::MineChasm::Initialize(
       rock.type = static_cast<ld::RockType>(
         static_cast<std::size_t>(
           nv
-          * Idx(RockTier::Size)
+          * Idx(RockType::Size)
         )
       );
 
