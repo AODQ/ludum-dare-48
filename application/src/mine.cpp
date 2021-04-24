@@ -19,6 +19,12 @@ ld::MineChasm ld::MineChasm::Initialize()
       static_cast<ld::RockTier>(::GetRandomValue(0, Idx(RockTier::Mined)-1));
     rock.gem  = ld::RockGemType::Empty;
 
+    // first row is walkable
+    if (i < 30) {
+      rock.type = ld::RockType::Sand;
+      rock.tier = ld::RockTier::Mined;
+    }
+
     rock.durability = 10;
   }
 
