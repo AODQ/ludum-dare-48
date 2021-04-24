@@ -5,6 +5,7 @@
 #include <raylib.h>
 
 #include <algorithm>
+#include <cmath>    // round
 
 
 namespace
@@ -34,6 +35,11 @@ namespace
       : lerp(value,   1.f, ((z - (maxZ / 2)) / (maxZ / 2)))
     );
   }
+
+  float fval(const ::Image& img, std::size_t i)
+  {
+    return reinterpret_cast<const ::Color*>(img.data)[i].r / 255.f;
+  }
 }
 
 
@@ -57,16 +63,16 @@ ld::MineChasm ld::MineChasm::Initialize(
         row,
         rows,
         average(
-          reinterpret_cast<const ::Color*>(pn1.data)[i].r / 256.f,
-          reinterpret_cast<const ::Color*>(cn1.data)[i].r / 256.f
+          fval(pn1, i),
+          fval(cn1, i)
         )
       );
 
       rock.type = static_cast<ld::RockType>(
-        static_cast<std::size_t>(
+        static_cast<std::size_t>(std::round(
           nv
-          * Idx(RockType::Size)
-        )
+          * (Idx(RockType::Size) - 1)
+        ))
       );
 
       rock.tier = static_cast<ld::RockTier>(::GetRandomValue(
