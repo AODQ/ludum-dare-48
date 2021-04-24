@@ -2,6 +2,7 @@
 
 #include <button.hpp>
 #include <gamestate.hpp>
+#include <mob.hpp>
 #include <overlay.hpp>
 #include <renderer.hpp>
 #include <sounds.hpp>
@@ -27,7 +28,8 @@ void Entry() {
   ld::SoundInitialize();
 
   ld::GameState gameState;
-  gameState.mineChasm = ld::MineChasm::Initialize();
+  gameState.mobGroup   = ld::MobGroup::Initialize();
+  gameState.mineChasm  = ld::MineChasm::Initialize(gameState.mobGroup);
   gameState.minerGroup = ld::MinerGroup::Initialize();
   ld::Overlay overlay(scrWidth, scrHeight);
 
@@ -41,6 +43,7 @@ void Entry() {
     // -- update
     if (!gameState.isPaused) {
       ld::MinerGroup::Update(gameState);
+      ld::MobGroup::Update(gameState);
       overlay.Update(gameState);
     }
 
@@ -50,7 +53,7 @@ void Entry() {
 
     // -- render
     BeginDrawing();
-      ClearBackground(RAYWHITE);
+      ClearBackground(BLACK);
 
       ld::RenderScene(gameState);
 

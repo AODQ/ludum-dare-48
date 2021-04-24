@@ -17,11 +17,11 @@ void ld::DrawCenteredText(const char* text, uint32_t xPos, uint32_t yPos, uint32
     );
 }
 
-void ld::DrawBar(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height, uint32_t fontSize, ::Color color)
+void ld::DrawBar(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height, uint32_t fontSize, ::Color color, float fillPct)
 {
     int textWidth = ::MeasureText(text, fontSize);
-    ::DrawRectangle     (xPos, yPos, width, height, color);
-    ::DrawRectangleLines(xPos, yPos, width, height, DARKGRAY);
+    ::DrawRectangle     (xPos, yPos, width*fillPct, height, color);
+    ::DrawRectangleLines(xPos, yPos, width        , height, DARKGRAY);
     ::DrawText(text, xPos + 0.5f*(width-textWidth), yPos + 0.5*(height-fontSize), fontSize, BLACK);
 }
 
@@ -58,7 +58,7 @@ void ld::Overlay::GameOverScreen()
 
 }
 
-void ld::Overlay::BlueprintsMenu(ld::GameState & game)
+void ld::Overlay::BlueprintsMenu(ld::GameState & /*game*/)
 {
 
 }
@@ -80,6 +80,8 @@ void ld::Overlay::TitleScreen()
 
 void ld::Overlay::ResourceMenu(const ld::GameState & game)
 {
+    currentGold -= ld::sgn(currentGold - game.gold);
+
     // Gold supply bar
     {
         uint32_t xPos = 50;
@@ -92,6 +94,7 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
         ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::GOLD);
     }
 
+    currentFood -= ld::sgn(currentFood - game.food);
     // Food supply bar
     {
         uint32_t xPos = 275;
@@ -101,7 +104,7 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
         uint32_t fontSize = 20;
 
         const char* text = ::TextFormat("Food: %i/%i", game.food, game.maxFood);
-        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::RED);
+        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::RED, static_cast<float>(game.food)/static_cast<float>(game.maxFood));
     }
 
     // Resource related buttons
@@ -119,13 +122,7 @@ void ld::Overlay::Update(ld::GameState & game)
     if (buyMinerBtn.IsClicked())
     {
         game.gold -= game.minerCost;
-        game.minerGroup.miners.push_back({
-            .minerId = game.minerGroup.miners.size(),
-            .xPosition = 300,
-        });
-        game.minerGroup.surfacedMiners.push_back({
-            game.minerGroup.miners.size() - 1
-        });
+        game.minerGroup.addMiner();
     }
 
     auto bluePrintBtn = buttons.at("BluePrints");

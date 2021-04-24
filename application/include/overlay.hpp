@@ -7,7 +7,7 @@
 namespace ld {
 
     void DrawCenteredText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color color);
-    void DrawBar(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height, uint32_t fontSize, ::Color color);
+    void DrawBar(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height, uint32_t fontSize, ::Color color, float fillPct = 1.0f);
 
     struct Overlay
     {
@@ -38,5 +38,9 @@ namespace ld {
 
         uint32_t scrWidth, scrHeight;
         ButtonGroup buttons;
+
+        // current gold/food that interpolates to game state's gold
+        int32_t currentGold = 0;
+        int32_t currentFood = 0;
     };
 }
