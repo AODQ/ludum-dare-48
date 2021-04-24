@@ -2,7 +2,7 @@
 #pragma once
 
 #include <mine.hpp>
-
+#include <button.hpp>
 
 // fwd
 struct Texture;
@@ -10,6 +10,7 @@ using Texture2D = Texture;
 namespace ld { struct Camera; }
 namespace ld { struct MineRenderer; }
 namespace ld { struct MinerGroup; }
+namespace ld { struct Button; }
 
 namespace ld {
 
@@ -29,6 +30,10 @@ namespace ld {
     ld::MineChasm const & mineChasm
   , ld::MinerGroup const & minerGroup
   , ld::Camera const & camera
+  );
+
+  void RenderOverlay(
+    ld::ButtonGroup const & buttonGroup
   );
 
   // -- initialize/shutdown

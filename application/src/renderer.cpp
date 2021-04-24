@@ -33,10 +33,18 @@ void ld::RenderInitialize()
   // -- load shaders
 }
 
-
 void ld::RenderShutdown()
 {
   // TODO cleanup
+}
+
+void ld::RenderOverlay(
+  ld::ButtonGroup const & buttonGroup
+) {
+    for (auto pair : buttonGroup)
+    {
+        pair.second.Draw(pair.first.c_str());
+    }
 }
 
 void ld::RenderScene(
