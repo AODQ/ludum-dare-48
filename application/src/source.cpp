@@ -1,8 +1,8 @@
 /* ludum dare | aodq.net */
 
 #include <scene.hpp>
-#include <objects.hpp>
 #include <miner.hpp>
+#include <camera.hpp>
 
 #include <renderer.hpp>
 
@@ -65,12 +65,12 @@ void Overlay()
 }
 
 void Entry() {
-  InitWindow(600, 600, "whatever");
+  InitWindow(960, 600, "whatever");
   SetTargetFPS(60);
 
   TraceLog(LOG_INFO, "Initializing scene");
 
-  Scene scene;
+  ld::Camera camera;
 
   ld::RenderInitialize();
   auto mineChasm = ld::MineChasm::Initialize();
@@ -78,14 +78,19 @@ void Entry() {
   TraceLog(LOG_INFO, "entering loop");
   while (!WindowShouldClose()) {
     if (IsKeyPressed(KEY_TAB)) { game.isPaused ^= 1; }
+
+    // -- update
     if (!game.isPaused) {
-        Scene_Update(scene);
     }
 
+    // -- misc updates
+    camera.Update();
+
+    // -- render
     BeginDrawing();
       ClearBackground(RAYWHITE);
 
-      ld::RenderScene(mineChasm);
+      ld::RenderScene(mineChasm, camera);
 
       Overlay();
       if (game.isPaused) {

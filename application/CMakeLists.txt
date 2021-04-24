@@ -9,6 +9,7 @@ target_sources(
     src/renderer.cpp
     src/scene.cpp
     src/source.cpp
+    src/camera.cpp
 )
 
 set_target_properties(

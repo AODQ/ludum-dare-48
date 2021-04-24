@@ -1,17 +1,23 @@
 #include <mine.hpp>
 
+#include <enum.hpp>
+
+#include <raylib.h>
+
 ld::MineChasm ld::MineChasm::Initialize()
 {
   ld::MineChasm self;
 
-  self.columns = 32;
+  self.columns = 30;
   self.rocks.resize(self.columns * 50);
 
   for (size_t i = 0; i < self.rocks.size(); ++ i) {
     auto & rock = self.rocks[i];
 
-    rock.type = ld::RockType::Sand;
-    rock.tier = ld::RockTier::Base1;
+    rock.type =
+      static_cast<ld::RockType>(::GetRandomValue(0, Idx(RockType::Size)-1));
+    rock.tier =
+      static_cast<ld::RockTier>(::GetRandomValue(0, Idx(RockTier::Size)-1));
     rock.gem  = ld::RockGemType::Empty;
 
     rock.durability = 10;

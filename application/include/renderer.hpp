@@ -8,8 +8,7 @@
 struct Texture;
 using Texture2D = Texture;
 namespace ld { struct MineRenderer; }
-
-
+namespace ld { struct Camera; }
 
 namespace ld {
 
@@ -23,7 +22,10 @@ namespace ld {
   ::Texture2D const & TextureGet(ld::TextureType const);
 
   // -- mine renderer
-  void RenderScene(ld::MineChasm const & mineChasm);
+  void RenderScene(
+    ld::MineChasm const & mineChasm
+  , ld::Camera & camera
+  );
 
   // -- initialize/shutdown
   void RenderInitialize();
