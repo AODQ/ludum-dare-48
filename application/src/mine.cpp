@@ -61,7 +61,7 @@ ld::MineChasm ld::MineChasm::Initialize(
       const auto i = row * columns + col;
       auto& rock = self.rocks[i];
 
-      auto nvType = vertGrade(
+      const auto nv = vertGrade(
         row,
         rows,
         average(
@@ -69,19 +69,13 @@ ld::MineChasm ld::MineChasm::Initialize(
           fval(cn1, i)
         )
       );
-      auto nvTier = fval(pn2, i);
 
       rock.type = static_cast<ld::RockType>(
         static_cast<std::size_t>(std::round(
-          nvType
+          nv
           * (Idx(RockType::Size) - 1)
         ))
       );
-
-      rock.tier = static_cast<ld::RockTier>(std::round(
-        nvTier
-        * (Idx(RockTier::Size) - 2)
-      ));
 
       rock.gem  = ld::RockGemType::Empty;
 
@@ -92,6 +86,31 @@ ld::MineChasm ld::MineChasm::Initialize(
       }
 
       rock.durability = 10;
+    }
+  }
+
+  // grade rock tiers in each column, leaving the first row walkable
+  for (std::size_t col = 0; col < columns; ++col) {
+    std::size_t topRow = 1;
+    for (std::size_t row = 1; row <= rows; ++row) {
+      auto&  top = self.rocks[topRow * columns + col];
+      if (row == rows || top.type != self.rocks[row * columns + col].type)
+      {
+        for (std::size_t i = topRow; i < row; ++i)
+        {
+          self.rocks[i * columns + col].tier = static_cast<ld::RockTier>(
+            std::round(
+              // skips Mined -- that's added separately
+              (Idx(ld::RockTier::Size) - 2) * vertGrade(
+                i - topRow,
+                row - topRow,
+                fval(pn2, i)
+              )
+            )
+          );
+        }
+        topRow = row;
+      }
     }
   }
 
