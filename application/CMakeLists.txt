@@ -9,6 +9,7 @@ target_sources(
     src/camera.cpp
     src/mine.cpp
     src/miner.cpp
+    src/overlay.cpp
     src/renderer.cpp
     src/scene.cpp
     src/source.cpp

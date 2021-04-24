@@ -4,6 +4,8 @@
 
 #include <raylib.h>
 
+#include <algorithm>
+
 
 namespace
 {
@@ -55,4 +57,18 @@ ld::MineChasm ld::MineChasm::Initialize(
   }
 
   return self;
+}
+
+bool ld::MineRock::receiveDamage(int32_t damage) {
+  auto & self = *this;
+
+  // -abs(damage)
+  if (damage < 0) damage = -damage;
+
+  durability = std::min(0, durability - damage);
+  if (durability == 0) {
+    self.tier = RockTier::Mined;
+  }
+
+  return self.isMined();
 }

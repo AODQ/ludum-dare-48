@@ -31,6 +31,9 @@ namespace ld {
     int32_t durability;
 
     bool isMined() const { return this->tier == ld::RockTier::Mined; }
+
+    // returns if this destroyed rock
+    bool receiveDamage(int32_t damage);
   };
 
   struct MineChasm {
@@ -42,6 +45,9 @@ namespace ld {
       std::size_t rows    = 50
     );
 
-    ld::MineRock GetRock(uint32_t rockId);
+    ld::MineRock & rock(uint32_t rockId) { return rocks[rockId]; }
+
+    int32_t rockPositionX(uint32_t rockId) { return rockId % columns; }
+    int32_t rockPositionY(uint32_t rockId) { return rockId / columns; }
   };
 }
