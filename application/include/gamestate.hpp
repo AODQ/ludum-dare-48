@@ -3,6 +3,7 @@
 #include <camera.hpp>
 #include <mine.hpp>
 #include <miner.hpp>
+#include <mob.hpp>
 
 namespace ld {
   struct GameState
@@ -17,6 +18,7 @@ namespace ld {
       Camera camera;
 
       MinerGroup minerGroup;
+      MobGroup mobGroup;
       MineChasm mineChasm;
   };
 }

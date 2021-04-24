@@ -124,21 +124,13 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & /*gameState*/) {
   if (
     miner.xPosition == state.targetTileX && miner.yPosition == state.targetTileY
   ) {
-    if (state.waitTimer < 0) {
-      state.waitTimer = 30 * 1; // 0.5 second wait
-      miner.animationState = ld::Miner::AnimationState::Idling;
-      miner.animationIdx = 0;
-    }
-
-    if (state.waitTimer == 0) {
-      // transition
-      if (state.wantsToSurface) {
-        // surfacing miner
-        miner.aiState = ld::Miner::AiState::Surfaced;
-        miner.aiStateInternal.surfaced.state =
-          ld::Miner::AiStateSurfaced::Surfacing;
-        miner.aiStateInternal.surfaced.waitTimer = -1;
-      }
+    // transition
+    if (state.wantsToSurface) {
+      // surfacing miner
+      miner.aiState = ld::Miner::AiState::Surfaced;
+      miner.aiStateInternal.surfaced.state =
+        ld::Miner::AiStateSurfaced::Surfacing;
+      miner.aiStateInternal.surfaced.waitTimer = -1;
     }
   }
 

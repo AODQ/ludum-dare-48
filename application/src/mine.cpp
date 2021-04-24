@@ -1,6 +1,7 @@
 #include <mine.hpp>
 
 #include <enum.hpp>
+#include <mob.hpp>
 
 #include <raylib.h>
 
@@ -44,6 +45,7 @@ namespace
 
 
 ld::MineChasm ld::MineChasm::Initialize(
+  ld::MobGroup & group,
   std::size_t columns,
   std::size_t rows
 )
@@ -94,6 +96,14 @@ ld::MineChasm ld::MineChasm::Initialize(
       rock.durability = 10;
     }
   }
+
+  // TODO add mobs to empty rooms
+  group.slimes.push_back({
+    .positionX = 400, .positionY = 200
+  });
+  group.poisonClouds.push_back({
+    .positionX = 400, .positionY = 200
+  });
 
   return self;
 }
