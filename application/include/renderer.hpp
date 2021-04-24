@@ -1,16 +1,12 @@
 
 #pragma once
 
-#include <mine.hpp>
 #include <button.hpp>
 
 // fwd
+namespace ld { struct GameState; }
 struct Texture;
 using Texture2D = Texture;
-namespace ld { struct Camera; }
-namespace ld { struct MineRenderer; }
-namespace ld { struct MinerGroup; }
-namespace ld { struct Button; }
 
 namespace ld {
 
@@ -26,11 +22,7 @@ namespace ld {
   ::Texture2D const & TextureGet(ld::TextureType const);
 
   // -- mine renderer
-  void RenderScene(
-    ld::MineChasm const & mineChasm
-  , ld::MinerGroup const & minerGroup
-  , ld::Camera const & camera
-  );
+  void RenderScene(ld::GameState const & state);
 
   void RenderOverlay(
     ld::ButtonGroup const & buttonGroup

@@ -1,9 +1,7 @@
 /* ludum dare | aodq.net */
 
-#include <scene.hpp>
-#include <miner.hpp>
-#include <camera.hpp>
 #include <button.hpp>
+#include <gamestate.hpp>
 
 #include <renderer.hpp>
 
@@ -23,16 +21,6 @@ typedef enum {
     eStorageHiScore = 1,
 } StorageData;
 
-struct GameState
-{
-    uint32_t food = 100;
-    uint32_t maxFood = 200;
-    uint32_t gold = 100;
-    uint32_t minerCost = 5;
-    size_t selection = -1;
-    bool isPaused = false;
-} game;
-
 void PauseScreen()
 {
     int score = ::LoadStorageValue(eStorageScore);
@@ -44,7 +32,6 @@ void PauseScreen()
 
 void GameOverScreen()
 {
-
 }
 
 ld::ButtonGroup InitButtons()
@@ -66,7 +53,7 @@ void BluePrintsMenu()
 {
 }
 
-void Overlay(ld::ButtonGroup buttons)
+void Overlay(ld::GameState & game, ld::ButtonGroup buttons)
 {
     if (buttons.at("BuyMiner").IsClicked())
     {
@@ -118,37 +105,38 @@ void Entry() {
   TraceLog(LOG_INFO, "Initializing scene");
 
   // -- scene setup
-  ld::Camera camera;
-
   ld::RenderInitialize();
-  auto mineChasm = ld::MineChasm::Initialize();
-  auto minerGroup = ld::MinerGroup::Initialize();
+
+  ld::GameState gameState;
+  gameState.mineChasm = ld::MineChasm::Initialize();
+  gameState.minerGroup = ld::MinerGroup::Initialize();
+
   auto buttonGroup = InitButtons();
 
   // -- start loop
   TraceLog(LOG_INFO, "entering loop");
   while (!WindowShouldClose()) {
-    if (IsKeyPressed(KEY_TAB)) { game.isPaused ^= 1; }
+    if (IsKeyPressed(KEY_TAB)) { gameState.isPaused ^= 1; }
 
     // -- update
-    if (!game.isPaused) {
-      minerGroup.Update();
+    if (!gameState.isPaused) {
+      gameState.minerGroup.Update();
     }
 
     // -- misc updates
-    camera.Update();
+    gameState.camera.Update();
 
     // -- render
     BeginDrawing();
       ClearBackground(RAYWHITE);
 
-      ld::RenderScene(mineChasm, minerGroup, camera);
+      ld::RenderScene(gameState);
 
       ld::RenderOverlay(buttonGroup);
 
-      Overlay(buttonGroup);
+      Overlay(gameState, buttonGroup);
 
-      if (game.isPaused) {
+      if (gameState.isPaused) {
         PauseScreen();
       }
     EndDrawing();

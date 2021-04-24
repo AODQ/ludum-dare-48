@@ -37,5 +37,7 @@ namespace ld {
     std::vector<ld::MineRock> rocks;
 
     static ld::MineChasm Initialize();
+
+    ld::MineRock GetRock(uint32_t rockId);
   };
 }

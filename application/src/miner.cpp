@@ -18,6 +18,8 @@ void ld::MinerGroup::Update() {
 
   // TODO update mining / fighting
 
+  // simple dumb ai right now
+
   // TODO update durability
 
   // TODO update animation state

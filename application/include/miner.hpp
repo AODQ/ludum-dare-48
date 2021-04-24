@@ -45,6 +45,34 @@ namespace ld {
       // this syncs with the miner.png file horizontally, scaled by 60Hz
       int32_t animationIdx = 0;
 
+      enum class AiState {
+        Mining,
+        Attacking,
+        Traversing,
+      };
+
+      union AiStateInternal {
+        struct Mining {
+          int32_t targetRockId = 0;
+        };
+
+        struct Attacking {
+          int32_t targetEnemyId = 0;
+        };
+
+        struct Traversing {
+          int32_t targetTileX = 0, targetTileY = 0;
+
+          bool wantsToSurface = false;
+        };
+
+        Mining     mining;
+        Attacking  attacking;
+        Traversing traversing;
+      };
+
+      AiStateInternal aiStateInternal;
+
       bool isSurfaced = true;
   };
 

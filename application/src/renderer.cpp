@@ -1,9 +1,7 @@
 #include <renderer.hpp>
 
-#include <camera.hpp>
 #include <enum.hpp>
-#include <mine.hpp>
-#include <miner.hpp>
+#include <gamestate.hpp>
 
 #include <raylib.h>
 
@@ -47,19 +45,15 @@ void ld::RenderOverlay(
     }
 }
 
-void ld::RenderScene(
-  ld::MineChasm const & chasm
-, ld::MinerGroup const & minerGroup
-, ld::Camera const & camera
-) {
-
+void ld::RenderScene(ld::GameState const & state)
+{
   // render background TODO
 
   // render surface TODO
   { // -- render chasm miners
     ::DrawTextureV(
       ld::TextureGet(ld::TextureType::SurfacedFg)
-    , ::Vector2{0.0f, -612.0f - camera.y}
+    , ::Vector2{0.0f, -612.0f - state.camera.y}
     , Color { 255, 255, 255, 255 }
     );
   }
@@ -70,9 +64,13 @@ void ld::RenderScene(
 
     // TODO only render in view instead of all
 
-    for (size_t it = 0; it < chasm.rocks.size(); ++ it) {
-      auto const & rock = chasm.rocks[it];
-      int32_t x = it % chasm.columns, y = it / chasm.columns;
+    for (size_t it = 0; it < state.mineChasm.rocks.size(); ++ it) {
+      auto const & rock = state.mineChasm.rocks[it];
+
+      int32_t
+        x = it % state.mineChasm.columns,
+        y = it / state.mineChasm.columns
+      ;
 
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Rock)
@@ -82,7 +80,7 @@ void ld::RenderScene(
           .width = 32.0f,
           .height = 32.0f,
         }
-      , ::Vector2{x*32.0f, y*32.0f - camera.y}
+      , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
       , Color { 255, 255, 255, 255 }
       );
     }
@@ -91,8 +89,8 @@ void ld::RenderScene(
   // render gems TODO
 
   { // -- render chasm miners
-    for (auto & minerIdx : minerGroup.chasmMiners) {
-      auto & miner = minerGroup.miners[minerIdx];
+    for (auto & minerIdx : state.minerGroup.chasmMiners) {
+      auto & miner = state.minerGroup.miners[minerIdx];
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
       , ::Rectangle {
@@ -103,7 +101,7 @@ void ld::RenderScene(
         }
       , ::Vector2{
           static_cast<float>(miner.xPosition),
-          static_cast<float>(miner.yPosition) - camera.y
+          static_cast<float>(miner.yPosition) - state.camera.y
         }
       , Color { 255, 255, 255, 255 }
       );
