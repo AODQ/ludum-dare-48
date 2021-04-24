@@ -16,6 +16,16 @@ ld::MinerGroup ld::MinerGroup::Initialize() {
   return self;
 }
 
+void ld::Miner::moveTowards(int32_t x, int32_t y)
+{
+  auto & self = *this;
+  self.prevXPosition = self.xPosition;
+  self.prevYPosition = self.yPosition;
+
+  self.xPosition -= ld::sgn(self.xPosition - x);
+  self.yPosition -= ld::sgn(self.yPosition - y);
+}
+
 namespace {
 void UpdateMinerCargo(ld::Miner & miner) {
   miner.currentCargoCapacity = 0;
@@ -72,8 +82,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
 
 void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState) {
   auto & state = miner.aiStateInternal.traversing;
-  miner.xPosition -= ld::sgn(miner.xPosition - state.targetTileX);
-  miner.yPosition -= ld::sgn(miner.yPosition - state.targetTileY);
+  miner.moveTowards(state.targetTileX, state.targetTileY);
 
   // clamp to game bounds
   miner.xPosition = std::clamp(miner.xPosition, 0, 30*32+16);
@@ -131,8 +140,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState) {
       state.waitTimer -= 1;
     break;
     case ld::Miner::AiStateSurfaced::DumpingMaterial:
-      miner.xPosition -= ld::sgn(miner.xPosition - 200);
-      miner.yPosition -= ld::sgn(miner.yPosition - -80);
+      miner.moveTowards(200, -100);
     break;
     default: break;
   }

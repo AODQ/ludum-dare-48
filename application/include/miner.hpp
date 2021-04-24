@@ -17,12 +17,15 @@ namespace ld {
       size_t minerId;
       // position is in texels, not tiles
       int32_t xPosition = 0, yPosition = 0;
+      int32_t prevXPosition = 0, prevYPosition = 0;
       int32_t energy = 100;
       std::array<ld::Item, Idx(ld::ItemType::Size)> inventory = {{
         { .type = ld::ItemType::Pickaxe1, .owns = false },
         { .type = ld::ItemType::Pickaxe2, .owns = false },
         { .type = ld::ItemType::Armor,    .owns = false },
       }};
+
+      void moveTowards(int32_t x, int32_t y);
 
       uint32_t cargoCapacity = 5u;
       uint32_t currentCargoCapacity = 0u;
