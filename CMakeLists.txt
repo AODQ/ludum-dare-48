@@ -23,6 +23,11 @@ set(
   "${CMAKE_CXX_FLAGS} -Os -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY"
 )
 
+set(
+  CMAKE_CXX_FLAGS
+  "${CMAKE_CXX_FLAGS} -s MAX_WEBGL_VERSION=2"
+)
+
 # Since WASM is used, ALLOW_MEMORY_GROWTH has no extra overheads
 set(
   CMAKE_CXX_FLAGS
@@ -31,7 +36,7 @@ set(
 
 set(
   CMAKE_CXX_FLAGS
-  "${CMAKE_CXX_FLAGS} --shell-file ${CMAKE_SOURCE_DIR}/resources/shell.html"
+  "${CMAKE_CXX_FLAGS} --shell-file ${CMAKE_SOURCE_DIR}/scripts/shell.html"
 )
 
 set(CMAKE_EXE_LINKER_FLAGS "-s USE_GLFW=3")
@@ -63,7 +68,7 @@ add_subdirectory(application)
 
 # install server
 install(
-  FILES resources/wasm-server.py
+  FILES scripts/wasm-server.py
   DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT core
 )

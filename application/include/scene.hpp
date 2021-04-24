@@ -41,16 +41,6 @@ struct Scene {
   std::vector<ObjectImplementation> objects;
 };
 
-#define assert(cnd) \
-  if (!(cnd)) { \
-    TraceLog( \
-      LOG_ERROR, \
-      "assertion fail: %s@%u: `%s`", __FILE__, __LINE__, #cnd \
-    ); \
-  }
-
-#include <raylib.h>
-
 template <typename T>
 T & Scene_ObjectLookup(Scene & scene, ObjectId const & object);
 
@@ -64,6 +54,16 @@ void Scene_ObjectImplementationAdd(
 );
 void Scene_Update(Scene & scene);
 void Scene_Render(Scene & scene);
+
+#define assert(cnd) \
+  if (!(cnd)) { \
+    TraceLog( \
+      LOG_ERROR, \
+      "assertion fail: %s@%u: `%s`", __FILE__, __LINE__, #cnd \
+    ); \
+  }
+
+#include <raylib.h>
 
 template <typename T>
 T & Scene_ObjectLookup(Scene & scene, ObjectId const & object)

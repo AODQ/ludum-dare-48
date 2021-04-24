@@ -5,8 +5,10 @@ target_include_directories(ludum-dare-client PUBLIC "include/")
 target_sources(
   ludum-dare-client
   PRIVATE
-    src/source.cpp
+    src/mine.cpp
+    src/renderer.cpp
     src/scene.cpp
+    src/source.cpp
 )
 
 set_target_properties(
@@ -22,6 +24,12 @@ target_link_libraries(
     raylib glfw
 )
 
+set_target_properties(
+  ludum-dare-client
+  PROPERTIES
+    LINK_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../resources"
+)
+
 install(
   TARGETS ludum-dare-client
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -35,6 +43,7 @@ install(
   FILES
     ${CMAKE_BINARY_DIR}/application/ludum-dare-client.js
     ${CMAKE_BINARY_DIR}/application/ludum-dare-client.wasm
+    ${CMAKE_BINARY_DIR}/application/ludum-dare-client.data
   DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT core
 )
