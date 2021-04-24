@@ -13,10 +13,6 @@
 #include <functional>
 #include <unordered_map>
 
-int width = 640;
-int height = 480;
-const char* title = "GameTitle";
-
 typedef enum {
     eStorageScore = 0,
     eStorageHiScore = 1,
@@ -70,7 +66,6 @@ void Overlay()
 
 void Entry() {
   InitWindow(600, 600, "whatever");
-  InitWindow(width, height, title);
   SetTargetFPS(60);
 
   TraceLog(LOG_INFO, "Initializing scene");
