@@ -36,6 +36,7 @@ void ld::Overlay::GameOverScreen()
 {
 
 }
+
 void ld::Overlay::BlueprintsMenu(ld::GameState & game)
 {
     // Update gamestate current available level of equipment
@@ -109,12 +110,13 @@ void ld::Overlay::Draw(const ld::GameState & game)
 {
     ResourceMenu(game);
 
-    switch (menuState)
-    {
-        case MenuState::Blueprint:
-            //BlueprintsMenu(game);
-            break;
-    }
+    // TODO
+    //switch (menuState)
+    //{
+    //    case MenuState::Blueprint:
+    //        BlueprintsMenu(game);
+    //        break;
+    //}
 
     // Paused
     if (game.isPaused) {

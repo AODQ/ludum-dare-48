@@ -63,9 +63,7 @@ add_subdirectory(application)
 
 # install server
 install(
-  FILES scripts/wasm-server.py
+  PROGRAMS scripts/wasm-server.py
   DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT core
 )
-
-file(COPY "resources/"  DESTINATION "resources/")
