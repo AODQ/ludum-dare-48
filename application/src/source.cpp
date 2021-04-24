@@ -4,6 +4,7 @@
 #include <gamestate.hpp>
 #include <overlay.hpp>
 #include <renderer.hpp>
+#include <sounds.hpp>
 
 #include <raylib.h>
 
@@ -23,6 +24,7 @@ void Entry() {
 
   // -- scene setup
   ld::RenderInitialize();
+  ld::SoundInitialize();
 
   ld::GameState gameState;
   gameState.mineChasm = ld::MineChasm::Initialize();
@@ -42,6 +44,7 @@ void Entry() {
 
     // -- misc updates
     gameState.camera.Update();
+    ld::SoundUpdate();
 
     // -- render
     BeginDrawing();
@@ -54,7 +57,9 @@ void Entry() {
   }
 
     TraceLog(LOG_INFO, "Closing window\n");
-  CloseWindow();
+
+  ::CloseWindow();
+  ld::SoundShutdown();
 }
 
 int main()

@@ -1,6 +1,7 @@
 #include <miner.hpp>
 
 #include <gamestate.hpp>
+#include <sounds.hpp>
 
 ld::MinerGroup ld::MinerGroup::Initialize() {
   ld::MinerGroup self;
@@ -41,6 +42,7 @@ void ld::MinerGroup::Update(ld::GameState & state) {
 
     if ((miner.animationIdx + 5) % (4 * 60) < miner.animationIdx) {
       rock.receiveDamage(-1);
+      /* ld::SoundPlay(ld::SoundType::RockHit); */
     }
   }
 
