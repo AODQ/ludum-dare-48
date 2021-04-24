@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <vector>
 
+namespace ld { struct MobGroup; }
+
 namespace ld {
 
   // this since with the rocks.png file vertically
@@ -19,7 +21,7 @@ namespace ld {
   };
 
   enum class RockGemType {
-    Empty, Tin,
+    Empty, Tin, Ruby, Emerald, Sapphire,
     Size,
   };
 
@@ -41,6 +43,7 @@ namespace ld {
     std::vector<ld::MineRock> rocks;
 
     static ld::MineChasm Initialize(
+      ld::MobGroup & group,
       std::size_t columns = 30,
       std::size_t rows    = 50
     );

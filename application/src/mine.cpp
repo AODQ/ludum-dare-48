@@ -1,6 +1,7 @@
 #include <mine.hpp>
 
 #include <enum.hpp>
+#include <mob.hpp>
 
 #include <raylib.h>
 
@@ -44,6 +45,7 @@ namespace
 
 
 ld::MineChasm ld::MineChasm::Initialize(
+  ld::MobGroup & group,
   std::size_t columns,
   std::size_t rows
 )
@@ -77,7 +79,7 @@ ld::MineChasm ld::MineChasm::Initialize(
         ))
       );
 
-      rock.gem  = ld::RockGemType::Empty;
+      rock.gem = static_cast<ld::RockGemType>(::GetRandomValue(0, 4));
 
       // first row is walkable
       if (row < 1) {
@@ -113,6 +115,14 @@ ld::MineChasm ld::MineChasm::Initialize(
       }
     }
   }
+
+  // TODO add mobs to empty rooms
+  group.slimes.push_back({
+    .positionX = 400, .positionY = 200
+  });
+  group.poisonClouds.push_back({
+    .positionX = 400, .positionY = 200
+  });
 
   return self;
 }

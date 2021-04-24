@@ -14,6 +14,7 @@ namespace ld {
 
   enum class TextureType {
     Rock,
+    Gem,
     Miner,
     SurfacedFg,
     Size,
