@@ -5,6 +5,27 @@ typedef enum {
     eStorageHiScore = 1,
 } StorageData;
 
+void ld::DrawCenteredText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color color)
+{
+    int textWidth = ::MeasureText(text, fontSize);
+    ::DrawText(
+        text,
+        xPos - 0.5f*textWidth,
+        yPos + 0.5*fontSize,
+        fontSize,
+        color
+    );
+}
+
+void ld::DrawBar(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height, uint32_t fontSize, ::Color color)
+{
+    int textWidth = ::MeasureText(text, fontSize);
+    ::DrawRectangle     (xPos, yPos, width, height, color);
+    ::DrawRectangleLines(xPos, yPos, width, height, DARKGRAY);
+    ::DrawText(text, xPos + 0.5f*(width-textWidth), yPos + 0.5*(height-fontSize), fontSize, BLACK);
+}
+
+
 void ld::Overlay::InitButtons()
 {
     uint32_t x = scrWidth - 100;
@@ -39,7 +60,22 @@ void ld::Overlay::GameOverScreen()
 
 void ld::Overlay::BlueprintsMenu(ld::GameState & game)
 {
-    // Update gamestate current available level of equipment
+
+}
+
+void ld::Overlay::TitleScreen()
+{
+    uint32_t xPos = scrWidth / 2.0f;
+    uint32_t yPos = 100;
+    uint32_t width = 50;
+    DrawCenteredText("Game Title", xPos, yPos, 100, BLACK);
+
+    ld::Button playBtn(xPos - 0.5*width, yPos + 250, 100, 50, 35);
+    playBtn.Draw("PLAY");
+    if (playBtn.IsClicked())
+    {
+        menuState = MenuState::None;
+    }
 }
 
 void ld::Overlay::ResourceMenu(const ld::GameState & game)
@@ -52,11 +88,8 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
         uint32_t height = 30;
         uint32_t fontSize = 20;
 
-        const char* text = TextFormat("Gold: %i", game.gold);
-        int textWidth = ::MeasureText(text, fontSize);
-        ::DrawRectangle     (xPos, yPos, width, height, GOLD);
-        ::DrawRectangleLines(xPos, yPos, width, height, DARKGRAY);
-        ::DrawText(text, xPos + 0.5f*(width-textWidth), yPos + 0.5*(height-fontSize), fontSize, BLACK);
+        const char* text = ::TextFormat("Gold: %i", game.gold);
+        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::GOLD);
     }
 
     // Food supply bar
@@ -67,11 +100,8 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
         uint32_t height = 30;
         uint32_t fontSize = 20;
 
-        const char* text = TextFormat("Food %i/%i", game.food, game.maxFood);
-        int textWidth = ::MeasureText(text, fontSize);
-        ::DrawRectangle     (xPos, yPos, width*((float)game.food/game.maxFood), height, RED);
-        ::DrawRectangleLines(xPos, yPos, width, height, DARKGRAY);
-        ::DrawText(text, xPos + 0.5f*(width-textWidth), yPos + 0.5*(height-fontSize), fontSize, BLACK);
+        const char* text = ::TextFormat("Food: %i/%i", game.food, game.maxFood);
+        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::RED);
     }
 
     // Resource related buttons
@@ -80,7 +110,6 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
     buyMinerBtn.Draw("Buy Miner");
     bluePrintBtn.Draw("Buy Blueprint");
 
-    // Miner info
 }
 
 // Update any gamestate changes from button usage
@@ -107,22 +136,56 @@ void ld::Overlay::Update(ld::GameState & game)
 
 }
 
-void ld::Overlay::Draw(const ld::GameState & game)
+void ld::Overlay::MinerInfo(ld::Miner & miner)
 {
-    ResourceMenu(game);
+    // Menu window positioning
+    uint32_t x = scrWidth - 100;
+    uint32_t y = 0;
+    uint32_t w = scrWidth - 100;;
+    uint32_t h = scrHeight;
 
-    // TODO
-    //switch (menuState)
-    //{
-    //    case MenuState::Blueprint:
-    //        BlueprintsMenu(game);
-    //        break;
-    //}
+    // Root Menu panel
+    DrawRectangle(x, y, w, h, ::Fade(LIGHTGRAY, 0.3f));
 
-    // Paused
+    // Energy
+    const char* energyText = ::TextFormat("Energy: %i/%i", miner.energy, miner.maxEnergy);
+    ld::DrawBar(energyText, x, 200, 100, 20, 20, ::GREEN);
+
+    // Inventory
+
+    // Cargo
+
+    // Gui sliders
+    //::GuiSliderBar((::Rectangle) { } 
+}
+
+void ld::Overlay::Draw(ld::GameState & game)
+{
+    // if game paused, then that should override every other menu
+    //menuState = game.isPaused ? MenuState::Pause : menuState;
+
+    switch (menuState)
+    {
+        case ld::Overlay::MenuState::Title:
+            // TODO Reenable upon submission
+            //TitleScreen();
+            //return; // return to Avoid rendering resources
+        case ld::Overlay::MenuState::Blueprint:
+            BlueprintsMenu(game);
+            break;
+        case ld::Overlay::MenuState::GameOver:
+            GameOverScreen();
+            break;
+        case ld::Overlay::MenuState::Pause:
+            PauseScreen();
+        case ld::Overlay::MenuState::None:
+        default:
+            break;
+    }
+
     if (game.isPaused) {
         PauseScreen();
     }
 
-    // Gameover
+    ResourceMenu(game);
 }

@@ -19,6 +19,7 @@ namespace ld {
       int32_t xPosition = 0, yPosition = 0;
       int32_t prevXPosition = 0, prevYPosition = 0;
       int32_t energy = 100;
+      int32_t maxEnergy = 100;
       std::array<ld::Item, Idx(ld::ItemType::Size)> inventory = {{
         { .type = ld::ItemType::Pickaxe1, .owns = false },
         { .type = ld::ItemType::Pickaxe2, .owns = false },
