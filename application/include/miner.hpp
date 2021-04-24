@@ -65,6 +65,7 @@ namespace ld {
 
       enum class AiStateSurfaced {
         Surfacing,
+        MovingToBase,
         DumpingMaterial,
         PurchasingUpgrades,
         BackToMine,

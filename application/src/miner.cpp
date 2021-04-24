@@ -128,22 +128,71 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState) {
       miner.animationState = ld::Miner::AnimationState::Idling;
 
       if (state.waitTimer < 0) {
-        state.waitTimer = 5*60;
+        state.waitTimer = 1*60;
       }
 
       if (state.waitTimer == 0) {
-        state.state = ld::Miner::AiStateSurfaced::DumpingMaterial;
+        state.state = ld::Miner::AiStateSurfaced::MovingToBase;
         miner.animationState = ld::Miner::AnimationState::Travelling;
         miner.animationIdx = 0;
       }
 
       state.waitTimer -= 1;
     break;
-    case ld::Miner::AiStateSurfaced::DumpingMaterial:
+    case ld::Miner::AiStateSurfaced::MovingToBase:
       miner.moveTowards(200, -100);
+      if (miner.xPosition == 200 && miner.yPosition == -100) {
+        miner.animationState = ld::Miner::AnimationState::Idling;
+        miner.animationIdx = 0;
+        state.waitTimer = 50;
+        state.state = ld::Miner::AiStateSurfaced::DumpingMaterial;
+      }
     break;
-    default: break;
+    case ld::Miner::AiStateSurfaced::DumpingMaterial: {
+      state.waitTimer -= 1;
+
+      if (state.waitTimer > 0) { break; }
+
+      // sell item
+      state.waitTimer = 20;
+
+      bool hasSold = false;
+
+      for (auto & cargo : miner.cargo) {
+        if (cargo.ownedUnits == 0) { continue; }
+
+        hasSold = true;
+
+        cargo.ownedUnits -= 1;
+        gameState.gold += ld::valuableInfoLookup[Idx(cargo.type)].value;
+      }
+
+      if (!hasSold) {
+        state.state = ld::Miner::AiStateSurfaced::PurchasingUpgrades;
+        state.waitTimer = 40;
+      }
+
+    } break;
+    case ld::Miner::AiStateSurfaced::PurchasingUpgrades:
+      state.state = ld::Miner::AiStateSurfaced::BackToMine;
+      miner.animationState = ld::Miner::AnimationState::Travelling;
+      miner.animationIdx = 0;
+    break;
+    case ld::Miner::AiStateSurfaced::BackToMine:
+      miner.moveTowards(700, -100);
+      if (miner.xPosition == 700 && miner.yPosition == -100) {
+        miner.aiState = ld::Miner::AiState::Idling;
+        gameState.minerGroup.TransitionMiner(miner.minerId, true);
+        miner.xPosition = 300;
+        miner.yPosition = 20;
+      }
+    break;
   }
+}
+
+void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
+{
+  miner.animationState = ld::Miner::AnimationState::Idling;
 }
 
 } // -- namespace
@@ -163,7 +212,9 @@ void ld::MinerGroup::Update(ld::GameState & state) {
         UpdateMinerAiMining(miner, state);
       break;
       case ld::Miner::AiState::Attacking: break;
-      case ld::Miner::AiState::Idling: break;
+      case ld::Miner::AiState::Idling:
+        UpdateMinerAiIdling(miner, state);
+      break;
       case ld::Miner::AiState::Surfaced:
         UpdateMinerAiSurfaced(miner, state);
       break;
