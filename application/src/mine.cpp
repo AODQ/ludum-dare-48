@@ -53,13 +53,15 @@ ld::MineChasm ld::MineChasm::Initialize(
     decltype(ld::MineChasm::rocks)(columns * rows, basicRock)
   };
   auto pn1 = ::GenImagePerlinNoise(columns, rows, 0, 0, 10.f);
+  auto pn2 = ::GenImagePerlinNoise(columns, rows, 0, 0, 20.f);
   auto cn1 = ::GenImageCellular(columns, rows, 5);
 
   for (std::size_t row = 0; row < rows; ++row) {
     for (std::size_t col = 0; col < columns; ++col) {
       const auto i = row * columns + col;
       auto& rock = self.rocks[i];
-      auto nv = vertGrade(
+
+      auto nvType = vertGrade(
         row,
         rows,
         average(
@@ -67,17 +69,18 @@ ld::MineChasm ld::MineChasm::Initialize(
           fval(cn1, i)
         )
       );
+      auto nvTier = fval(pn2, i);
 
       rock.type = static_cast<ld::RockType>(
         static_cast<std::size_t>(std::round(
-          nv
+          nvType
           * (Idx(RockType::Size) - 1)
         ))
       );
 
-      rock.tier = static_cast<ld::RockTier>(::GetRandomValue(
-        0,
-        Idx(RockTier::Mined)-1
+      rock.tier = static_cast<ld::RockTier>(std::round(
+        nvTier
+        * (Idx(RockTier::Size) - 2)
       ));
 
       rock.gem  = ld::RockGemType::Empty;
