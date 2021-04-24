@@ -38,6 +38,9 @@ namespace ld {
 
     static ld::MineChasm Initialize();
 
-    ld::MineRock GetRock(uint32_t rockId);
+    ld::MineRock & rock(uint32_t rockId) { return rocks[rockId]; }
+
+    int32_t rockPositionX(uint32_t rockId) { return rockId % columns; }
+    int32_t rockPositionY(uint32_t rockId) { return rockId / columns; }
   };
 }

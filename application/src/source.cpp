@@ -120,7 +120,7 @@ void Entry() {
 
     // -- update
     if (!gameState.isPaused) {
-      gameState.minerGroup.Update();
+      ld::MinerGroup::Update(gameState);
     }
 
     // -- misc updates

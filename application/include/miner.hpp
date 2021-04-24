@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+namespace ld { struct GameState; }
+
 namespace ld {
 
   struct Miner {
@@ -71,6 +73,7 @@ namespace ld {
         Traversing traversing;
       };
 
+      AiState aiState;
       AiStateInternal aiStateInternal;
 
       bool isSurfaced = true;
@@ -84,6 +87,6 @@ namespace ld {
 
       static MinerGroup Initialize();
 
-      void Update();
+      static void Update(ld::GameState & state);
   };
 }
