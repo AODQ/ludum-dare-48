@@ -14,6 +14,7 @@ namespace ld { struct GameState; }
 namespace ld {
 
   struct Miner {
+      size_t minerId;
       // position is in texels, not tiles
       int32_t xPosition = 0, yPosition = 0;
       int32_t energy = 100;
@@ -23,9 +24,13 @@ namespace ld {
         { .type = ld::ItemType::Armor,    .owns = false },
       }};
 
-      uint32_t cargoCapacity = 100u;
+      uint32_t cargoCapacity = 5u;
+      uint32_t currentCargoCapacity = 0u;
       std::array<ld::Valuable, Idx(ld::ValuableType::Size)> cargo = {{
         {
+          .type = ld::ValuableType::Stone,
+          .ownedUnits = 0,
+        }, {
           .type = ld::ValuableType::Tin,
           .ownedUnits = 0,
         }, {
@@ -51,6 +56,15 @@ namespace ld {
         Mining,
         Attacking,
         Traversing,
+        Idling,
+        Surfaced,
+      };
+
+      enum class AiStateSurfaced {
+        Surfacing,
+        DumpingMaterial,
+        PurchasingUpgrades,
+        BackToMine,
       };
 
       union AiStateInternal {
@@ -66,11 +80,23 @@ namespace ld {
           int32_t targetTileX = 0, targetTileY = 0;
 
           bool wantsToSurface = false;
+          int32_t waitTimer = 0;
+        };
+
+        struct Idling {
+        };
+
+        struct Surfaced {
+          AiStateSurfaced state = AiStateSurfaced::Surfacing;
+
+          int32_t waitTimer = -1;
         };
 
         Mining     mining;
         Attacking  attacking;
         Traversing traversing;
+        Idling     idling;
+        Surfaced   surfaced;
       };
 
       AiState aiState;
@@ -88,5 +114,7 @@ namespace ld {
       static MinerGroup Initialize();
 
       static void Update(ld::GameState & state);
+
+      void TransitionMiner(size_t idx, bool isCurrentlySurfaced);
   };
 }

@@ -91,11 +91,12 @@ void ld::Overlay::Update(ld::GameState & game)
     {
         game.gold -= game.minerCost;
         game.minerGroup.miners.push_back({
-            .xPosition = 300
+            .minerId = game.minerGroup.miners.size(),
+            .xPosition = 300,
         });
-        game.minerGroup.surfacedMiners.push_back(
+        game.minerGroup.surfacedMiners.push_back({
             game.minerGroup.miners.size() - 1
-        );
+        });
     }
 
     auto bluePrintBtn = buttons.at("BluePrints");

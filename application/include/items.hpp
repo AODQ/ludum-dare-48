@@ -6,6 +6,8 @@
 #include <cstdint>
 
 namespace ld {
+
+  // if this changes, must update below and in miner.hpp inventory
   enum class ItemType {
     Pickaxe1,
     Pickaxe2,
@@ -31,7 +33,9 @@ namespace ld {
       { .type = ld::ItemType::Armor,    .value = 5'000 },
     }};
 
+  // if this changes, must update below and in miner.hpp cargo
   enum class ValuableType {
+    Stone,
     Tin,
     Food,
     Size,
@@ -51,9 +55,14 @@ namespace ld {
   constexpr std::array<ld::ValuableInfoLookup, Idx(ld::ValuableType::Size)>
     valuableInfoLookup = {{
       {
-        .type = ld::ValuableType::Tin,
+        .type = ld::ValuableType::Stone,
         .weightUnitMultiplier = 1.0f,
         .value = 1,
+        .currencyType = ld::ValuableCurrencyType::Gold,
+      }, {
+        .type = ld::ValuableType::Tin,
+        .weightUnitMultiplier = 1.0f,
+        .value = 10,
         .currencyType = ld::ValuableCurrencyType::Gold,
       }, {
         .type = ld::ValuableType::Food,
