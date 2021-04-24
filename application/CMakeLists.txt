@@ -11,6 +11,7 @@ target_sources(
     src/scene.cpp
     src/source.cpp
     src/camera.cpp
+    src/button.cpp
 )
 
 set_target_properties(
