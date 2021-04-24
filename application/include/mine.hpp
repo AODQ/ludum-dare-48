@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <stdint.h>
 #include <vector>
 
@@ -39,7 +40,10 @@ namespace ld {
     uint32_t columns;
     std::vector<ld::MineRock> rocks;
 
-    static ld::MineChasm Initialize();
+    static ld::MineChasm Initialize(
+      std::size_t columns = 30,
+      std::size_t rows    = 50
+    );
 
     ld::MineRock & rock(uint32_t rockId) { return rocks[rockId]; }
 
