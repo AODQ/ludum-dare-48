@@ -2,6 +2,7 @@
 
 #include <scene.hpp>
 #include <objects.hpp>
+#include <miner.hpp>
 
 #include <raylib.h>
 
@@ -21,17 +22,41 @@ typedef enum {
 
 struct GameState
 {
+    uint32_t food = 100;
+    uint32_t maxFood = 200;
+    uint32_t gold = 100;
+    uint32_t minerCost = 5;
+    size_t selection = -1;
     bool isPaused = false;
+
+    std::vector<Miner> miners;
 } game;
 
 void PauseScreen()
 {
-    int score = LoadStorageValue(eStorageScore);
-    int hiScore = LoadStorageValue(eStorageHiScore);
+    int score = ::LoadStorageValue(eStorageScore);
+    int hiScore = ::LoadStorageValue(eStorageHiScore);
 
-    DrawText(title, 150, 50, 50, BLACK);
-    DrawText(TextFormat("Score: %i\t Hi-Score: %i", score, hiScore), 150, 130, 30, BLACK);
-    DrawText("PRESS [TAB] TO RESUME", 100, 170, 30, GRAY);
+    //::DrawText(title, 150, 50, 50, BLACK);
+    ::DrawText(TextFormat("Score: %i\t Hi-Score: %i", score, hiScore), 150, 130, 30, BLACK);
+    ::DrawText("PRESS [TAB] TO RESUME", 100, 170, 30, GRAY);
+}
+
+void GameOverScreen()
+{
+
+}
+
+// Displays miner info and player overlay
+void Overlay()
+{
+    uint32_t height = 30;
+    // Food supply bar
+    ::DrawRectangle     (150, 50, game.food,    height, RED);
+    ::DrawRectangleLines(150, 50, game.maxFood, height, DARKGRAY);
+    ::DrawText("Food", 220, 50, 30, MAROON);
+
+    // Miner info
 }
 
 void Entry() {
@@ -177,7 +202,10 @@ void Entry() {
 
       Scene_Render(scene);
 
-      if (game.isPaused) { PauseScreen(); }
+      Overlay();
+      if (game.isPaused) {
+        PauseScreen();
+      }
     EndDrawing();
   }
 
