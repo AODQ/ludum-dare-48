@@ -48,7 +48,7 @@ void Entry() {
 
     // -- render
     BeginDrawing();
-      ClearBackground(RAYWHITE);
+      ClearBackground(BLACK);
 
       ld::RenderScene(gameState);
 
