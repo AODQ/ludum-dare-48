@@ -27,11 +27,21 @@ void ld::MinerGroup::Update(ld::GameState & state) {
 
     if (rock.isMined()) {
       miner.aiStateInternal.mining.targetRockId += 1;
+      continue;
     }
 
     // TODO path to the rock
     miner.xPosition = state.mineChasm.rockPositionX(rockId)*32.0f;
-    miner.yPosition = state.mineChasm.rockPositionY(rockId)*32.0f - 32.0f;
+    miner.yPosition = state.mineChasm.rockPositionY(rockId)*32.0f - 8.0f;
+
+    if (miner.animationState != ld::Miner::AnimationState::Mining) {
+      miner.animationState = ld::Miner::AnimationState::Mining;
+      miner.animationIdx = 0;
+    }
+
+    if ((miner.animationIdx + 5) % (4 * 60) < miner.animationIdx) {
+      rock.receiveDamage(-1);
+    }
   }
 
   // TODO update durability

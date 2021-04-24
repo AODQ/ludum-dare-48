@@ -30,6 +30,9 @@ namespace ld {
     int32_t durability;
 
     bool isMined() const { return this->tier == ld::RockTier::Mined; }
+
+    // returns if this destroyed rock
+    bool receiveDamage(int32_t damage);
   };
 
   struct MineChasm {
