@@ -36,7 +36,6 @@ void PauseScreen()
 {
     int score = ::LoadStorageValue(eStorageScore);
     int hiScore = ::LoadStorageValue(eStorageHiScore);
-
     //::DrawText(title, 150, 50, 50, BLACK);
     ::DrawText(TextFormat("Score: %i\t Hi-Score: %i", score, hiScore), 150, 130, 30, BLACK);
     ::DrawText("PRESS [TAB] TO RESUME", 100, 170, 30, GRAY);
@@ -50,11 +49,19 @@ void GameOverScreen()
 // Displays miner info and player overlay
 void Overlay()
 {
+    // TODO create generic button with centering text
+    uint32_t xPos = 150;
+    uint32_t yPos = 50;
+    uint32_t width = game.maxFood;
     uint32_t height = 30;
+    uint32_t fontSize = 20;
+    const char* text = TextFormat("Food %i/%i", game.food, game.maxFood);
+
+    int textWidth = ::MeasureText(text, fontSize);
     // Food supply bar
-    ::DrawRectangle     (150, 50, game.food,    height, RED);
-    ::DrawRectangleLines(150, 50, game.maxFood, height, DARKGRAY);
-    ::DrawText("Food", 220, 50, 30, MAROON);
+    ::DrawRectangle     (xPos, yPos, game.food   , height, RED);
+    ::DrawRectangleLines(xPos, yPos, width, height, DARKGRAY);
+    ::DrawText(text, xPos + 0.5f*(width - textWidth), yPos, fontSize, BLACK);
 
     // Miner info
 }
