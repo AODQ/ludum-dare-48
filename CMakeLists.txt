@@ -23,11 +23,6 @@ set(
   "${CMAKE_CXX_FLAGS} -Os -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY"
 )
 
-set(
-  CMAKE_CXX_FLAGS
-  "${CMAKE_CXX_FLAGS} -s MAX_WEBGL_VERSION=2"
-)
-
 # Since WASM is used, ALLOW_MEMORY_GROWTH has no extra overheads
 set(
   CMAKE_CXX_FLAGS
