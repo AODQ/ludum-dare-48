@@ -26,8 +26,6 @@ struct GameState
     uint32_t minerCost = 5;
     size_t selection = -1;
     bool isPaused = false;
-
-    std::vector<Miner> miners;
 } game;
 
 void PauseScreen()
@@ -70,17 +68,21 @@ void Entry() {
 
   TraceLog(LOG_INFO, "Initializing scene");
 
+  // -- scene setup
   ld::Camera camera;
 
   ld::RenderInitialize();
   auto mineChasm = ld::MineChasm::Initialize();
+  auto minerGroup = ld::MinerGroup::Initialize();
 
+  // -- start loop
   TraceLog(LOG_INFO, "entering loop");
   while (!WindowShouldClose()) {
     if (IsKeyPressed(KEY_TAB)) { game.isPaused ^= 1; }
 
     // -- update
     if (!game.isPaused) {
+      minerGroup.Update();
     }
 
     // -- misc updates
@@ -90,7 +92,7 @@ void Entry() {
     BeginDrawing();
       ClearBackground(RAYWHITE);
 
-      ld::RenderScene(mineChasm, camera);
+      ld::RenderScene(mineChasm, minerGroup, camera);
 
       Overlay();
       if (game.isPaused) {

@@ -6,6 +6,7 @@ target_sources(
   ludum-dare-client
   PRIVATE
     src/mine.cpp
+    src/miner.cpp
     src/renderer.cpp
     src/scene.cpp
     src/source.cpp

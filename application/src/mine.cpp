@@ -14,10 +14,9 @@ ld::MineChasm ld::MineChasm::Initialize()
   for (size_t i = 0; i < self.rocks.size(); ++ i) {
     auto & rock = self.rocks[i];
 
-    rock.type =
-      static_cast<ld::RockType>(::GetRandomValue(0, Idx(RockType::Size)-1));
+    rock.type = static_cast<ld::RockType>(i / 500);
     rock.tier =
-      static_cast<ld::RockTier>(::GetRandomValue(0, Idx(RockTier::Size)-1));
+      static_cast<ld::RockTier>(::GetRandomValue(0, Idx(RockTier::Mined)-1));
     rock.gem  = ld::RockGemType::Empty;
 
     rock.durability = 10;

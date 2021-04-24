@@ -7,8 +7,9 @@
 // fwd
 struct Texture;
 using Texture2D = Texture;
-namespace ld { struct MineRenderer; }
 namespace ld { struct Camera; }
+namespace ld { struct MineRenderer; }
+namespace ld { struct MinerGroup; }
 
 namespace ld {
 
@@ -16,6 +17,8 @@ namespace ld {
 
   enum class TextureType {
     Rock,
+    Miner,
+    SurfacedFg,
     Size,
   };
 
@@ -24,7 +27,8 @@ namespace ld {
   // -- mine renderer
   void RenderScene(
     ld::MineChasm const & mineChasm
-  , ld::Camera & camera
+  , ld::MinerGroup const & minerGroup
+  , ld::Camera const & camera
   );
 
   // -- initialize/shutdown

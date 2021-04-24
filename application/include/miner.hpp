@@ -1,27 +1,61 @@
 #pragma once
 
+#include <enum.hpp>
+#include <items.hpp>
+
 #include <raylib.h>
-#include <string>
+
 #include <array>
+#include <string>
+#include <vector>
 
-struct Item {
-    std::string name;
-    uint32_t value;
-};
+namespace ld {
 
-struct Miner {
-    uint32_t xPosition = 0, yPosition = 0;
-    uint32_t width = 10, height = 10;
-    uint32_t energy = 100;
-    std::array<Item, 9> inventory;
+  struct Miner {
+      // position is in texels, not tiles
+      int32_t xPosition = 0, yPosition = 0;
+      int32_t energy = 100;
+      std::array<ld::Item, Idx(ld::ItemType::Size)> inventory = {{
+        { .type = ld::ItemType::Pickaxe1, .owns = false },
+        { .type = ld::ItemType::Pickaxe2, .owns = false },
+        { .type = ld::ItemType::Armor,    .owns = false },
+      }};
 
-    ::Rectangle GetBounds() {
-        ::Rectangle bounds = {
-            static_cast<float>(xPosition),
-            static_cast<float>(yPosition),
-            static_cast<float>(width),
-            static_cast<float>(height),
-        };
-        return bounds;
-    }
-};
+      uint32_t cargoCapacity = 100u;
+      std::array<ld::Valuable, Idx(ld::ValuableType::Size)> cargo = {{
+        {
+          .type = ld::ValuableType::Tin,
+          .ownedUnits = 0,
+        }, {
+          .type = ld::ValuableType::Food,
+          .ownedUnits = 0,
+        },
+      }};
+
+      // this syncs with the miner.png file vertically
+      enum class AnimationState {
+        Travelling,
+        Mining,
+        Fighting,
+        Idling,
+      };
+
+      AnimationState animationState = AnimationState::Idling;
+
+      // this syncs with the miner.png file horizontally, scaled by 60Hz
+      int32_t animationIdx = 0;
+
+      bool isSurfaced = true;
+  };
+
+  struct MinerGroup {
+      std::vector<ld::Miner> miners;
+
+      std::vector<size_t> surfacedMiners; // interacting w/ surface
+      std::vector<size_t> chasmMiners; // mining down in the chasm
+
+      static MinerGroup Initialize();
+
+      void Update();
+  };
+}

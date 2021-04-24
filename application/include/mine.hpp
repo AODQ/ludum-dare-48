@@ -5,11 +5,13 @@
 
 namespace ld {
 
+  // this since with the rocks.png file vertically
   enum class RockType {
     Sand, Dirt, Rock, Gravel,
     Size,
   };
 
+  // this since with the rocks.png file horizontally
   enum class RockTier {
     Base1, Base2, Hard, Mined,
     Size,
