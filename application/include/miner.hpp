@@ -18,7 +18,9 @@ namespace ld {
       // position is in texels, not tiles
       int32_t xPosition = 0, yPosition = 0;
       int32_t prevXPosition = 0, prevYPosition = 0;
-      int32_t energy = 5;
+      int32_t maxEnergy = 1'000;
+      int32_t energy = 500;
+      int32_t foodToEnergyRatio = 100;
       std::array<ld::Item, Idx(ld::ItemType::Size)> inventory = {{
         { .type = ld::ItemType::Pickaxe1, .owns = false },
         { .type = ld::ItemType::Pickaxe2, .owns = false },
@@ -60,13 +62,22 @@ namespace ld {
       // this syncs with the miner.png file horizontally, scaled by 60Hz
       int32_t animationIdx = 0;
 
+      void applyAnimationState(ld::Miner::AnimationState const state) {
+        auto & self = *this;
+        if (self.animationState != state) {
+          self.animationState = state;
+          self.animationIdx = 0;
+        }
+      }
+
       enum class AiState {
-        Mining,
         Attacking,
-        Traversing,
-        Idling,
-        Surfaced,
         Dying,
+        Idling,
+        MineTraversing,
+        Mining,
+        Surfaced,
+        Traversing,
       };
 
       enum class AiStateSurfaced {
@@ -77,7 +88,9 @@ namespace ld {
         BackToMine,
       };
 
-      union AiStateInternal {
+      // struct, not a union, in order to preserve memory to chain commands
+      // like mine -> mineTraversing
+      struct AiStateInternal {
         struct Mining {
           int32_t targetRockId = 0;
         };
@@ -93,6 +106,11 @@ namespace ld {
           int32_t waitTimer = 0;
         };
 
+        struct MineTraversing {
+          std::vector<::Vector2> path;
+          size_t pathIdx;
+        };
+
         struct Idling {
         };
 
@@ -105,12 +123,13 @@ namespace ld {
           int32_t waitTimer = -1;
         };
 
-        Mining     mining;
-        Attacking  attacking;
-        Traversing traversing;
-        Idling     idling;
-        Surfaced   surfaced;
-        Dying      dying;
+        Attacking      attacking;
+        Dying          dying;
+        Idling         idling;
+        MineTraversing mineTraversing;
+        Mining         mining;
+        Surfaced       surfaced;
+        Traversing     traversing;
       };
 
       AiState aiState;

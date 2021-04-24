@@ -93,7 +93,7 @@ ld::MineChasm ld::MineChasm::Initialize(
         rock.tier = ld::RockTier::Mined;
       }
 
-      rock.durability = 10;
+      rock.durability = 1;
     }
   }
 

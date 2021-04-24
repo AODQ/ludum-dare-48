@@ -33,5 +33,9 @@ namespace ld {
 
         uint32_t scrWidth, scrHeight;
         ButtonGroup buttons;
+
+        // current gold/food that interpolates to game state's gold
+        int32_t currentGold = 0;
+        int32_t currentFood = 0;
     };
 }
