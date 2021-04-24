@@ -13,3 +13,9 @@ template <typename EnumType>
 constexpr typename std::underlying_type<EnumType>::type & Idx(EnumType & v) {
   return reinterpret_cast<typename std::underlying_type<EnumType>::type &>(v);
 }
+
+namespace ld {
+  template <typename T> int sgn(T val) {
+      return (T(0) < val) - (val < T(0));
+  }
+}

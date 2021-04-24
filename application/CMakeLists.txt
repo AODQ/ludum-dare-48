@@ -12,6 +12,7 @@ target_sources(
     src/overlay.cpp
     src/renderer.cpp
     src/scene.cpp
+    src/sounds.cpp
     src/source.cpp
 )
 

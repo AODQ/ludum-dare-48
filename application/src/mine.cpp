@@ -65,7 +65,7 @@ bool ld::MineRock::receiveDamage(int32_t damage) {
   // -abs(damage)
   if (damage < 0) damage = -damage;
 
-  durability = std::min(0, durability - damage);
+  durability = std::max(0, durability - damage);
   if (durability == 0) {
     self.tier = RockTier::Mined;
   }

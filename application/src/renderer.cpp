@@ -108,5 +108,25 @@ void ld::RenderScene(ld::GameState const & state)
     }
   }
 
+  { // -- render surface miners
+    for (auto & minerIdx : state.minerGroup.surfacedMiners) {
+      auto & miner = state.minerGroup.miners[minerIdx];
+      ::DrawTextureRec(
+        ld::TextureGet(ld::TextureType::Miner)
+      , ::Rectangle {
+          .x = static_cast<float>(miner.animationIdx / 60) * 16.0f,
+          .y = static_cast<float>(miner.animationState) * 16.0f,
+          .width = 16.0f,
+          .height = 16.0f,
+        }
+      , ::Vector2{
+          static_cast<float>(miner.xPosition),
+          static_cast<float>(miner.yPosition) - state.camera.y
+        }
+      , Color { 255, 255, 255, 255 }
+      );
+    }
+  }
+
   // render enemies TODO
 }
