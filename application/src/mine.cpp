@@ -20,6 +20,20 @@ namespace
   {
     return (n2 * f) + (n1 * (1.f - f));
   }
+
+  template<typename... T> constexpr auto average(T... vs)
+  {
+    return (0.f + ... + vs) / static_cast<float>(sizeof...(vs));
+  }
+
+  constexpr float vertGrade(float z, float maxZ, float value)
+  {
+    return (
+      (z < maxZ / 2)
+      ? lerp(  0.f, value, ((z             ) / (maxZ / 2)))
+      : lerp(value,   1.f, ((z - (maxZ / 2)) / (maxZ / 2)))
+    );
+  }
 }
 
 
@@ -39,15 +53,13 @@ ld::MineChasm ld::MineChasm::Initialize(
     for (std::size_t col = 0; col < columns; ++col) {
       const auto i = row * columns + col;
       auto& rock = self.rocks[i];
-      auto nv = (
-          reinterpret_cast<const ::Color*>(pn1.data)[i].r / 256.f
-        + reinterpret_cast<const ::Color*>(cn1.data)[i].r / 256.f
-      ) / 2.f;
-
-      nv = (
-        (row < rows / 2)
-        ? lerp(0.f,  nv, (static_cast<float>(row             ) / (rows / 2)))
-        : lerp(nv , 1.f, (static_cast<float>(row - (rows / 2)) / (rows / 2)))
+      auto nv = vertGrade(
+        row,
+        rows,
+        average(
+          reinterpret_cast<const ::Color*>(pn1.data)[i].r / 256.f,
+          reinterpret_cast<const ::Color*>(cn1.data)[i].r / 256.f
+        )
       );
 
       rock.type = static_cast<ld::RockType>(
