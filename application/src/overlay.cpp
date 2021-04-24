@@ -37,7 +37,7 @@ void ld::Overlay::GameOverScreen()
 
 }
 
-void ld::Overlay::BlueprintsMenu(ld::GameState & game)
+void ld::Overlay::BlueprintsMenu(ld::GameState & /*game*/)
 {
     // Update gamestate current available level of equipment
 }
@@ -90,13 +90,7 @@ void ld::Overlay::Update(ld::GameState & game)
     if (buyMinerBtn.IsClicked())
     {
         game.gold -= game.minerCost;
-        game.minerGroup.miners.push_back({
-            .minerId = game.minerGroup.miners.size(),
-            .xPosition = 300,
-        });
-        game.minerGroup.surfacedMiners.push_back({
-            game.minerGroup.miners.size() - 1
-        });
+        game.minerGroup.addMiner();
     }
 
     auto bluePrintBtn = buttons.at("BluePrints");

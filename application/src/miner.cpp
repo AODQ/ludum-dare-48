@@ -8,10 +8,7 @@
 ld::MinerGroup ld::MinerGroup::Initialize() {
   ld::MinerGroup self;
 
-  self.miners.push_back({.minerId = 0, .xPosition = 400,}); // push a default
-
-  self.surfacedMiners = {};
-  self.chasmMiners = { 0 }; // put default miner in the chasm
+  self.addMiner();
 
   return self;
 }
@@ -107,7 +104,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState) {
       if (state.wantsToSurface) {
         // surfacing miner
         miner.aiState = ld::Miner::AiState::Surfaced;
-        gameState.minerGroup.TransitionMiner(miner.minerId, false);
+        gameState.minerGroup.transitionMiner(miner.minerId, false);
         miner.aiStateInternal.surfaced.state =
           ld::Miner::AiStateSurfaced::Surfacing;
         miner.aiStateInternal.surfaced.waitTimer = -1;
@@ -182,15 +179,15 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState) {
       miner.moveTowards(700, -100);
       if (miner.xPosition == 700 && miner.yPosition == -100) {
         miner.aiState = ld::Miner::AiState::Idling;
-        gameState.minerGroup.TransitionMiner(miner.minerId, true);
-        miner.xPosition = 300;
-        miner.yPosition = 20;
+        gameState.minerGroup.transitionMiner(miner.minerId, true);
+        miner.xPosition = ::GetRandomValue(100, 700);
+        miner.yPosition = ::GetRandomValue(10, 30);
       }
     break;
   }
 }
 
-void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
+void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & /*gameState*/)
 {
   miner.animationState = ld::Miner::AnimationState::Idling;
 }
@@ -236,7 +233,7 @@ void ld::MinerGroup::Update(ld::GameState & state) {
   // TODO update inventoy
 }
 
-void ld::MinerGroup::TransitionMiner(size_t minerId, bool isCurrentlySurfaced)
+void ld::MinerGroup::transitionMiner(size_t minerId, bool isCurrentlySurfaced)
 {
   auto & self = *this;
 
@@ -263,4 +260,28 @@ void ld::MinerGroup::TransitionMiner(size_t minerId, bool isCurrentlySurfaced)
   originMiners->erase(originMiners->begin() + surfacedMinerIdx);
 
   // TODO assert that there's no missing miners in any of the containers
+}
+
+void ld::MinerGroup::addMiner()
+{
+  auto & self = *this;
+
+  auto id = self.miners.size();
+
+  self.miners.push_back(
+    ld::Miner {
+      .minerId = id,
+      .xPosition = 700,
+      .yPosition = -100,
+      .aiState = ld::Miner::AiState::Surfaced,
+      .aiStateInternal = {
+        .surfaced = {
+          .state = ld::Miner::AiStateSurfaced::Surfacing,
+          .waitTimer = -1,
+        },
+      },
+    }
+  );
+
+  self.surfacedMiners.emplace_back(id);
 }

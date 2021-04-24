@@ -119,6 +119,8 @@ namespace ld {
 
       static void Update(ld::GameState & state);
 
-      void TransitionMiner(size_t idx, bool isCurrentlySurfaced);
+      void transitionMiner(size_t idx, bool isCurrentlySurfaced);
+
+      void addMiner();
   };
 }
