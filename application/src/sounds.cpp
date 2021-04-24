@@ -12,33 +12,33 @@ namespace { std::array<::Sound, Idx(ld::SoundType::Size)> sounds; }
 
 void ld::SoundInitialize()
 {
-  ::InitAudioDevice();
+  /* ::InitAudioDevice(); */
 
-  ::SetMasterVolume(100.0f);
+  /* ::SetMasterVolume(100.0f); */
 
   TraceLog(LOG_INFO, "audio ready? %d", ::IsAudioDeviceReady());
 
 
-  sounds[Idx(ld::SoundType::RockHit)] =
-    ::LoadSound("resources/rock-break1.ogg");
+  /* sounds[Idx(ld::SoundType::RockHit)] = */
+  /*   ::LoadSound("resources/rock-break1.ogg"); */
 
-  stream = ::LoadMusicStream("resources/audio.xm");
-  ::PlayMusicStream(stream);
+  /* stream = ::LoadMusicStream("resources/audio.xm"); */
+  /* ::PlayMusicStream(stream); */
 }
 
 void ld::SoundShutdown()
 {
   // TODO
-  ::CloseAudioDevice();
+  /* ::CloseAudioDevice(); */
 }
 
 void ld::SoundUpdate()
 {
-  ::UpdateMusicStream(stream);
+  /* ::UpdateMusicStream(stream); */
 }
 
 void ld::SoundPlay(ld::SoundType const type, float const volume)
 {
   /* ::PlaySoundMulti(sounds[Idx(type)]); */
-  ::PlaySound(sounds[Idx(type)]);
+  /* ::PlaySound(sounds[Idx(type)]); */
 }
