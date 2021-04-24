@@ -72,3 +72,5 @@ install(
   DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT core
 )
+
+file(COPY "resources/"  DESTINATION "resources/")

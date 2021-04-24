@@ -27,8 +27,9 @@ target_link_libraries(
 set_target_properties(
   ludum-dare-client
   PROPERTIES
-    LINK_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../resources"
+    LINK_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../resources@resources"
 )
+
 
 install(
   TARGETS ludum-dare-client
