@@ -13,36 +13,23 @@ void ld::Camera::Update() {
   }
 
   // snap surface
-  if (self.y > -128.0f && self.y < 0.0f && self.yVelocity == 0.0f) {
+  if (self.y > -32.0f && self.y < 0.0f && self.yVelocity == 0.0f) {
     self.y = 0.0f;
-  }
-
-  // check if user wants to goto surface
-  if (!surfaceSnapped && self.y < -64.0f) {
-    self.y = -612.0f;
-    surfaceSnapped = true;
-    self.yVelocity = 0.0f;
-    self.surfaceSnapCooldown = 0.1f;
   }
 
   self.yVelocity += GetMouseWheelMove()*16.0f;
 
-  // check if user wants to go into chasm
-  if (surfaceSnapped && self.yVelocity < 0.0f) {
-    self.y = 0.0f;
-    surfaceSnapped = false;
-    self.yVelocity = 0.0f;
-    self.surfaceSnapCooldown = 0.1f;
-  }
+  self.y -= self.yVelocity;
 
-
-  // make sure user cant see above surface limit
-  if (surfaceSnapped) {
+  if (self.y < -612.0f) {
+    self.y = -612.0f;
     self.yVelocity = fmin(self.yVelocity, 0.0f);
   }
 
-  self.y -= self.yVelocity;
-
   if (abs(self.yVelocity) < 1.0f) self.yVelocity = 0.0f;
-  self.yVelocity *= 0.85f;
+
+  if (self.y < 0.0f)
+    self.yVelocity *= 0.95f;
+  else
+    self.yVelocity *= 0.85f;
 }

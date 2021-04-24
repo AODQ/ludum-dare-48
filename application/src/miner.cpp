@@ -71,6 +71,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
     if (miner.currentCargoCapacity >= miner.cargoCapacity) {
       miner.aiState = ld::Miner::AiState::Traversing;
       miner.aiStateInternal.traversing.wantsToSurface = true;
+      miner.aiStateInternal.traversing.waitTimer = -1;
       miner.aiStateInternal.traversing.targetTileX = 20;
       miner.aiStateInternal.traversing.targetTileY = 0;
     }
@@ -94,7 +95,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState) {
     miner.xPosition == state.targetTileX && miner.yPosition == state.targetTileY
   ) {
     if (state.waitTimer < 0) {
-      state.waitTimer = 60 * 5; // 5 second wait
+      state.waitTimer = 30 * 1; // 0.5 second wait
       miner.animationState = ld::Miner::AnimationState::Idling;
       miner.animationIdx = 0;
     }
@@ -104,7 +105,6 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState) {
       if (state.wantsToSurface) {
         // surfacing miner
         miner.aiState = ld::Miner::AiState::Surfaced;
-        gameState.minerGroup.transitionMiner(miner.minerId, false);
         miner.aiStateInternal.surfaced.state =
           ld::Miner::AiStateSurfaced::Surfacing;
         miner.aiStateInternal.surfaced.waitTimer = -1;
@@ -179,7 +179,6 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState) {
       miner.moveTowards(700, -100);
       if (miner.xPosition == 700 && miner.yPosition == -100) {
         miner.aiState = ld::Miner::AiState::Idling;
-        gameState.minerGroup.transitionMiner(miner.minerId, true);
         miner.xPosition = ::GetRandomValue(100, 700);
         miner.yPosition = ::GetRandomValue(10, 30);
       }
@@ -190,6 +189,11 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState) {
 void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & /*gameState*/)
 {
   miner.animationState = ld::Miner::AnimationState::Idling;
+
+  miner.animationIdx = 0;
+  miner.animationState = ld::Miner::AnimationState::Travelling;
+  miner.aiState = ld::Miner::AiState::Mining;
+  miner.aiStateInternal.mining = {};
 }
 
 } // -- namespace
@@ -233,35 +237,6 @@ void ld::MinerGroup::Update(ld::GameState & state) {
   // TODO update inventoy
 }
 
-void ld::MinerGroup::transitionMiner(size_t minerId, bool isCurrentlySurfaced)
-{
-  auto & self = *this;
-
-  std::vector<size_t> * originMiners, * destinationMiners;
-  if (isCurrentlySurfaced) {
-    originMiners = &self.surfacedMiners;
-    destinationMiners = &self.chasmMiners;
-  } else {
-    originMiners = &self.chasmMiners;
-    destinationMiners = &self.surfacedMiners;
-  }
-
-  size_t surfacedMinerIdx = 0;
-  for (; surfacedMinerIdx < originMiners->size(); ++ surfacedMinerIdx) {
-    if (self.surfacedMiners[surfacedMinerIdx] == minerId) { break; }
-  }
-
-  if (surfacedMinerIdx == self.surfacedMiners.size()) {
-    TraceLog(LOG_ERROR, "Trying to transition miner but couldn't find ID");
-    return;
-  }
-
-  destinationMiners->push_back(minerId);
-  originMiners->erase(originMiners->begin() + surfacedMinerIdx);
-
-  // TODO assert that there's no missing miners in any of the containers
-}
-
 void ld::MinerGroup::addMiner()
 {
   auto & self = *this;
@@ -282,6 +257,4 @@ void ld::MinerGroup::addMiner()
       },
     }
   );
-
-  self.surfacedMiners.emplace_back(id);
 }

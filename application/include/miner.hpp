@@ -112,14 +112,9 @@ namespace ld {
   struct MinerGroup {
       std::vector<ld::Miner> miners;
 
-      std::vector<size_t> surfacedMiners; // interacting w/ surface
-      std::vector<size_t> chasmMiners; // mining down in the chasm
-
       static MinerGroup Initialize();
 
       static void Update(ld::GameState & state);
-
-      void transitionMiner(size_t idx, bool isCurrentlySurfaced);
 
       void addMiner();
   };
