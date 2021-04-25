@@ -20,6 +20,7 @@ namespace ld
         }
 
         void Draw(const char* text);
+        bool IsHovered();
         bool IsClicked();
 
         uint32_t xPos, yPos;

@@ -70,11 +70,55 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
     ld::DrawCenteredText("Research", x+w*0.5f, y, 20, ::BLACK);
 
     // Upgrade Buttons
+    uint32_t btnWidth = 75;
+    uint32_t btnHeight = 75;
+    const uint32_t numButtons = 4;
+    uint32_t padding = w / numButtons;
+    uint32_t xOffset = x + (padding-btnWidth)*0.5f; // Increment with padding as we add more elements
 
-    // Close button
-    uint32_t btnWidth = 50;
-    uint32_t btnHeight = 30;
-    ld::Button closeBtn(x + 0.5f*(w-btnWidth), y+h-btnHeight, btnWidth, btnHeight, 15, ::WHITE);
+    std::vector<ld::Button> upgBtns;
+    for (size_t i = 0; i < numButtons; ++i)
+    {
+        upgBtns.push_back(ld::Button(xOffset, y + 100, btnWidth, btnHeight, 15, ::WHITE));
+        xOffset+=padding;
+    }
+
+    std::vector<std::string> descriptions =
+    {
+        "Increase pickaxe power and durability",
+        "Increase armor defense and durability",
+        "Increase food to energy ratio",
+        "Increase vision distance in fog of war",
+    };
+
+    // TODO replace with texture icons
+    std::vector<std::string> icon =
+    {
+        "Pickaxe",
+        "Armor",
+        "Food",
+        "Vision",
+    };
+
+    std::string desc = "Hover over each button to learn more";
+    for (size_t i = 0; i < numButtons; ++i)
+    {
+        upgBtns[i].Draw(icon[i].c_str());
+        if (upgBtns[i].IsHovered())
+        {
+            desc = descriptions[i];
+        }
+        if (upgBtns[i].IsClicked())
+        {
+            // Decrement gold
+            // Increase level
+        }
+    }
+    // Description of upgrade
+    ld::DrawCenteredText(desc.c_str(), x+w*0.5f, y + 200, 20, ::BLACK);
+
+    // -- Close
+    ld::Button closeBtn(x + 0.5f*(w-btnWidth), y+h-30, 50, 30, 15, ::WHITE);
     closeBtn.Draw("Close");
     if (closeBtn.IsClicked())
     {
