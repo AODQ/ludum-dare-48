@@ -74,10 +74,9 @@ namespace { // generate passes
   // grade rock tiers in each column
   void GenerateTiers(ld::MineChasm& self)
   {
-    // TODO: make this more noisy
     const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
     const auto ps = perlinSize(self);
-    auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 20.f);
+    auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 100.f);
 
     for (uint32_t col = 0; col < self.columns; ++col) {
       uint32_t topRow = 0;
@@ -94,7 +93,7 @@ namespace { // generate passes
                 (Idx(ld::RockTier::Size) - 2) * vertGrade(
                   i - topRow,
                   row - topRow,
-                  fval(perlin, col, row)
+                  fval(perlin, col, i)
                 )
               )
             );
