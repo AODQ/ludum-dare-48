@@ -111,14 +111,14 @@ void ld::pathFind(
               )
             ].isMined()
           ) {
-            pathValue[directionIt] -= 5'000;
+            pathValue[directionIt] -= 50'000;
           }
         }
       }
     }
 
     int32_t selectedPath = -1;
-    int32_t selectedPathMaxValue = INT32_MIN;
+    int32_t selectedPathMaxValue = -500;
     for (int32_t pathIt = 0; pathIt < 4; ++ pathIt) {
       if (pathValue[pathIt] > selectedPathMaxValue) {
         selectedPath = pathIt;

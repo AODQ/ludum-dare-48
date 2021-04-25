@@ -285,20 +285,7 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
 
   if (target.isMined()) { return 0; }
 
-  int32_t value = 0;
-  switch (target.type) {
-    default: break;
-    case ld::RockType::Sand:   value -= 50;  break;
-    case ld::RockType::Dirt:   value -= 100;  break;
-    case ld::RockType::Rock:   value -= 250;  break;
-    case ld::RockType::Gravel: value -= 350; break;
-  }
-
-  switch (target.tier) {
-    default: break;
-    case ld::RockTier::Base1: case ld::RockTier::Base2: break;
-    case ld::RockTier::Hard: value -= 100;
-  }
+  int32_t value = -target.durability;
 
   switch (target.gem) {
     default: break;
