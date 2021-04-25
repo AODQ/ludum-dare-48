@@ -240,8 +240,10 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     static size_t cycle = 0;
     std::string idleText = "Idle: " + std::to_string(idleMiners.size());
     idleBtn.Draw(idleText.c_str(), 10);
-    if (idleBtn.IsClicked() && !idleMiners.empty())
-    {
+    if (
+        (::IsKeyPressed(KEY_SPACE) || idleBtn.IsClicked())
+        && !idleMiners.empty()
+    ) {
         // wrap cycle first in case it corresponds to an invalid index within the list
         cycle = (cycle+1) % idleMiners.size();
         game.minerSelection = idleMiners.at(cycle);
