@@ -321,7 +321,7 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
 
   auto const & target = self.rock(self.rockId(x, y));
 
-  if (self.rockFow[rockId] <= 0.5f) { return 2.0f; } // unknown
+  if (self.rockFow[rockId] <= 0.05f) { return 2.0f; } // unknown
 
   if (target.isMined()) { return 1.0f; }
 
@@ -336,7 +336,7 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
     case ld::RockGemType::Sapphire: value -= 1500; break;
   }
 
-  return std::clamp(1.0f + value / 100.0f, 0.5f, 20.0f);
+  return std::clamp(1.0f + value / 20.0f, 0.5f, 20.0f);
 }
 
 void ld::MineChasm::Update(ld::GameState & state)

@@ -12,11 +12,11 @@ namespace ld {
   {
       bool showCursor = true;
 
-      int32_t food = 100;
+      int32_t food = 500;
       int32_t gold = 100;
       int32_t MaxFood() const {
         size_t idx = static_cast<size_t>(ld::ResearchType::Food);
-        return 200 + researchItems[idx].level*100;
+        return 500 + researchItems[idx].level*1000;
       }
 
       uint32_t foodEatTimer = 60 * 5;
