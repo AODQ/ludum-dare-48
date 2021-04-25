@@ -44,6 +44,7 @@ void Entry() {
     if (!gameState.isPaused) {
       ld::MinerGroup::Update(gameState);
       ld::MobGroup::Update(gameState);
+      ld::MineChasm::Update(gameState);
       overlay.Update(gameState);
     }
 

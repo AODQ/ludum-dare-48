@@ -5,6 +5,7 @@
 #include <vector>
 
 namespace ld { struct MobGroup; }
+namespace ld { struct GameState; }
 
 namespace ld {
 
@@ -41,6 +42,13 @@ namespace ld {
   struct MineChasm {
     uint32_t columns;
     std::vector<ld::MineRock> rocks;
+    std::vector<float> rockFow;
+
+    template <typename T>
+    uint8_t fowU8(T const & thing) const {
+      float x = rockFow[(thing.positionY/32)*columns + thing.positionY/32];
+      return static_cast<uint8_t>(x > 1.0f ? 255 : (x < 0.0f ? 0 : x*255.0f));
+    }
 
     static ld::MineChasm Initialize(
       ld::MobGroup & group,
@@ -58,5 +66,7 @@ namespace ld {
     int32_t rockPositionY(uint32_t rockId) const { return rockId / columns; }
 
     int32_t rockPathValue(int32_t x, int32_t y) const;
+
+    static void Update(ld::GameState & state);
   };
 }

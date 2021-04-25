@@ -78,6 +78,15 @@ void ld::RenderScene(ld::GameState const & state)
         y = it / state.mineChasm.columns
       ;
 
+      uint8_t fow =
+        static_cast<int8_t>(
+          std::clamp(
+            state.mineChasm.rockFow[it]*255.0f,
+            0.0f,
+            255.0f
+          )
+        );
+
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Rock)
       , ::Rectangle {
@@ -87,7 +96,7 @@ void ld::RenderScene(ld::GameState const & state)
           .height = 32.0f,
         }
       , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
-      , Color { 255, 255, 255, 255 }
+      , { fow, fow, fow, 255 }
       );
 
       if (!rock.isMined() && rock.gem != ld::RockGemType::Empty) {
@@ -109,7 +118,7 @@ void ld::RenderScene(ld::GameState const & state)
             .height = 32.0f,
           }
         , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
-        , Color { 255, 255, 255, 255 }
+        , Color { fow, fow, fow, 255 }
         );
       }
     }
@@ -191,6 +200,8 @@ void ld::RenderScene(ld::GameState const & state)
         ::Vector2 { 4, 0, },
       };
 
+      uint8_t const fow = state.mineChasm.fowU8(slime);
+
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
       , ::Rectangle {
@@ -203,7 +214,7 @@ void ld::RenderScene(ld::GameState const & state)
           static_cast<float>(slime.positionX),
           static_cast<float>(slime.positionY) - state.camera.y
         }
-      , Color { 255, 255, 255, 255 }
+      , Color { fow, fow, fow, 255 }
       );
     }
 
@@ -212,6 +223,8 @@ void ld::RenderScene(ld::GameState const & state)
         ::Vector2 { 4, 3, },
         ::Vector2 { 4, 4, },
       };
+
+      uint8_t const fow = state.mineChasm.fowU8(cloud);
 
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
@@ -225,7 +238,7 @@ void ld::RenderScene(ld::GameState const & state)
           static_cast<float>(cloud.positionX),
           static_cast<float>(cloud.positionY) - state.camera.y
         }
-      , Color { 255, 255, 255, 255 }
+      , Color { fow, fow, fow, 255 }
       );
     }
   }

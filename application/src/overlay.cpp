@@ -167,6 +167,13 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
         uint32_t fontSize = 20;
 
         const char* text = ::TextFormat("Food: %i/%i", game.food, game.maxFood);
+
+        ld::DrawBar(
+          text, xPos, yPos, width, height, fontSize,
+          Color{100, 40, 55, 255},
+          1.0f
+        );
+
         ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::RED, static_cast<float>(game.food)/static_cast<float>(game.maxFood));
     }
 
