@@ -1,6 +1,37 @@
 #include <button.hpp>
 #include <overlay.hpp>
 
+void ld::Button::DrawTexture(const char* text, ::Texture2D texture, uint32_t spriteRow, uint32_t spriteCol, ::Color tint, bool isInteractable)
+{
+    if (isInteractable) {
+        if (IsPressedDown()) {
+            tint = ::Fade(::DARKBLUE, 0.8f);
+        }
+        else if (IsHovered()) {
+            tint = ::Fade(Color{0, 255, 255, 255}, 0.5f);
+        }
+    }
+
+    ::DrawTextureRec(
+      texture
+      , ::Rectangle {
+        .x = static_cast<float>(spriteCol) * 32.0f,
+        .y = static_cast<float>(spriteRow) * 32.0f,
+        .width = 32.0f,
+        .height = 32.0f,
+      }
+      , ::Vector2{
+          static_cast<float>(xPos),
+          static_cast<float>(yPos)
+        }
+      , tint
+    );
+
+    int fontSize = 10;
+    int textWidth = ::MeasureText(text, fontSize);
+    ld::DrawOutlinedText(text, xPos + 0.5f*(width - textWidth), yPos + 0.5f*(height-fontSize), 10, ::WHITE, ::BLACK);
+}
+
 void ld::Button::Draw(const char* text, uint32_t fontSize)
 {
     int textWidth = ::MeasureText(text, fontSize);

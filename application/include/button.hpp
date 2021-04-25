@@ -19,6 +19,7 @@ namespace ld
             };
         }
 
+        void DrawTexture(const char* text, ::Texture2D texture, uint32_t spriteCol, uint32_t spriteRow, ::Color tint = ::WHITE, bool isInteractable = false);
         void Draw(const char* text, uint32_t fontSize = 10);
         bool IsHovered();
         bool IsPressedDown();

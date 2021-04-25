@@ -1,4 +1,5 @@
 #include <overlay.hpp>
+#include <renderer.hpp> // Texture info
 
 typedef enum {
     eStorageScore = 0,
@@ -127,10 +128,8 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
                     game.researchItems[i].level++;
                 }
             }
-            const char* text = ::TextFormat("lvl:%i %iG", game.researchItems[i].level, cost);
 
-            // TODO draw text icon
-            upgBtns[i].Draw(text, 3);
+            upgBtns[i].DrawTexture("", ld::TextureGet(ld::TextureType::Misc), i, 0, ::WHITE, true);
 
             // Draw upgrade bars
             uint32_t maxUpgrades = 10;
@@ -144,7 +143,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
                 ::DrawRectangleLines(barPosX, barPosY, barWidth, upgBtns[i].height, researchColor[i]);
                 barPosX += barWidth;
             }
-            const char* barText = ::TextFormat("%s Level: %i", game.researchItems[i].name.c_str(), game.researchItems[i].level);
+            const char* barText = ::TextFormat("%s Level:%i, Cost:%iG", game.researchItems[i].name.c_str(), game.researchItems[i].level, cost);
             ld::DrawOutlinedText(barText, barPosX + 10, barPosY + 0.5f*(upgBtns[i].height-10), 10, researchColor[i], ::BLACK);
         }
 
@@ -345,17 +344,19 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         uint32_t btnSize = 30;
         float xPadding = w / 3.0f;
         uint32_t xOffset = x + 0.5f*(xPadding - btnSize);
+
+        int i = 0;
         for (auto equip : miner.inventory) {
-            // TODO display texture and darken if not owned
-            ::Color color = ::DARKGRAY;
+            ::Color tint = ::DARKGRAY;
             if (equip.owns) {
-                color = ::WHITE;
+                tint = ::WHITE;
             }
 
-            ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, color);
-            // TODO replace with texture
-            itemBtn.Draw("TODO", 10);
+            ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, tint);
+            itemBtn.DrawTexture("", ld::TextureGet(ld::TextureType::Misc), i, 1, tint);
             xOffset += xPadding;
+
+            i++;
         }
     }
 
@@ -372,7 +373,16 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
             // TODO display texture
             ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, ::WHITE);
             // Display count of item
-            itemBtn.Draw(std::to_string(miner.cargo[it].ownedUnits).c_str(), 10);
+            auto itemCount = miner.cargo[it].ownedUnits;
+            Color tint = itemCount > 0
+                ? ::WHITE
+                : ::Fade(::DARKGRAY, 0.5f)
+            ;
+            itemBtn.DrawTexture(
+                std::to_string(miner.cargo[it].ownedUnits).c_str(),
+                ld::TextureGet(ld::TextureType::Rock), it, 2, tint
+            );
+
             xOffset += xPadding;
             cargoValue += miner.cargo[it].ownedUnits* ld::valuableInfoLookup[it].value;
         }
