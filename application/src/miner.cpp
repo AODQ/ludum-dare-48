@@ -95,8 +95,8 @@ void MinerPickLocation(
 
     if (previousTileX > targetTileX) pathValue[0] = 250;
     if (previousTileX < targetTileX) pathValue[1] = 250;
-    if (previousTileY < targetTileY) pathValue[2] = 500;
-    if (previousTileY > targetTileY) pathValue[3] = 550;
+    if (previousTileY < targetTileY) pathValue[2] = 250;
+    if (previousTileY > targetTileY) pathValue[3] = 250;
 
     if (previousTileX - 1 < 0)
       pathValue[0] = -55000;
@@ -104,12 +104,6 @@ void MinerPickLocation(
       pathValue[1] = -55000;
     if (previousTileY - 1 < 0)
       pathValue[3] = -55000;
-
-    // down is always better
-    pathValue[2] += 50;
-
-    // up is always slightly worse
-    pathValue[3] += -50;
 
     for (auto & path : pathValue)
       path += ::GetRandomValue(-20, 80);
@@ -212,10 +206,6 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
     miner.aiState = ld::Miner::AiState::MineTraversing;
     return;
   }
-
-  // TODO path to the rock
-  miner.xPosition = state.mineChasm.rockPositionX(rockId)*32.0f;
-  miner.yPosition = state.mineChasm.rockPositionY(rockId)*32.0f - 8.0f;
 
   miner.applyAnimationState(ld::Miner::AnimationState::Mining);
 
@@ -321,7 +311,7 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
         static_cast<float>(miner.xPosition),
         static_cast<float>(miner.yPosition),
       },
-      24.0f,
+      8.0f,
       rect
     )
   ) {
