@@ -93,7 +93,7 @@ void Entry() {
 
   // -- start loop
   TraceLog(LOG_INFO, "entering loop");
-  emscripten_set_main_loop(UpdateFrame, 0, 1);
+  emscripten_set_main_loop(UpdateFrame, 60, true);
 
     TraceLog(LOG_INFO, "Closing window\n");
 
