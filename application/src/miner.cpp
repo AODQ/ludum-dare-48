@@ -51,6 +51,107 @@ void ld::Miner::kill()
 }
 
 namespace {
+
+void MinerPickLocation(
+  ld::Miner & miner,
+  int32_t const targetTileX,
+  int32_t const targetTileY,
+  ld::GameState const & gameState
+) {
+
+  miner.aiState = ld::Miner::AiState::MineTraversing;
+  auto & state = miner.aiStateInternal.mineTraversing;
+  state.path.clear();
+  state.pathIdx = 0;
+
+  // *very* naive path finder
+  // these miners are DUMB! and very near-sighted!
+  /*
+
+       build a cone in a direction to pick
+
+            *
+          * *
+      X * * *
+          * *
+            *
+  */
+  int32_t previousTileX = static_cast<int32_t>(miner.xPosition / 32.0f);
+  int32_t previousTileY = static_cast<int32_t>(miner.yPosition / 32.0f);
+  for (size_t i = 0; i < 4ul; ++ i) {
+
+    struct PossLocs {
+      int32_t x, y;
+    };
+
+    constexpr std::array<PossLocs, 4> directions = {{
+      { -1, 0 }, { +1, 0 }, {  0, +1 }, {  0, -1 },
+    }};
+
+    std::array<int32_t, 4> pathValue = {{ 0, 0, 0, 0, }};
+
+    if (previousTileX > targetTileX) pathValue[0] = 500;
+    if (previousTileX < targetTileX) pathValue[1] = 500;
+    if (previousTileY < targetTileY) pathValue[2] = 500;
+    if (previousTileY > targetTileY) pathValue[3] = 500;
+
+    for (size_t directionIt = 0ul; directionIt < 4ul; ++ directionIt) {
+      auto const direction = directions[directionIt];
+      constexpr std::array<PossLocs, 9> offsets = {{
+        { +1, 0 }, { +2,  0 }, { +3,  0 },
+                   { +2, +1 }, { +3, +2 },
+                   { +2, -1 }, { +3, -2 },
+                               { +3, +2 },
+                               { +3, -2 },
+      }};
+
+      for (auto const offset : offsets) {
+        // transform cone into local space
+        int32_t pickTileX =
+           direction.x == -1 ? -offset.x
+        : (direction.x == +1 ?  offset.x
+        : (direction.y == -1 ? -offset.y
+        :                       offset.y
+        ));
+
+        int32_t pickTileY =
+           direction.x == -1 ? -offset.y
+        : (direction.x == +1 ?  offset.y
+        : (direction.y == -1 ? -offset.x
+        :                       offset.x
+        ));
+
+        // transform cone into global space & select rock
+        pathValue[directionIt] +=
+          gameState.mineChasm.rockPathValue(
+            previousTileX+pickTileX,
+            previousTileY+pickTileY
+          );
+      }
+    }
+
+    int32_t selectedPath = 0;
+    int32_t selectedPathMaxValue = 0;
+    for (int32_t pathIt = 0; pathIt < 4; ++ pathIt) {
+      if (pathValue[pathIt] > selectedPathMaxValue) {
+        selectedPath = pathIt;
+        selectedPathMaxValue = pathValue[pathIt];
+      }
+    }
+
+    int32_t newTileX = previousTileX + directions[selectedPath].x;
+    int32_t newTileY = previousTileY + directions[selectedPath].y;
+
+    state.path.push_back(
+      ::Vector2{static_cast<float>(newTileX), static_cast<float>(newTileY)}
+    );
+
+    previousTileX = newTileX;
+    previousTileY = newTileY;
+  }
+}
+
+
 void UpdateMinerCargo(ld::Miner & miner) {
   miner.currentCargoCapacity = 0;
   for (size_t it = 0u; it < miner.cargo.size(); ++ it) {
@@ -144,11 +245,32 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
   auto & state = miner.aiStateInternal.mineTraversing;
 
   if (state.pathIdx >= state.path.size()) {
-    miner.aiState = ld::Miner::AiState::Traversing;
-    miner.aiStateInternal.traversing.wantsToSurface = true;
-    miner.aiStateInternal.traversing.waitTimer = -1;
-    miner.aiStateInternal.traversing.targetTileX = 20;
-    miner.aiStateInternal.traversing.targetTileY = 0;
+
+    if (state.hasHitTarget) {
+      miner.aiState = ld::Miner::AiState::Traversing;
+      miner.aiStateInternal.traversing.wantsToSurface = true;
+      miner.aiStateInternal.traversing.waitTimer = -1;
+      miner.aiStateInternal.traversing.targetTileX = 20;
+      miner.aiStateInternal.traversing.targetTileY = 0;
+      return;
+    }
+
+    MinerPickLocation(
+      miner,
+      state.targetTileX,
+      state.targetTileY,
+      gameState
+    );
+
+    // if no path was selected just leave
+    if (state.path.size() == 0) {
+      miner.aiState = ld::Miner::AiState::Traversing;
+      miner.aiStateInternal.traversing.wantsToSurface = true;
+      miner.aiStateInternal.traversing.waitTimer = -1;
+      miner.aiStateInternal.traversing.targetTileX = 20;
+      miner.aiStateInternal.traversing.targetTileY = 0;
+      return;
+    }
   }
 
   auto & path = state.path[state.pathIdx];
@@ -178,10 +300,15 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
       miner.aiState = ld::Miner::AiState::Mining;
       miner.aiStateInternal.mining.targetRockId = rockId;
     }
+
+    if (state.targetTileX == path.x && state.targetTileY == path.y) {
+      state.hasHitTarget = true;
+    }
   }
 }
 
-void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState) {
+void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
+{
   auto & state = miner.aiStateInternal.surfaced;
   switch (state.state) {
     case ld::Miner::AiStateSurfaced::Surfacing:
@@ -272,27 +399,19 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState) {
   }
 }
 
-void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & /*gameState*/)
+void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
 {
   miner.animationState = ld::Miner::AnimationState::Idling;
 
   miner.animationIdx = 0;
   miner.animationState = ld::Miner::AnimationState::Travelling;
   miner.aiState = ld::Miner::AiState::MineTraversing;
-  int32_t startX = static_cast<int32_t>(miner.xPosition / 32.0f);
-  miner.aiStateInternal.mineTraversing = {
-    .path = {
-      ::Vector2{static_cast<float>(startX), 0.0f},
-      ::Vector2{static_cast<float>(startX), 1.0f},
-      ::Vector2{static_cast<float>(startX), 2.0f},
-      ::Vector2{static_cast<float>(startX), 3.0f},
-      ::Vector2{static_cast<float>(startX), 4.0f},
-      ::Vector2{static_cast<float>(startX), 5.0f},
-      ::Vector2{static_cast<float>(startX), 6.0f},
-      ::Vector2{static_cast<float>(startX), 7.0f},
-    },
-    .pathIdx = 0
-  };
+  miner.aiStateInternal.mineTraversing.path.clear();
+  miner.aiStateInternal.mineTraversing.pathIdx = 0;
+  miner.aiStateInternal.mineTraversing.targetTileX =
+    ::GetRandomValue(0, 29);
+  miner.aiStateInternal.mineTraversing.targetTileY =
+    ::GetRandomValue(4, 8);
 }
 
 } // -- namespace
@@ -358,13 +477,25 @@ void ld::MinerGroup::addMiner()
       .minerId = id,
       .xPosition = 700,
       .yPosition = -100,
+
+      // TODO this is for debug
       .aiState = ld::Miner::AiState::Surfaced,
       .aiStateInternal = {
         .surfaced = {
-          .state = ld::Miner::AiStateSurfaced::Surfacing,
+          .state = ld::Miner::AiStateSurfaced::BackToMine,
           .waitTimer = -1,
         },
       },
+
+
+      // TODO use below on release
+      /* .aiState = ld::Miner::AiState::Surfaced, */
+      /* .aiStateInternal = { */
+      /*   .surfaced = { */
+      /*     .state = ld::Miner::AiStateSurfaced::Surfacing, */
+      /*     .waitTimer = -1, */
+      /*   }, */
+      /* }, */
     }
   );
 }

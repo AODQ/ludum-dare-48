@@ -149,3 +149,37 @@ bool ld::MineRock::receiveDamage(int32_t damage) {
 
   return self.isMined();
 }
+
+int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
+  auto & self = *this;
+
+  auto const & target = self.rock(self.rockId(x, y));
+
+  if (target.isMined()) { return 100; }
+
+  int32_t value = 0;
+  switch (target.type) {
+    default: break;
+    case ld::RockType::Sand:   value += 5;  break;
+    case ld::RockType::Dirt:   value -= 5;  break;
+    case ld::RockType::Rock:   value -= 25; break;
+    case ld::RockType::Gravel: value -= 50; break;
+  }
+
+  switch (target.tier) {
+    default: break;
+    case ld::RockTier::Base1: case ld::RockTier::Base2: break;
+    case ld::RockTier::Hard: value -= 5;
+  }
+
+  switch (target.gem) {
+    default: break;
+    case ld::RockGemType::Empty: break;
+    case ld::RockGemType::Tin:      value += 10; break;
+    case ld::RockGemType::Ruby:     value += 100; break;
+    case ld::RockGemType::Emerald:  value += 250; break;
+    case ld::RockGemType::Sapphire: value += 500; break;
+  }
+
+  return value;
+}
