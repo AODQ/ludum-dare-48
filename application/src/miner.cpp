@@ -13,13 +13,13 @@ ld::MinerGroup ld::MinerGroup::Initialize() {
   return self;
 }
 
-void ld::Miner::moveTowards(int32_t x, int32_t y)
+void ld::Miner::moveTowards(int32_t x, int32_t y, uint32_t speed)
 {
   auto & self = *this;
   self.prevXPosition = self.xPosition;
   self.prevYPosition = self.yPosition;
 
-  for (int i = 0; i < 1; ++ i) {
+  for (uint32_t i = 0; i < speed; ++ i) {
     self.xPosition -= ld::sgn(self.xPosition - x);
     self.yPosition -= ld::sgn(self.yPosition - y);
   }
@@ -225,10 +225,10 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
   }
 }
 
-void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & /*gameState*/)
+void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
 {
   auto & state = miner.aiStateInternal.traversing;
-  miner.moveTowards(state.targetTileX, state.targetTileY);
+  miner.moveTowards(state.targetTileX, state.targetTileY, gameState.MinerSpeed());
 
   miner.applyAnimationState(ld::Miner::AnimationState::Travelling);
 
@@ -298,7 +298,7 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
   auto & path = state.path[state.pathIdx];
 
   miner.applyAnimationState(ld::Miner::AnimationState::Travelling);
-  miner.moveTowards(path.x*32.0f, path.y*32.0f);
+  miner.moveTowards(path.x*32.0f, path.y*32.0f, gameState.MinerSpeed());
 
   ::Rectangle rect = {
     .x = path.x*32.0f, .y = path.y*32.0f,
@@ -353,7 +353,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       state.waitTimer -= 1;
     break;
     case ld::Miner::AiStateSurfaced::MovingToBase:
-      miner.moveTowards(200, -100);
+      miner.moveTowards(200, -100, gameState.MinerSpeed());
 
       if (miner.animationFinishesThisFrame()) {
         miner.reduceEnergy(5);
@@ -418,7 +418,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       }
     } break;
     case ld::Miner::AiStateSurfaced::BackToMine:
-      miner.moveTowards(700, -100);
+      miner.moveTowards(700, -100, gameState.MinerSpeed());
       if (miner.xPosition == 700 && miner.yPosition == -100) {
         miner.aiState = ld::Miner::AiState::Idling;
         miner.xPosition = ::GetRandomValue(100, 700);

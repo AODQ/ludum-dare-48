@@ -22,6 +22,11 @@ namespace ld {
         return 60 * (5 + researchItems[idx].level);
       }
 
+      uint32_t MinerSpeed() const {
+        size_t idx = static_cast<size_t>(ld::ResearchType::Speed);
+        return 1 + researchItems[idx].level;
+      }
+
       uint32_t minerCost = 5;
       int32_t minerSelection = -1;
       bool isPaused = false;
