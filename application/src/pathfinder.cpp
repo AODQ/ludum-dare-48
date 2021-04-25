@@ -52,7 +52,8 @@ public:
 
       adjacent->push_back(micropather::StateCost {
         .state = reinterpret_cast<void *>(&rock),
-        .cost = rock.isMined() ? 1.0f : 3.0f,
+        .cost =
+          rock.isMined() ? 1.0f : gameState->mineChasm.rockPathValue(x, y), 
       });
     }
   }
