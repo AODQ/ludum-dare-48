@@ -47,7 +47,8 @@ void Entry() {
       ld::MineChasm::Update(gameState);
       overlay.Update(gameState);
 
-      gameState.foodEatTimer = (gameState.foodEatTimer - 1);
+      int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 5 : 1;
+      gameState.foodEatTimer = (gameState.foodEatTimer - foodDecTimer);
       if (gameState.foodEatTimer <= 0) {
         gameState.foodEatTimer = 60*5;
         gameState.food -= 1;
