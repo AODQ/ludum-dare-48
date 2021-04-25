@@ -44,6 +44,11 @@ void ld::MobGroup::Update(ld::GameState & state)
       );
     }
 
+    if (slime.pathSize <= slime.pathIdx) {
+      slime.pathIdx = 0;
+      continue;
+    }
+
     auto & path = slime.path[slime.pathIdx];
 
     slime.positionX -= ld::sgn(slime.positionX - path.x*32.0f);
