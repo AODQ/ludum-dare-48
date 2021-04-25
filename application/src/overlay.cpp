@@ -173,7 +173,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
                 action += "Idling";
                 break;
             case Miner::AiState::MineTraversing:
-                action += "MineTraversing";
+                action += "Traversing";
                 break;
             case Miner::AiState::Mining:
                 action += "Mining";
