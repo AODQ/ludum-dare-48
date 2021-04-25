@@ -46,7 +46,7 @@ namespace ld {
 
     template <typename T>
     uint8_t fowU8(T const & thing) const {
-      float x = rockFow[(thing.positionY/32)*columns + thing.positionY/32];
+      float x = rockFow[(thing.positionY/32)*columns + thing.positionX/32];
       return static_cast<uint8_t>(x > 1.0f ? 255 : (x < 0.0f ? 0 : x*255.0f));
     }
 

@@ -63,7 +63,6 @@ void MinerPickLocation(
   auto & state = miner.aiStateInternal.mineTraversing;
   state.path.clear();
   state.pathIdx = 0;
-  state.hasHitTarget = false;
 
   // *very* naive path finder
   // these miners are DUMB! and very near-sighted!
@@ -157,15 +156,6 @@ void MinerPickLocation(
         }
       }
     }
-
-    TraceLog(LOG_INFO, "path <%d, %d> -> <%d, %d> (left %d) (right %d) (down %d) (up %d)",
-      previousTileX, previousTileY,
-      targetTileX, targetTileY,
-      pathValue[0],
-      pathValue[1],
-      pathValue[2],
-      pathValue[3]
-      );
 
     int32_t selectedPath = -1;
     int32_t selectedPathMaxValue = INT32_MIN;
@@ -302,10 +292,10 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
       state.targetTileY,
       gameState
     );
-    state.hasHitTarget = false;
 
     // if no path was selected just leave
     if (state.path.size() == 0) {
+      miner.aiStateInternal.mineTraversing.hasHitTarget = true;
       miner.aiState = ld::Miner::AiState::Traversing;
       miner.aiStateInternal.traversing.wantsToSurface = true;
       miner.aiStateInternal.traversing.waitTimer = -1;
@@ -402,6 +392,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         hasSold = true;
 
         cargo.ownedUnits -= 1;
+        UpdateMinerCargo(miner);
         gameState.gold += ld::valuableInfoLookup[Idx(cargo.type)].value;
       }
 
@@ -440,10 +431,8 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       miner.moveTowards(700, -100);
       if (miner.xPosition == 700 && miner.yPosition == -100) {
         miner.aiState = ld::Miner::AiState::Idling;
-        /* miner.xPosition = ::GetRandomValue(100, 700); */
-        /* miner.yPosition = ::GetRandomValue(10, 30); */
-        miner.xPosition = 400;
-        miner.yPosition = 16;
+        miner.xPosition = ::GetRandomValue(100, 700);
+        miner.yPosition = ::GetRandomValue(10, 30);
       }
     break;
   }
@@ -452,6 +441,14 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
 void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
 {
   miner.animationState = ld::Miner::AnimationState::Idling;
+
+  if (!miner.aiStateInternal.mineTraversing.hasHitTarget) {
+    miner.animationIdx = 0;
+    miner.animationState = ld::Miner::AnimationState::Travelling;
+    miner.aiState = ld::Miner::AiState::MineTraversing;
+    miner.aiStateInternal.mineTraversing.path.clear();
+    miner.aiStateInternal.mineTraversing.pathIdx = 0;
+  }
 
   // draw
   if (miner.minerId == gameState.minerSelection) {

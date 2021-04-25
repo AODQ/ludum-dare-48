@@ -147,6 +147,7 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
     }
 
     currentFood -= ld::sgn(currentFood - game.food);
+
     // Food supply bar
     {
         uint32_t xPos = 275;
@@ -157,10 +158,15 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
 
         const char* text = ::TextFormat("Food: %i/%i", game.food, game.maxFood);
 
-        ld::DrawBar(
-          text, xPos, yPos, width, height, fontSize,
-          Color{100, 40, 55, 255},
-          1.0f
+        ::DrawRectangle(
+          xPos, yPos, width, height,
+          Color{100, 40, 55, 255}
+        );
+
+        ::DrawRectangle(
+          xPos, yPos - height/2 + 8,
+          width * (game.foodEatTimer / (60.0f*5.0f)), 5,
+          BLUE
         );
 
         ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::RED, static_cast<float>(game.food)/static_cast<float>(game.maxFood));
@@ -204,7 +210,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
     uint32_t y = scrHeight - h - 20;
 
     // Root Menu panel
-    DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.8f));
+    ::DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.8f));
 
     // Increment as we go to get padding between the last element
     uint32_t padding = 0;

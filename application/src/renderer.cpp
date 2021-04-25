@@ -126,6 +126,60 @@ void ld::RenderScene(ld::GameState const & state)
 
   // render gems TODO
 
+  { // -- render mobs
+    // TODO optimize
+    for (auto & slime : state.mobGroup.slimes) {
+      constexpr std::array<::Vector2, Idx(ld::RockGemType::Size)> offsets = {
+        ::Vector2 { 4, 0, },
+        ::Vector2 { 4, 1, },
+        ::Vector2 { 4, 2, },
+        ::Vector2 { 4, 1, },
+        ::Vector2 { 4, 0, },
+      };
+
+      uint8_t const fow = state.mineChasm.fowU8(slime);
+
+      ::DrawTextureRec(
+        ld::TextureGet(ld::TextureType::Miner)
+      , ::Rectangle {
+          .x = offsets[slime.animationIdx / 60].x * 16.0f,
+          .y = offsets[slime.animationIdx / 60].y * 16.0f,
+          .width = 16.0f,
+          .height = 16.0f,
+        }
+      , ::Vector2{
+          static_cast<float>(slime.positionX),
+          static_cast<float>(slime.positionY) - state.camera.y
+        }
+      , Color { fow, fow, fow, 255 }
+      );
+    }
+
+    for (auto & cloud : state.mobGroup.poisonClouds) {
+      constexpr std::array<::Vector2, Idx(ld::RockGemType::Size)> offsets = {
+        ::Vector2 { 4, 3, },
+        ::Vector2 { 4, 4, },
+      };
+
+      uint8_t const fow = state.mineChasm.fowU8(cloud);
+
+      ::DrawTextureRec(
+        ld::TextureGet(ld::TextureType::Miner)
+      , ::Rectangle {
+          .x = offsets[cloud.animationIdx / 60].x * 16.0f,
+          .y = offsets[cloud.animationIdx / 60].y * 16.0f,
+          .width = 16.0f,
+          .height = 16.0f,
+        }
+      , ::Vector2{
+          static_cast<float>(cloud.positionX),
+          static_cast<float>(cloud.positionY) - state.camera.y
+        }
+      , Color { fow, fow, fow, 255 }
+      );
+    }
+  }
+
   { // -- render miners
     // TODO optimize
     for (auto & miner : state.minerGroup.miners) {
@@ -189,57 +243,4 @@ void ld::RenderScene(ld::GameState const & state)
     }
   }
 
-  { // -- render mobs
-    // TODO optimize
-    for (auto & slime : state.mobGroup.slimes) {
-      constexpr std::array<::Vector2, Idx(ld::RockGemType::Size)> offsets = {
-        ::Vector2 { 4, 0, },
-        ::Vector2 { 4, 1, },
-        ::Vector2 { 4, 2, },
-        ::Vector2 { 4, 1, },
-        ::Vector2 { 4, 0, },
-      };
-
-      uint8_t const fow = state.mineChasm.fowU8(slime);
-
-      ::DrawTextureRec(
-        ld::TextureGet(ld::TextureType::Miner)
-      , ::Rectangle {
-          .x = offsets[slime.animationIdx / 60].x * 16.0f,
-          .y = offsets[slime.animationIdx / 60].y * 16.0f,
-          .width = 16.0f,
-          .height = 16.0f,
-        }
-      , ::Vector2{
-          static_cast<float>(slime.positionX),
-          static_cast<float>(slime.positionY) - state.camera.y
-        }
-      , Color { fow, fow, fow, 255 }
-      );
-    }
-
-    for (auto & cloud : state.mobGroup.poisonClouds) {
-      constexpr std::array<::Vector2, Idx(ld::RockGemType::Size)> offsets = {
-        ::Vector2 { 4, 3, },
-        ::Vector2 { 4, 4, },
-      };
-
-      uint8_t const fow = state.mineChasm.fowU8(cloud);
-
-      ::DrawTextureRec(
-        ld::TextureGet(ld::TextureType::Miner)
-      , ::Rectangle {
-          .x = offsets[cloud.animationIdx / 60].x * 16.0f,
-          .y = offsets[cloud.animationIdx / 60].y * 16.0f,
-          .width = 16.0f,
-          .height = 16.0f,
-        }
-      , ::Vector2{
-          static_cast<float>(cloud.positionX),
-          static_cast<float>(cloud.positionY) - state.camera.y
-        }
-      , Color { fow, fow, fow, 255 }
-      );
-    }
-  }
 }
