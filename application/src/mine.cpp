@@ -134,7 +134,7 @@ namespace { // generate passes
           );
         }
         else {
-          rock.type = ld::RockType::Gravel;
+          rock.type = ld::RockType::Granite;
         }
       }
     }
@@ -310,10 +310,10 @@ int32_t ld::baseRockDurability(
   int32_t durability = 0;
   switch (type) {
     default: break;
-    case ld::RockType::Sand:   durability = 10;  break;
-    case ld::RockType::Dirt:   durability = 50;  break;
-    case ld::RockType::Rock:   durability = 150; break;
-    case ld::RockType::Gravel: durability = 500; break;
+    case ld::RockType::Sand:    durability = 10;  break;
+    case ld::RockType::Dirt:    durability = 50;  break;
+    case ld::RockType::Rock:    durability = 150; break;
+    case ld::RockType::Granite: durability = 500; break;
   }
 
   switch (tier) {
