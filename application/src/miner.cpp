@@ -61,12 +61,6 @@ void ld::Miner::kill()
 
 namespace {
 
-int32_t MinerTileValue(
-  ld::GameState const & state, int32_t tileX, int32_t tileY
-) {
-  return state.mineChasm.rockPathValue(tileX, tileY);
-}
-
 void MinerPickLocation(
   ld::Miner & miner,
   int32_t const targetTileX,
@@ -81,10 +75,9 @@ void MinerPickLocation(
   ld::pathFind(
     gameState,
     state.path, state.pathSize,
-    miner.xPosition, miner.yPosition,
+    miner.xPosition / 32, miner.yPosition / 32,
     targetTileX, targetTileY,
-    true, // can mine
-    &MinerTileValue
+    true // can mine
   );
 }
 
@@ -122,7 +115,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
 
   if (miner.animationFinishesThisFrame()) {
     miner.reduceEnergy(10);
-    rock.receiveDamage(-1);
+    rock.receiveDamage(-5);
     UpdateMinerInventory(miner, rock);
     ld::SoundPlay(ld::SoundType::RockHit);
 
@@ -235,8 +228,8 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
   ) {
     state.pathIdx += 1;
 
-    state.targetPosOffX = ::GetRandomValue(0, 32);
-    state.targetPosOffY = ::GetRandomValue(0, 32);
+    state.targetPosOffX = ::GetRandomValue(0, 16);
+    state.targetPosOffY = ::GetRandomValue(0, 16);
 
     auto rockId = gameState.mineChasm.rockId(path.x, path.y);
     auto & rock = gameState.mineChasm.rock(rockId);

@@ -7,6 +7,7 @@ target_sources(
   PRIVATE
     src/button.cpp
     src/camera.cpp
+    src/micropather.cpp
     src/mine.cpp
     src/miner.cpp
     src/mob.cpp

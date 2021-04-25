@@ -33,6 +33,8 @@ namespace ld {
     int32_t durability = 5u;
     int32_t baseDurability = 5u;
 
+    int32_t rockId = 0;
+
     bool isMined() const { return this->tier == ld::RockTier::Mined; }
 
     // returns if this destroyed rock

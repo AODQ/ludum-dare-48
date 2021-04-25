@@ -5,6 +5,7 @@
 #include <mob.hpp>
 #include <notifs.hpp>
 #include <overlay.hpp>
+#include <pathfinder.hpp>
 #include <renderer.hpp>
 #include <sounds.hpp>
 
@@ -33,6 +34,8 @@ void Entry() {
   gameState.mineChasm  = ld::MineChasm::Initialize(gameState.mobGroup);
   gameState.minerGroup = ld::MinerGroup::Initialize();
   ld::Overlay overlay(scrWidth, scrHeight);
+
+  ld::pathFindInitialize(&gameState);
 
   // -- start loop
   TraceLog(LOG_INFO, "entering loop");

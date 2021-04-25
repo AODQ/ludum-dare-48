@@ -7,17 +7,6 @@
 
 namespace {
 
-int32_t slimeTileValue(
-  ld::GameState const & state,
-  int32_t tileX, int32_t tileY
-) {
-  return
-      state.mineChasm.rocks[state.mineChasm.rockId(tileX, tileY)].isMined()
-    ? 0
-    : -50
-  ;
-}
-
 } // -- namespace
 
 void ld::MobGroup::Update(ld::GameState & state)
@@ -39,8 +28,7 @@ void ld::MobGroup::Update(ld::GameState & state)
         slime.path, slime.pathSize,
         slime.positionX/32, slime.positionY/32,
         slime.targetTileX, slime.targetTileY,
-        false, // cannot mine
-        slimeTileValue
+        false // cannot mine
       );
     }
 

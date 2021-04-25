@@ -3,13 +3,13 @@
 #include <enum.hpp>
 #include <gamestate.hpp>
 #include <mob.hpp>
+#include <pathfinder.hpp>
 
 #include <raylib.h>
 
 #include <algorithm>
 #include <cmath>    // round, floor
 #include <set>
-
 
 namespace {
   constexpr ld::MineRock basicDirt{
@@ -289,8 +289,10 @@ ld::MineChasm ld::MineChasm::Initialize(
 
   GenerateMobs (self, group, emptySpacesVec);
 
-  // compute durabilities
-  for (auto & rock : self.rocks) {
+  // compute durabilities & ids
+  for (uint32_t id = 0; id < self.rocks.size(); ++ id) {
+    auto & rock = self.rocks[id];
+    rock.rockId = id;
     rock.baseDurability = rock.durability =
       ld::baseRockDurability(rock.type, rock.tier, rock.gem);
   }
@@ -307,6 +309,7 @@ bool ld::MineRock::receiveDamage(int32_t damage) {
   durability = std::max(0, durability - damage);
   if (durability == 0) {
     self.tier = RockTier::Mined;
+    ld::pathClear();
   }
 
   return self.isMined();

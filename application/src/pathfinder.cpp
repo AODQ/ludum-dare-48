@@ -1,143 +1,120 @@
 #include <pathfinder.hpp>
 
 #include <gamestate.hpp>
+#include <micropather.hpp>
 
 #include <algorithm>
 #include <array>
 
-void ld::pathFind(
-  ld::GameState const & state,
-  std::array<::Vector2, 8> & path, size_t & pathSize,
-  int32_t const origTileX,   int32_t const origTileY,
-  int32_t const targetTileX, int32_t const targetTileY,
-  bool const canMine,
-  int32_t (*tileValue)(
-    ld::GameState const & state, int32_t tileX, int32_t tileY
-  )
-) {
-  // *very* naive path finder
-  // the AI are DUMB! and very near-sighted!
-  /*
+namespace {
+class GraphPathFinder : public micropather::Graph {
+public:
+  ld::GameState * gameState;
 
-       build a cone in a direction to pick
+  float LeastCostEstimate(void * stateStart, void * stateEnd) {
+    uint32_t startId = reinterpret_cast<ld::MineRock *>(stateStart)->rockId;
+    uint32_t endId   = reinterpret_cast<ld::MineRock *>(stateEnd)->rockId;
 
-            *
-          * *
-      X * * *
-          * *
-            *
-  */
-  int32_t previousTileX2 = 0;
-  int32_t previousTileY2 = 0;
-  int32_t previousTileX = static_cast<int32_t>(origTileX / 32.0f);
-  int32_t previousTileY = static_cast<int32_t>(origTileY / 32.0f);
+    int32_t startX = startId % 30, startY = startId / 30;
+    int32_t endX   = endId   % 30, endY   = endId   / 30;
 
-  pathSize = 0;
+    return std::abs(endX - startX) + std::abs(endY - startY);
+  }
 
-  for (size_t i = 0; i < 3ul; ++ i) {
-    struct PossLocs {
+  void AdjacentCost(void * state, MP_VECTOR<micropather::StateCost> * adjacent)
+  {
+    int32_t startId = reinterpret_cast<ld::MineRock *>(state)->rockId;
+    int32_t startX = startId % 30, startY = startId / 30;
+
+    // we add 4 adjacencies
+    struct Offsets {
       int32_t x, y;
     };
 
-    constexpr std::array<PossLocs, 4> directions = {{
+    constexpr std::array<Offsets, 4> offsets = {{
       { -1, 0 }, { +1, 0 }, {  0, +1 }, {  0, -1 },
     }};
 
-    std::array<int32_t, 4> pathValue = {{ 0, 0, 0, 0, }};
+    for (auto const offset : offsets) {
 
-    if (previousTileX > targetTileX) pathValue[0] = 250;
-    if (previousTileX < targetTileX) pathValue[1] = 250;
-    if (previousTileY < targetTileY) pathValue[2] = 450;
-    if (previousTileY > targetTileY) pathValue[3] = 450;
+      int32_t x = startX + offset.x;
+      int32_t y = startY + offset.y;
 
-    if (previousTileX - 1 < 0)
-      pathValue[0] = -55000;
-    if (previousTileX + 1 >= static_cast<int32_t>(state.mineChasm.columns))
-      pathValue[1] = -55000;
-    if (previousTileY - 1 < 0)
-      pathValue[3] = -55000;
-
-    for (auto & pathVal : pathValue)
-      pathVal += ::GetRandomValue(-20, 80);
-
-    for (size_t directionIt = 0ul; directionIt < 4ul; ++ directionIt) {
-      auto const direction = directions[directionIt];
-      constexpr std::array<PossLocs, 9> offsets = {{
-        { +1, 0 }, { +2,  0 }, { +3,  0 },
-                   { +2, +1 }, { +3, +2 },
-                   { +2, -1 }, { +3, -2 },
-                               { +3, +2 },
-                               { +3, -2 },
-      }};
-
-      for (auto const offset : offsets) {
-        // transform cone into local space
-        int32_t pickTileX =
-           direction.x == -1 ? -offset.x
-        : (direction.x == +1 ?  offset.x
-        : (direction.y == -1 ? -offset.y
-        :                       offset.y
-        ));
-
-        int32_t pickTileY =
-           direction.x == -1 ? -offset.y
-        : (direction.x == +1 ?  offset.y
-        : (direction.y == -1 ? -offset.x
-        :                       offset.x
-        ));
-
-        // transform cone into global space & select rock
-        pathValue[directionIt] +=
-          tileValue(
-            state,
-            previousTileX+pickTileX,
-            previousTileY+pickTileY
-          )
-          * (1.0f / (offset.x+offset.y));
-
-        if (
-            previousTileX+pickTileX == previousTileX2
-         && previousTileY+pickTileY == previousTileY2
-        ) {
-          pathValue[directionIt] -= 1000;
-        }
-
-        if (!canMine) {
-          if (
-            !state.mineChasm.rocks[
-              state.mineChasm.rockId(
-                previousTileX+pickTileX,
-                previousTileY+pickTileY
-              )
-            ].isMined()
-          ) {
-            pathValue[directionIt] -= 50'000;
-          }
-        }
+      if (x < 0 || x >= 30 || y < 0 || y > 250) {
+        continue;
       }
+
+      ld::MineRock & rock =
+        gameState->mineChasm.rock(startX + offset.x, startY + offset.y);
+
+      adjacent->push_back(micropather::StateCost {
+        .state = reinterpret_cast<void *>(&rock),
+        .cost = rock.isMined() ? 1.0f : 3.0f,
+      });
     }
-
-    int32_t selectedPath = -1;
-    int32_t selectedPathMaxValue = -500;
-    for (int32_t pathIt = 0; pathIt < 4; ++ pathIt) {
-      if (pathValue[pathIt] > selectedPathMaxValue) {
-        selectedPath = pathIt;
-        selectedPathMaxValue = pathValue[pathIt];
-      }
-    }
-
-    if (selectedPath == -1) { break; }
-
-    int32_t newTileX = previousTileX + directions[selectedPath].x;
-    int32_t newTileY = previousTileY + directions[selectedPath].y;
-
-    path[pathSize] =
-      ::Vector2{static_cast<float>(newTileX), static_cast<float>(newTileY)};
-    ++ pathSize;
-
-    previousTileX2 = previousTileX;
-    previousTileY2 = previousTileY;
-    previousTileX = newTileX;
-    previousTileY = newTileY;
   }
+
+  void PrintStateInfo(void * /*state*/)
+  {
+  }
+};
+
+GraphPathFinder graphMinable;
+GraphPathFinder graphUnminable;
+
+// couldnt use unique ptr here?
+micropather::MicroPather * patherMinable;
+micropather::MicroPather * patherUnminable;
+} // -- namespace
+
+void ld::pathFindInitialize(ld::GameState * state) {
+  graphMinable.gameState = state;
+  graphUnminable.gameState = state;
+
+  // couldnt use make_unique
+  patherMinable =
+    new micropather::MicroPather(micropather::MicroPather(&graphMinable));
+  patherUnminable =
+    new micropather::MicroPather(micropather::MicroPather(&graphUnminable));
+}
+
+void ld::pathFind(
+  ld::GameState const & state,
+  std::array<::Vector2, 32> & path, size_t & pathSize,
+  int32_t const origTileX,   int32_t const origTileY,
+  int32_t const targetTileX, int32_t const targetTileY,
+  bool const canMine
+) {
+  micropather::MPVector<void *> microPath;
+  auto & startTile = state.mineChasm.rock(origTileX, origTileY);
+  auto & endTile   = state.mineChasm.rock(targetTileX, targetTileY);
+
+
+  //  TODO limit the end tile to a radius of 32
+
+  float totalCost;
+
+  patherMinable->Solve(
+    reinterpret_cast<void *>(const_cast<ld::MineRock *>(&startTile)),
+    reinterpret_cast<void *>(const_cast<ld::MineRock *>(&endTile)),
+    &microPath,
+    &totalCost
+  );
+
+  (void) canMine;
+
+  pathSize = std::min(32u, microPath.size());
+  for (uint32_t i = 0u; i < pathSize; ++ i) {
+    uint32_t pathId = reinterpret_cast<ld::MineRock *>(microPath[i])->rockId;
+    path[i] =
+      ::Vector2{
+        static_cast<float>(pathId % 30),
+        static_cast<float>(pathId / 30)
+      };
+  }
+}
+
+void ld::pathClear() {
+  patherMinable->Reset();
+  patherUnminable->Reset();
 }

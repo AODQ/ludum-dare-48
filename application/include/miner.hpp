@@ -109,7 +109,7 @@ namespace ld {
         };
 
         struct MineTraversing {
-          std::array<::Vector2, 8> path;
+          std::array<::Vector2, 32> path;
           size_t pathIdx;
           size_t pathSize;
 
