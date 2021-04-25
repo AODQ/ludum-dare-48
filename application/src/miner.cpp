@@ -407,10 +407,10 @@ void ld::MinerGroup::Update(ld::GameState & state) {
         ::CheckCollisionPointCircle(
           mousePos,
           ::Vector2 {
-            static_cast<float>(miner.xPosition),
-            static_cast<float>(miner.yPosition) - state.camera.y,
+            miner.xPosition + 8.0f,
+            miner.yPosition + 8.0f - state.camera.y,
           },
-          32.0f
+          9.0f
         )
       ) {
         state.minerSelection = miner.minerId;
