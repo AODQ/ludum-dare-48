@@ -442,10 +442,11 @@ void ld::Overlay::Draw(ld::GameState & game)
         }
     }
 
+    ResourceMenu(game);
+
+    // Cursor should be drawn last
     if (game.showCursor)
     {
         ::DrawCircleV(GetMousePosition(), 2, RED);
     }
-
-    ResourceMenu(game);
 }
