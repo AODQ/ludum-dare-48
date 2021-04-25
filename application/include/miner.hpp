@@ -111,7 +111,7 @@ namespace ld {
           size_t pathIdx;
 
           int32_t targetTileX = 0, targetTileY = 0;
-          bool hasHitTarget = false;
+          bool hasHitTarget = true;
         };
 
         struct Idling {
