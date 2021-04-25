@@ -106,6 +106,7 @@ namespace { // generate passes
     ::UnloadImage(perlin);
   }
 
+  // basic earth pattern
   void GenerateEarth(ld::MineChasm& self)
   {
     const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
@@ -201,10 +202,30 @@ namespace { // generate passes
     }
   }
 
-  [[maybe_unused]]
-  void GenerateCaves(ld::MineChasm& /*self*/)
+  // add caves & caverns
+  void GenerateCaves(ld::MineChasm& self)
   {
+    const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
+    const auto ps = perlinSize(self);
+    auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 7.f);
+    auto cells  = ::GenImageCellular(self.columns, rows, 10);
 
+    for (uint32_t row = 0; row < rows; ++row) {
+      for (uint32_t col = 0; col < self.columns; ++col) {
+        auto& rock = self.rock(col, row);
+        const auto vv = average(
+          fval(perlin, col, row),
+          fval(cells , col, row)
+        );
+        if (vv < 0.3f) {
+          rock.tier = ld::RockTier::Mined;
+          rock.gem  = ld::RockGemType::Empty;
+        }
+      }
+    }
+
+    ::UnloadImage(perlin);
+    ::UnloadImage(cells );
   }
 
   void GenerateMobs(ld::MineChasm& /*self*/, ld::MobGroup & group)
