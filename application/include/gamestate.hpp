@@ -27,6 +27,11 @@ namespace ld {
         return 1 + researchItems[idx].level;
       }
 
+      uint32_t MaxCargoCapacity() const {
+        size_t idx = static_cast<size_t>(ld::ResearchType::Cargo);
+        return 5 + researchItems[idx].level;
+      }
+
       uint32_t minerCost = 5;
       int32_t minerSelection = -1;
       bool isPaused = false;

@@ -13,7 +13,7 @@ ld::MinerGroup ld::MinerGroup::Initialize() {
   return self;
 }
 
-void ld::Miner::moveTowards(int32_t x, int32_t y, uint32_t speed)
+void ld::Miner::moveTowards(int32_t x, int32_t y)
 {
   auto & self = *this;
   self.prevXPosition = self.xPosition;
@@ -228,7 +228,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
 void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
 {
   auto & state = miner.aiStateInternal.traversing;
-  miner.moveTowards(state.targetTileX, state.targetTileY, gameState.MinerSpeed());
+  miner.moveTowards(state.targetTileX, state.targetTileY);
 
   miner.applyAnimationState(ld::Miner::AnimationState::Travelling);
 
@@ -298,7 +298,7 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
   auto & path = state.path[state.pathIdx];
 
   miner.applyAnimationState(ld::Miner::AnimationState::Travelling);
-  miner.moveTowards(path.x*32.0f, path.y*32.0f, gameState.MinerSpeed());
+  miner.moveTowards(path.x*32.0f, path.y*32.0f);
 
   ::Rectangle rect = {
     .x = path.x*32.0f, .y = path.y*32.0f,
@@ -353,7 +353,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       state.waitTimer -= 1;
     break;
     case ld::Miner::AiStateSurfaced::MovingToBase:
-      miner.moveTowards(200, -100, gameState.MinerSpeed());
+      miner.moveTowards(200, -100);
 
       if (miner.animationFinishesThisFrame()) {
         miner.reduceEnergy(5);
@@ -418,7 +418,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       }
     } break;
     case ld::Miner::AiStateSurfaced::BackToMine:
-      miner.moveTowards(700, -100, gameState.MinerSpeed());
+      miner.moveTowards(700, -100);
       if (miner.xPosition == 700 && miner.yPosition == -100) {
         miner.aiState = ld::Miner::AiState::Idling;
         miner.xPosition = ::GetRandomValue(100, 700);
@@ -463,6 +463,15 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
 
 void ld::MinerGroup::Update(ld::GameState & state) {
   auto & self = state.minerGroup;
+
+  // Update miner stats based on upgrades
+  for (int64_t i = 0; i < self.miners.size(); ++ i) {
+    auto & miner = self.miners[i];
+    miner.cargoCapacity = state.MaxCargoCapacity();
+    miner.speed = state.MinerSpeed();
+    // Weapons
+    // Armor
+  }
 
   // selecting a miner via mouse click
   if (::IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
