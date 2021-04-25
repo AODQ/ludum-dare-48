@@ -18,6 +18,7 @@ namespace ld {
     Miner,
     SurfacedFg,
     Misc,
+    RockDamage,
     Size,
   };
 

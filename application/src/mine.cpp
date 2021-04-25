@@ -251,10 +251,16 @@ ld::MineChasm ld::MineChasm::Initialize(
   GenerateCaves(self);
   GenerateMobs (self, group);
 
-  // first row is walkable
-  for (uint32_t i = 0; i < columns; ++i) {
+  // first 2 rows is walkable
+  for (uint32_t i = 0; i < columns*2; ++i) {
     // self.rock(i).type = ld::RockType::Sand;
     self.rock(i).tier = ld::RockTier::Mined;
+  }
+
+  // compute durabilities
+  for (auto & rock : self.rocks) {
+    rock.baseDurability = rock.durability =
+      ld::baseRockDurability(rock.type, rock.tier, rock.gem);
   }
 
   return self;
@@ -309,4 +315,35 @@ void ld::MineChasm::Update(ld::GameState & state)
         state.mineChasm.rockFow[i] - (0.15f/60.0f)
       );
   }
+}
+
+int32_t ld::baseRockDurability(
+  ld::RockType const type,
+  ld::RockTier const tier,
+  ld::RockGemType const gem
+) {
+  int32_t durability = 0;
+  switch (type) {
+    default: break;
+    case ld::RockType::Sand:   durability = 10;  break;
+    case ld::RockType::Dirt:   durability = 50;  break;
+    case ld::RockType::Rock:   durability = 150; break;
+    case ld::RockType::Gravel: durability = 500; break;
+  }
+
+  switch (tier) {
+    default: break;
+    case ld::RockTier::Hard:   durability *= 2;
+  }
+
+  switch (gem) {
+    default: break;
+    case ld::RockGemType::Empty: break;
+    case ld::RockGemType::Tin:      durability += 10; break;
+    case ld::RockGemType::Ruby:     durability += 30; break;
+    case ld::RockGemType::Emerald:  durability += 80; break;
+    case ld::RockGemType::Sapphire: durability += 130; break;
+  }
+
+  return durability;
 }

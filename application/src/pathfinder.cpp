@@ -47,8 +47,8 @@ void ld::pathFind(
 
     if (previousTileX > targetTileX) pathValue[0] = 250;
     if (previousTileX < targetTileX) pathValue[1] = 250;
-    if (previousTileY < targetTileY) pathValue[2] = 250;
-    if (previousTileY > targetTileY) pathValue[3] = 250;
+    if (previousTileY < targetTileY) pathValue[2] = 450;
+    if (previousTileY > targetTileY) pathValue[3] = 450;
 
     if (previousTileX - 1 < 0)
       pathValue[0] = -55000;
