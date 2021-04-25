@@ -4,6 +4,7 @@
 #include <mine.hpp>
 #include <miner.hpp>
 #include <mob.hpp>
+#include <research.hpp>
 
 namespace ld {
   struct GameState
@@ -14,6 +15,16 @@ namespace ld {
       uint32_t minerCost = 5;
       int32_t minerSelection = -1;
       bool isPaused = false;
+      int32_t foodEatTimer = 60*5;
+
+      std::array<ld::ResearchItem, Idx(ld::ResearchType::Size)> researchItems = {{
+        { .type = ld::ResearchType::Pickaxe, .level = 0},
+        { .type = ld::ResearchType::Armor  , .level = 0},
+        { .type = ld::ResearchType::Food   , .level = 0},
+        { .type = ld::ResearchType::Cargo  , .level = 0},
+        { .type = ld::ResearchType::Vision , .level = 0},
+        { .type = ld::ResearchType::Speed  , .level = 0},
+      }};
 
       Camera camera;
 

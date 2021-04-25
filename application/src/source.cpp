@@ -46,6 +46,12 @@ void Entry() {
       ld::MobGroup::Update(gameState);
       ld::MineChasm::Update(gameState);
       overlay.Update(gameState);
+
+      gameState.foodEatTimer = (gameState.foodEatTimer - 1);
+      if (gameState.foodEatTimer <= 0) {
+        gameState.foodEatTimer = 60*5;
+        gameState.food -= 1;
+      }
     }
 
     // -- misc updates
