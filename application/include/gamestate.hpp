@@ -38,12 +38,12 @@ namespace ld {
       bool isPaused = false;
 
       std::array<ld::ResearchItem, Idx(ld::ResearchType::Size)> researchItems = {{
-        { .type = ld::ResearchType::Pickaxe, .level = 0},
-        { .type = ld::ResearchType::Armor  , .level = 0},
-        { .type = ld::ResearchType::Food   , .level = 0},
-        { .type = ld::ResearchType::Cargo  , .level = 0},
-        { .type = ld::ResearchType::Vision , .level = 0},
-        { .type = ld::ResearchType::Speed  , .level = 0},
+        { .type = ld::ResearchType::Pickaxe, .level = 0, .name = "Pickaxe"},
+        { .type = ld::ResearchType::Armor  , .level = 0, .name = "Armor  "},
+        { .type = ld::ResearchType::Food   , .level = 0, .name = "Food   "},
+        { .type = ld::ResearchType::Cargo  , .level = 0, .name = "Cargo  "},
+        { .type = ld::ResearchType::Vision , .level = 0, .name = "Vision "},
+        { .type = ld::ResearchType::Speed  , .level = 0, .name = "Speed  "},
       }};
 
       Camera camera;

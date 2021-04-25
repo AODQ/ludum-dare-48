@@ -81,52 +81,86 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
     uint32_t y = (scrHeight - h) * 0.5f;
 
     // Root Menu panel
-    DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.7f));
-    ld::DrawCenteredText("Research", x+w*0.5f, y, 20, ::BLACK);
-
-    // Upgrade Buttons
-    uint32_t btnWidth = 75;
-    uint32_t btnHeight = 75;
-    const uint32_t numButtons = Idx(ld::ResearchType::Size);
-    uint32_t padding = w / numButtons;
-    uint32_t xOffset = x + (padding-btnWidth)*0.5f; // Increment with padding as we add more elements
-
-    std::vector<ld::Button> upgBtns;
-    for (size_t i = 0; i < numButtons; ++i)
     {
-        upgBtns.push_back(ld::Button(xOffset, y + 100, btnWidth, btnHeight, ::WHITE));
-        xOffset+=padding;
+        uint32_t size = 30;
+        DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.7f));
+        ld::DrawOutlinedCenteredText("Research", x+w*0.5f, y-size, size, ::WHITE, ::BLACK);
     }
 
-    std::string desc = "Hover over each button to learn more";
-    for (size_t i = 0; i < numButtons; ++i)
-    {
-        int cost = ld::researchInfoLookup[i].cost + (game.researchItems[i].level * 25);
-        if (upgBtns[i].IsHovered())
+    { // -- Upgrade Buttons
+        uint32_t btnWidth = 30;
+        uint32_t btnHeight = 30;
+        const uint32_t numButtons = Idx(ld::ResearchType::Size);
+        uint32_t padding = h / numButtons;
+        uint32_t offset = (padding-btnHeight)*0.5f + 15;
+
+        std::vector<ld::Button> upgBtns;
+        for (size_t i = 0; i < numButtons; ++i)
         {
-            desc = ld::researchInfoLookup[i].desc;
+            upgBtns.push_back(ld::Button(x + 5, y + offset, btnWidth, btnHeight, ::WHITE));
+            offset += btnHeight + 2;
         }
-        if (upgBtns[i].IsClicked())
+
+        std::vector<::Color> researchColor =
         {
-            if (game.gold >= cost)
+            ::RED,      // pickaxe
+            ::DARKBLUE, // Armor
+            ::GREEN,    // Food
+            ::GOLD,     // Cargo
+            ::VIOLET,   // Vision
+            ::RAYWHITE, // Speed
+        };
+
+        std::string desc = "Hover over each button to learn more";
+        for (size_t i = 0; i < numButtons; ++i)
+        {
+            int cost = ld::researchInfoLookup[i].cost + (game.researchItems[i].level * 25);
+            if (upgBtns[i].IsHovered())
             {
-                game.gold -= cost;
-                game.researchItems[i].level++;
+                desc = ld::researchInfoLookup[i].desc;
             }
-        }
-        const char* text = ::TextFormat("lvl:%i %iG", game.researchItems[i].level, cost);
-        // TODO draw text icon
-        upgBtns[i].Draw(text, 3);
-    }
-    // Description of upgrade
-    ld::DrawCenteredText(desc.c_str(), x+w*0.5f, y + 200, 20, ::BLACK);
+            if (upgBtns[i].IsClicked())
+            {
+                if (game.gold >= cost)
+                {
+                    game.gold -= cost;
+                    game.researchItems[i].level++;
+                }
+            }
+            const char* text = ::TextFormat("lvl:%i %iG", game.researchItems[i].level, cost);
 
-    // -- Close
-    ld::Button closeBtn(x + 0.5f*(w-btnWidth), y+h-40, 50, 30, ::WHITE);
-    closeBtn.Draw("Close", 15);
-    if (closeBtn.IsClicked())
-    {
-        menuState = MenuState::None;
+            // TODO draw text icon
+            upgBtns[i].Draw(text, 3);
+
+            // Draw upgrade bars
+            uint32_t maxUpgrades = 10;
+            //uint32_t barWidth = (w-btnWidth-20) / maxUpgrades;
+            uint32_t barWidth = 30;
+            uint32_t barPosX = upgBtns[i].xPos+upgBtns[i].width + 10;
+            uint32_t barPosY = upgBtns[i].yPos;
+            ::DrawRectangle(barPosX, barPosY, barWidth*game.researchItems[i].level, upgBtns[i].height, Fade(researchColor[i], 0.5f));
+            for (size_t j = 0; j < maxUpgrades; ++j)
+            {
+                ::DrawRectangleLines(barPosX, barPosY, barWidth, upgBtns[i].height, researchColor[i]);
+                barPosX += barWidth;
+            }
+            const char* barText = ::TextFormat("%s Level: %i", game.researchItems[i].name.c_str(), game.researchItems[i].level);
+            ld::DrawOutlinedText(barText, barPosX + 10, barPosY + 0.5f*(upgBtns[i].height-10), 10, researchColor[i], ::BLACK);
+        }
+
+        // Description of upgrade
+        ld::DrawOutlinedCenteredText(desc.c_str(), x+w*0.5f, y + 230, 20, ::WHITE, ::BLACK);
+    }
+
+    { // -- Close
+        uint32_t btnWidth = 70;
+        uint32_t btnHeight = 35;
+        ld::Button closeBtn(x + 0.5f*(w-btnWidth), y+h-btnHeight*0.5f, 70, 35, ::WHITE);
+        closeBtn.Draw("Close", 20);
+        if (closeBtn.IsClicked())
+        {
+            menuState = MenuState::None;
+        }
     }
 }
 
@@ -208,8 +242,9 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     idleBtn.Draw(idleText.c_str(), 10);
     if (idleBtn.IsClicked() && !idleMiners.empty())
     {
-        game.minerSelection = idleMiners.at(cycle);
+        // wrap cycle first in case it corresponds to an invalid index within the list
         cycle = (cycle+1) % idleMiners.size();
+        game.minerSelection = idleMiners.at(cycle);
     }
 }
 

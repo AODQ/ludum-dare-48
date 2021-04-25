@@ -28,6 +28,7 @@ namespace ld {
     struct ResearchItem {
         ld::ResearchType type;
         uint32_t level = 0;
+        std::string name;
     };
 
 }
