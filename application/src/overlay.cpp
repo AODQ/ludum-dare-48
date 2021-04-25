@@ -32,9 +32,8 @@ void ld::Overlay::InitButtons()
     uint32_t btnWidth = 70;
     uint32_t btnHeight = 50;
 
-    buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight, 5));
-
-    buttons.emplace("BluePrints", ld::Button(x, 150, btnWidth, btnHeight, 5));
+    buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight, 5, ::Fade(::LIGHTGRAY, 0.5f)));
+    buttons.emplace("BluePrints", ld::Button(x, 150, btnWidth, btnHeight, 5, ::Fade(::LIGHTGRAY, 0.5f)));
 }
 
 void ld::Overlay::PauseScreen()
@@ -136,17 +135,18 @@ void ld::Overlay::Update(ld::GameState & game)
 void ld::Overlay::MinerInfo(ld::Miner & miner)
 {
     // Menu window positioning
-    uint32_t x = scrWidth - 100;
-    uint32_t y = 0;
-    uint32_t w = scrWidth - 100;;
-    uint32_t h = scrHeight;
+    uint32_t w = 300;
+    uint32_t h = 200;
+    uint32_t padding = 100;
+    uint32_t x = scrWidth - w - padding;
+    uint32_t y = scrHeight - h - padding;
 
     // Root Menu panel
-    DrawRectangle(x, y, w, h, ::Fade(LIGHTGRAY, 0.3f));
+    DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.5f));
 
     // Energy
     const char* energyText = ::TextFormat("Energy: %i/%i", miner.energy, miner.maxEnergy);
-    ld::DrawBar(energyText, x, y+100, 100, 20, 20, ::GREEN, static_cast<float>(miner.energy) / static_cast<float>(miner.maxEnergy));
+    ld::DrawBar(energyText, x, y+20, 100, 20, 10, ::GREEN, static_cast<float>(miner.energy) / static_cast<float>(miner.maxEnergy));
 
     // Inventory
 
