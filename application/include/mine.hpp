@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>
 #include <stdint.h>
 #include <vector>
 
@@ -52,12 +51,18 @@ namespace ld {
 
     static ld::MineChasm Initialize(
       ld::MobGroup & group,
-      std::size_t columns =  30,
-      std::size_t rows    = 250
+      uint32_t columns =  30,
+      uint32_t rows    = 250
     );
 
     ld::MineRock & rock(uint32_t rockId) { return rocks[rockId]; }
     ld::MineRock const & rock(uint32_t rockId) const { return rocks[rockId]; }
+    ld::MineRock & rock(uint32_t x, uint32_t y) {
+      return rocks[rockId(x, y)];
+    }
+    ld::MineRock const & rock(uint32_t x, uint32_t y) const {
+      return rocks[rockId(x, y)];
+    }
     uint32_t rockId(uint32_t x, uint32_t y) const {
       return y*columns + x;
     }

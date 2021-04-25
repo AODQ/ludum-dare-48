@@ -10,9 +10,8 @@
 #include <cmath>    // round
 
 
-namespace
-{
-  constexpr ld::MineRock basicRock{
+namespace {
+  constexpr ld::MineRock basicDirt{
     ld::RockType   ::Dirt,
     ld::RockTier   ::Base1,
     ld::RockGemType::Empty,
@@ -38,12 +37,12 @@ namespace
     );
   }
 
-  float fval(const ::Image& img, std::size_t x, std::size_t y)
+  float fval(const ::Image& img, uint32_t x, uint32_t y)
   {
     if (
       img.width <= 0 || img.height <= 0
-      || x >= static_cast<std::size_t>(img.width)
-      || y >= static_cast<std::size_t>(img.height)
+      || x >= static_cast<uint32_t>(img.width)
+      || y >= static_cast<uint32_t>(img.height)
     ) {
       return 0.f;
     }
@@ -53,105 +52,205 @@ namespace
       ].r / 255.f;
     }
   }
+
+  // rayblib Perlin noise size
+  auto perlinSize(ld::MineChasm const& self)
+  {
+    return std::max(
+      static_cast<uint32_t>(self.rocks.size() / self.columns),
+      self.columns
+    );
+  }
+
+  // raylib Perlin noise coordinate
+  auto pc()
+  {
+    return ::GetRandomValue(0, 197);
+  }
+}
+
+
+namespace { // generate passes
+  void GenerateDirt(ld::MineChasm& self)
+  {
+    const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
+    const auto ps = perlinSize(self);
+    auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 10.f);
+    auto cells  = ::GenImageCellular(self.columns, rows, 5);
+
+    for (uint32_t row = 0; row < rows; ++row) {
+      for (uint32_t col = 0; col < self.columns; ++col) {
+        const auto i = row * self.columns + col;
+        auto& rock = self.rocks[i];
+
+        const auto nv = vertGrade(
+          row,
+          rows,
+          average(
+            fval(perlin, col, row),
+            fval(cells , col, row)
+          )
+        );
+
+        rock.type = static_cast<ld::RockType>(
+          static_cast<uint32_t>(std::round(
+            nv
+            * (Idx(ld::RockType::Size) - 1)
+          ))
+        );
+      }
+    }
+
+    ::UnloadImage(perlin);
+    ::UnloadImage(cells );
+  }
+
+  void GenerateRock(ld::MineChasm& /*self*/)
+  {
+    
+  }
+
+  void GenerateGranite(ld::MineChasm& /*self*/)
+  {
+    
+  }
+
+  // grade rock tiers in each column
+  void GenerateTiers(ld::MineChasm& self)
+  {
+    const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
+    const auto ps = perlinSize(self);
+    auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 20.f);
+
+    for (uint32_t col = 0; col < self.columns; ++col) {
+      uint32_t topRow = 0;
+      for (uint32_t row = 0; row <= rows; ++row) {
+        auto& top = self.rock(col, topRow);
+        if (
+          row == rows
+          || top.type != self.rocks[row * self.columns + col].type
+        ) {
+          for (uint32_t i = topRow; i < row; ++i) {
+            self.rock(col, i).tier = static_cast<ld::RockTier>(
+              std::round(
+                // skips Mined -- that's added separately
+                (Idx(ld::RockTier::Size) - 2) * vertGrade(
+                  i - topRow,
+                  row - topRow,
+                  fval(perlin, col, row)
+                )
+              )
+            );
+          }
+          topRow = row;
+        }
+      }
+    }
+
+    ::UnloadImage(perlin);
+  }
+
+  void GenerateEarth(ld::MineChasm& self)
+  {
+    GenerateDirt   (self);
+    GenerateRock   (self);
+    GenerateGranite(self);
+    GenerateTiers  (self);
+  }
+
+  void GenerateTin(ld::MineChasm& /*self*/)
+  {
+    
+  }
+
+  void GenerateRuby(ld::MineChasm& /*self*/)
+  {
+    
+  }
+
+  void GenerateEmerald(ld::MineChasm& /*self*/)
+  {
+    
+  }
+
+  void GenerateSapphire(ld::MineChasm& /*self*/)
+  {
+    
+  }
+
+  // TODO: split this up
+  void GenerateGems(ld::MineChasm& self)
+  {
+    // TODO:
+    // GenerateTin     (self);
+    // GenerateRuby    (self);
+    // GenerateEmerald (self);
+    // GenerateSapphire(self);
+
+    const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
+    const auto ps = perlinSize(self);
+    auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 80.f);
+
+    for (uint32_t row = 0; row < rows; ++row) {
+      for (uint32_t col = 0; col < self.columns; ++col) {
+        // fade in gem distribution for the first few rows
+        const auto gv = (
+          row < 20
+          ? lerp(0.5f, fval(perlin, col, row), static_cast<float>(row) / 20.f)
+          : fval(perlin, col, row)
+        );
+        if (gv > 0.7f) {
+          self.rock(col, row).gem = static_cast<ld::RockGemType>(
+            ::GetRandomValue(
+              1,
+              Idx(ld::RockGemType::Size) * (static_cast<float>(row) / rows)
+            )
+          );
+        }
+      }
+    }
+  }
+
+  void GenerateCaves(ld::MineChasm& /*self*/)
+  {
+    
+  }
+
+  void GenerateMobs(ld::MineChasm& /*self*/, ld::MobGroup & group)
+  {
+    // TODO add mobs to empty rooms
+    group.slimes.push_back({
+      .positionX = 400, .positionY = 200
+    });
+    group.poisonClouds.push_back({
+      .positionX = 400, .positionY = 200
+    });
+  }
 }
 
 
 ld::MineChasm ld::MineChasm::Initialize(
   ld::MobGroup & group,
-  std::size_t columns,
-  std::size_t rows
+  uint32_t columns,
+  uint32_t rows
 )
 {
   auto self = ld::MineChasm{
     columns,
-    decltype(ld::MineChasm::rocks)(columns * rows, basicRock),
-    decltype(ld::MineChasm::rockFow)(columns * rows, 0.0f)
+    decltype(ld::MineChasm::rocks  )(columns * rows, basicDirt),
+    decltype(ld::MineChasm::rockFow)(columns * rows, 0.0f     )
   };
-  const auto perlinSize = std::max(columns, rows);
-  auto pn1 = ::GenImagePerlinNoise(perlinSize, perlinSize, 0, 0, 10.f);
-  auto pn2 = ::GenImagePerlinNoise(perlinSize, perlinSize, 0, 0, 20.f);
-  auto pn3 = ::GenImagePerlinNoise(perlinSize, perlinSize, 0, 0, 80.f);
-  auto cn1 = ::GenImageCellular(columns, rows, 5);
 
-  for (std::size_t row = 0; row < rows; ++row) {
-    for (std::size_t col = 0; col < columns; ++col) {
-      const auto i = row * columns + col;
-      auto& rock = self.rocks[i];
+  GenerateEarth(self);
+  GenerateGems (self);
+  GenerateCaves(self);
+  GenerateMobs (self, group);
 
-      const auto nv = vertGrade(
-        row,
-        rows,
-        average(
-          fval(pn1, col, row),
-          fval(cn1, col, row)
-        )
-      );
-
-      rock.type = static_cast<ld::RockType>(
-        static_cast<std::size_t>(std::round(
-          nv
-          * (Idx(RockType::Size) - 1)
-        ))
-      );
-
-      // fade in gem distribution for the first few rows
-      const auto gv = (
-        row < 20
-        ? lerp(0.5f, fval(pn3, col, row), static_cast<float>(row) / 20.f)
-        : fval(pn3, col, row)
-      );
-      if (gv > 0.7f) {
-        rock.gem = static_cast<ld::RockGemType>(::GetRandomValue(
-          1,
-          Idx(ld::RockGemType::Size) * (static_cast<float>(row) / rows)
-        ));
-      }
-
-      // first row is walkable
-      if (row < 1) {
-        rock.type = ld::RockType::Sand;
-        rock.tier = ld::RockTier::Mined;
-      }
-
-      rock.durability = 1;
-    }
+  // first row is walkable
+  for (uint32_t i = 0; i < columns; ++i) {
+    // self.rock(i).type = ld::RockType::Sand;
+    self.rock(i).tier = ld::RockTier::Mined;
   }
-
-  // grade rock tiers in each column, leaving the first row walkable
-  for (std::size_t col = 0; col < columns; ++col) {
-    std::size_t topRow = 1;
-    for (std::size_t row = 1; row <= rows; ++row) {
-      auto&  top = self.rocks[topRow * columns + col];
-      if (row == rows || top.type != self.rocks[row * columns + col].type) {
-        for (std::size_t i = topRow; i < row; ++i) {
-          self.rocks[i * columns + col].tier = static_cast<ld::RockTier>(
-            std::round(
-              // skips Mined -- that's added separately
-              (Idx(ld::RockTier::Size) - 2) * vertGrade(
-                i - topRow,
-                row - topRow,
-                fval(pn2, col, row)
-              )
-            )
-          );
-        }
-        topRow = row;
-      }
-    }
-  }
-
-  // TODO add mobs to empty rooms
-  group.slimes.push_back({
-    .positionX = 400, .positionY = 200
-  });
-  group.poisonClouds.push_back({
-    .positionX = 400, .positionY = 200
-  });
-
-  ::UnloadImage(pn1);
-  ::UnloadImage(pn2);
-  ::UnloadImage(pn3);
-  ::UnloadImage(cn1);
 
   return self;
 }
@@ -173,7 +272,7 @@ bool ld::MineRock::receiveDamage(int32_t damage) {
 int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
   auto & self = *this;
 
-  if (y < 0) { return -100; }
+  if (y < 0) { return 0; }
 
   if (x < 0 || x > static_cast<int32_t>(columns)) { return 0; }
 
@@ -184,7 +283,7 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
   int32_t value = 0;
   switch (target.type) {
     default: break;
-    case ld::RockType::Sand:   value -= 0;  break;
+    case ld::RockType::Sand:   value -= 50;  break;
     case ld::RockType::Dirt:   value -= 100;  break;
     case ld::RockType::Rock:   value -= 250;  break;
     case ld::RockType::Gravel: value -= 350; break;

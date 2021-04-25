@@ -112,10 +112,6 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
     return;
   }
 
-  // TODO path to the rock
-  miner.xPosition = state.mineChasm.rockPositionX(rockId)*32.0f;
-  miner.yPosition = state.mineChasm.rockPositionY(rockId)*32.0f - 8.0f;
-
   miner.applyAnimationState(ld::Miner::AnimationState::Mining);
 
   if (miner.animationFinishesThisFrame()) {
@@ -224,7 +220,7 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
         static_cast<float>(miner.xPosition),
         static_cast<float>(miner.yPosition),
       },
-      24.0f,
+      8.0f,
       rect
     )
   ) {
