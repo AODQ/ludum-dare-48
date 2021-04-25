@@ -1,6 +1,6 @@
 #include <button.hpp>
 
-void ld::Button::Draw(const char* text)
+void ld::Button::Draw(const char* text, uint32_t fontSize)
 {
     int textWidth = ::MeasureText(text, fontSize);
     ::DrawRectangle     (xPos, yPos, width, height, color);

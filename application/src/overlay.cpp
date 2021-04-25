@@ -32,8 +32,8 @@ void ld::Overlay::InitButtons()
     uint32_t btnWidth = 70;
     uint32_t btnHeight = 50;
 
-    buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight, 5, ::Fade(::LIGHTGRAY, 0.5f)));
-    buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight, 5, ::Fade(::LIGHTGRAY, 0.5f)));
+    buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
+    buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
 }
 
 void ld::Overlay::PauseScreen()
@@ -72,54 +72,43 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
     // Upgrade Buttons
     uint32_t btnWidth = 75;
     uint32_t btnHeight = 75;
-    const uint32_t numButtons = 4;
+    const uint32_t numButtons = Idx(ld::ResearchType::Size);
     uint32_t padding = w / numButtons;
     uint32_t xOffset = x + (padding-btnWidth)*0.5f; // Increment with padding as we add more elements
 
     std::vector<ld::Button> upgBtns;
     for (size_t i = 0; i < numButtons; ++i)
     {
-        upgBtns.push_back(ld::Button(xOffset, y + 100, btnWidth, btnHeight, 15, ::WHITE));
+        upgBtns.push_back(ld::Button(xOffset, y + 100, btnWidth, btnHeight, ::WHITE));
         xOffset+=padding;
     }
-
-    std::vector<std::string> descriptions =
-    {
-        "Increase pickaxe power and durability",
-        "Increase armor defense and durability",
-        "Increase food to energy ratio",
-        "Increase vision distance in fog of war",
-    };
-
-    // TODO replace with texture icons
-    std::vector<std::string> icon =
-    {
-        "Pickaxe",
-        "Armor",
-        "Food",
-        "Vision",
-    };
 
     std::string desc = "Hover over each button to learn more";
     for (size_t i = 0; i < numButtons; ++i)
     {
-        upgBtns[i].Draw(icon[i].c_str());
+        int cost = ld::researchInfoLookup[i].cost + (game.researchItems[i].level * 25);
         if (upgBtns[i].IsHovered())
         {
-            desc = descriptions[i];
+            desc = ld::researchInfoLookup[i].desc;
         }
         if (upgBtns[i].IsClicked())
         {
-            // Decrement gold
-            // Increase level
+            if (game.gold >= cost)
+            {
+                game.gold -= cost;
+                game.researchItems[i].level++;
+            }
         }
+        const char* text = ::TextFormat("lvl:%i %iG", game.researchItems[i].level, cost);
+        // TODO draw text icon
+        upgBtns[i].Draw(text, 3);
     }
     // Description of upgrade
     ld::DrawCenteredText(desc.c_str(), x+w*0.5f, y + 200, 20, ::BLACK);
 
     // -- Close
-    ld::Button closeBtn(x + 0.5f*(w-btnWidth), y+h-30, 50, 30, 15, ::WHITE);
-    closeBtn.Draw("Close");
+    ld::Button closeBtn(x + 0.5f*(w-btnWidth), y+h-40, 50, 30, ::WHITE);
+    closeBtn.Draw("Close", 15);
     if (closeBtn.IsClicked())
     {
         menuState = MenuState::None;
@@ -133,8 +122,8 @@ void ld::Overlay::TitleScreen()
     uint32_t width = 50;
     DrawCenteredText("Game Title", xPos, yPos, 100, BLACK);
 
-    ld::Button playBtn(xPos - 0.5*width, yPos + 250, 100, 50, 35);
-    playBtn.Draw("PLAY");
+    ld::Button playBtn(xPos - 0.5*width, yPos + 250, 100, 50);
+    playBtn.Draw("PLAY", 35);
     if (playBtn.IsClicked())
     {
         menuState = MenuState::None;
@@ -276,9 +265,9 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
                 color = ::WHITE;
             }
 
-            ld::Button itemBtn(x+xOffset, y+padding, 30, 30, 10, color);
+            ld::Button itemBtn(x+xOffset, y+padding, 30, 30, color);
             // TODO replace with texture
-            itemBtn.Draw("TODO");
+            itemBtn.Draw("TODO", 10);
             xOffset += 30;
         }
     }
@@ -292,9 +281,9 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         padding+=20;
         for (size_t it = 0u; it < miner.cargo.size(); ++ it) {
             // TODO display texture
-            ld::Button itemBtn(x+xOffset, y+padding, 30, 30, 10, ::WHITE);
+            ld::Button itemBtn(x+xOffset, y+padding, 30, 30, ::WHITE);
             // Display count of item
-            itemBtn.Draw(std::to_string(miner.cargo[it].ownedUnits).c_str());
+            itemBtn.Draw(std::to_string(miner.cargo[it].ownedUnits).c_str(), 10);
             xOffset += 30;
             cargoValue += miner.cargo[it].ownedUnits* ld::valuableInfoLookup[it].value;
         }
