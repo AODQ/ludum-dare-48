@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>    // round, floor
+#include <set>
 
 
 namespace {
@@ -66,6 +67,11 @@ namespace {
   auto pc()
   {
     return ::GetRandomValue(0, 197);
+  }
+
+  int32_t MobPos(uint32_t cell)
+  {
+    return cell * 32 + 16 / 2;
   }
 }
 
@@ -175,12 +181,15 @@ namespace { // generate passes
   }
 
   // add caves & caverns
-  void GenerateCaves(ld::MineChasm& self)
+  [[nodiscard]] auto GenerateCaves(ld::MineChasm& self)
   {
     const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
     const auto ps = perlinSize(self);
     auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 7.f);
     auto cells  = ::GenImageCellular(self.columns, rows, 10);
+
+    // set of (row,col) pairs (implicitly unique), sorted by first member (row)
+    std::set<std::pair<uint32_t, uint32_t>> emptySpaces;
 
     for (uint32_t row = 0; row < rows; ++row) {
       for (uint32_t col = 0; col < self.columns; ++col) {
@@ -198,23 +207,53 @@ namespace { // generate passes
         if (cv < 0.3f) {
           rock.tier = ld::RockTier::Mined;
           rock.gem  = ld::RockGemType::Empty;
+          emptySpaces.emplace(row, col);
         }
       }
     }
 
     ::UnloadImage(perlin);
     ::UnloadImage(cells );
+
+    return emptySpaces;
   }
 
-  void GenerateMobs(ld::MineChasm& /*self*/, ld::MobGroup & group)
+  void GenerateMobs(
+    ld::MineChasm& self,
+    ld::MobGroup & group,
+    std::vector<std::pair<uint32_t, uint32_t>> const& emptySpaces
+  )
   {
-    // TODO add mobs to empty rooms
-    group.slimes.push_back({
-      .positionX = 400, .positionY = 200
-    });
-    group.poisonClouds.push_back({
-      .positionX = 400, .positionY = 200
-    });
+    const auto numSlimes = static_cast<uint32_t>(
+      self.rocks.size() / 375
+    );
+    const auto numClouds = static_cast<uint32_t>(
+      // half as many clouds
+      self.rocks.size() / 750
+    );
+
+    for (uint32_t i = 0; i < numSlimes; ++i) {
+      auto spot = emptySpaces.begin() + ::GetRandomValue(
+        0,
+        emptySpaces.size() - 1
+      );
+      group.slimes.push_back({
+        .positionX = MobPos(spot->second),
+        .positionY = MobPos(spot->first )
+      });
+    }
+
+    // poison clouds only in lower half
+    for (uint32_t i = 0; i < numClouds; ++i) {
+      auto spot = emptySpaces.begin() + ::GetRandomValue(
+        emptySpaces.size() / 2,
+        emptySpaces.size() - 1
+      );
+      group.poisonClouds.push_back({
+        .positionX = MobPos(spot->second),
+        .positionY = MobPos(spot->first )
+      });
+    }
   }
 }
 
@@ -233,14 +272,22 @@ ld::MineChasm ld::MineChasm::Initialize(
 
   GenerateEarth(self);
   GenerateGems (self);
-  GenerateCaves(self);
-  GenerateMobs (self, group);
+  auto emptySpaces = GenerateCaves(self);
 
   // first 2 rows is walkable
   for (uint32_t i = 0; i < columns*2; ++i) {
     self.rock(i).type = ld::RockType::Sand;
     self.rock(i).tier = ld::RockTier::Mined;
+    emptySpaces.emplace(0, i);
   }
+
+  std::vector<std::pair<uint32_t, uint32_t>> emptySpacesVec;
+  for (auto& pair : emptySpaces) {
+    emptySpacesVec.emplace_back(pair);
+  }
+  emptySpaces = {};
+
+  GenerateMobs (self, group, emptySpacesVec);
 
   // compute durabilities
   for (auto & rock : self.rocks) {
