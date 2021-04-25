@@ -63,7 +63,7 @@ ld::MineChasm ld::MineChasm::Initialize(
       const auto i = row * columns + col;
       auto& rock = self.rocks[i];
 
-      auto nvType = vertGrade(
+      const auto nv = vertGrade(
         row,
         rows,
         average(
@@ -71,21 +71,26 @@ ld::MineChasm ld::MineChasm::Initialize(
           fval(cn1, i)
         )
       );
-      auto nvTier = fval(pn2, i);
 
       rock.type = static_cast<ld::RockType>(
         static_cast<std::size_t>(std::round(
-          nvType
+          nv
           * (Idx(RockType::Size) - 1)
         ))
       );
 
-      rock.tier = static_cast<ld::RockTier>(std::round(
-        nvTier
-        * (Idx(RockTier::Size) - 2)
-      ));
-
-      rock.gem = static_cast<ld::RockGemType>(::GetRandomValue(0, 4));
+      // fade in gem distribution for the first few rows
+      const auto gv = (
+        row < 20
+        ? lerp(0.5f, fval(pn2, i), static_cast<float>(row) / 20.f)
+        : fval(pn2, i)
+      );
+      if (gv > 0.6f) {
+        rock.gem = static_cast<ld::RockGemType>(::GetRandomValue(
+          1,
+          Idx(ld::RockGemType::Size) * (static_cast<float>(row) / rows)
+        ));
+      }
 
       // first row is walkable
       if (row < 1) {
@@ -94,6 +99,29 @@ ld::MineChasm ld::MineChasm::Initialize(
       }
 
       rock.durability = 1;
+    }
+  }
+
+  // grade rock tiers in each column, leaving the first row walkable
+  for (std::size_t col = 0; col < columns; ++col) {
+    std::size_t topRow = 1;
+    for (std::size_t row = 1; row <= rows; ++row) {
+      auto&  top = self.rocks[topRow * columns + col];
+      if (row == rows || top.type != self.rocks[row * columns + col].type) {
+        for (std::size_t i = topRow; i < row; ++i) {
+          self.rocks[i * columns + col].tier = static_cast<ld::RockTier>(
+            std::round(
+              // skips Mined -- that's added separately
+              (Idx(ld::RockTier::Size) - 2) * vertGrade(
+                i - topRow,
+                row - topRow,
+                fval(pn2, i)
+              )
+            )
+          );
+        }
+        topRow = row;
+      }
     }
   }
 
@@ -120,4 +148,38 @@ bool ld::MineRock::receiveDamage(int32_t damage) {
   }
 
   return self.isMined();
+}
+
+int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
+  auto & self = *this;
+
+  auto const & target = self.rock(self.rockId(x, y));
+
+  if (target.isMined()) { return 100; }
+
+  int32_t value = 0;
+  switch (target.type) {
+    default: break;
+    case ld::RockType::Sand:   value -= 200;  break;
+    case ld::RockType::Dirt:   value -= 500;  break;
+    case ld::RockType::Rock:   value -= 850; break;
+    case ld::RockType::Gravel: value -= 1300; break;
+  }
+
+  switch (target.tier) {
+    default: break;
+    case ld::RockTier::Base1: case ld::RockTier::Base2: break;
+    case ld::RockTier::Hard: value -= 5;
+  }
+
+  switch (target.gem) {
+    default: break;
+    case ld::RockGemType::Empty: break;
+    case ld::RockGemType::Tin:      value += 100; break;
+    case ld::RockGemType::Ruby:     value += 200; break;
+    case ld::RockGemType::Emerald:  value += 550; break;
+    case ld::RockGemType::Sapphire: value += 700; break;
+  }
+
+  return value;
 }
