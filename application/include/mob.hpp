@@ -20,7 +20,7 @@ namespace ld {
 
     int32_t sleepTimer = 0;
 
-    std::array<::Vector2, 32> path;
+    std::array<::Vector2, 4> path;
     size_t pathIdx = 0;
     size_t pathSize = 0;
   };

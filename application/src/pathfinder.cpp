@@ -87,17 +87,25 @@ void ld::pathFindInitialize(ld::GameState * state) {
 
 void ld::pathFind(
   ld::GameState const & state,
-  std::array<::Vector2, 32> & path, size_t & pathSize,
+  std::array<::Vector2, 4> & path, size_t & pathSize,
   int32_t const origTileX,   int32_t const origTileY,
-  int32_t const targetTileX, int32_t const targetTileY,
+  int32_t       targetTileX, int32_t       targetTileY,
   bool const canMine
 ) {
   micropather::MPVector<void *> microPath;
   auto & startTile = state.mineChasm.rock(origTileX, origTileY);
+
+  patherMinable->Reset();
+  patherUnminable->Reset();
+
+  //  TODO limit the end tile to a radius of 4
+  if (std::abs(origTileX - targetTileX) + std::abs(origTileY - targetTileY)) {
+    float theta = atan2(origTileY - targetTileY, origTileX - targetTileX);
+    targetTileX = origTileX - cos(theta)*5;
+    targetTileY = origTileY - sin(theta)*5;
+  }
+
   auto & endTile   = state.mineChasm.rock(targetTileX, targetTileY);
-
-
-  //  TODO limit the end tile to a radius of 32
 
   float totalCost;
 
@@ -111,7 +119,7 @@ void ld::pathFind(
 
   (void) canMine;
 
-  pathSize = std::min(32u, microPath.size());
+  pathSize = std::min(4u, microPath.size());
   for (uint32_t i = 0u; i < pathSize; ++ i) {
     uint32_t pathId = reinterpret_cast<ld::MineRock *>(microPath[i])->rockId;
     path[i] =

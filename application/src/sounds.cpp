@@ -20,11 +20,15 @@ void ld::SoundInitialize()
 
   TraceLog(LOG_INFO, "audio ready? %d", ::IsAudioDeviceReady());
 
-
   rockHitSounds[0] = ::LoadSound("resources/hit1.ogg");
   rockHitSounds[1] = ::LoadSound("resources/hit2.ogg");
   rockHitSounds[2] = ::LoadSound("resources/hit3.ogg");
   rockHitSounds[3] = ::LoadSound("resources/hit4.ogg");
+
+  /* rockHitSounds[0] = ::LoadSound("resources/hit1.ogg"); */
+  /* rockHitSounds[1] = ::LoadSound("resources/hit2.ogg"); */
+  /* rockHitSounds[2] = ::LoadSound("resources/hit3.ogg"); */
+  /* rockHitSounds[3] = ::LoadSound("resources/hit4.ogg"); */
 
   /* stream = ::LoadMusicStream("resources/audio.xm"); */
   /* ::PlayMusicStream(stream); */
