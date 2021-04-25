@@ -211,18 +211,10 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
 void ld::MineChasm::Update(ld::GameState & state)
 {
   // update FOW
-  for (size_t i = 0; i < 30*4; ++ i) {
-    state.mineChasm.rockFow[i] =
-      ::fmax(
-        1.0f - (i/30) / 4.0f,
-        state.mineChasm.rockFow[i]
-      );
-  }
-
-  for (size_t i = 30*4; i < state.mineChasm.rocks.size(); ++ i) {
+  for (size_t i = 0; i < state.mineChasm.rocks.size(); ++ i) {
     state.mineChasm.rockFow[i] =
       std::max(
-        0.0f,
+        std::clamp(1.0f - (i/30) / 4.0f, 0.0f, 1.0f),
         state.mineChasm.rockFow[i] - (0.15f/60.0f)
       );
   }
