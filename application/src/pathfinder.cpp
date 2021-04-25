@@ -10,6 +10,7 @@ namespace {
 class GraphPathFinder : public micropather::Graph {
 public:
   ld::GameState * gameState;
+  bool canMine;
 
   float LeastCostEstimate(void * stateStart, void * stateEnd) {
     uint32_t startId = reinterpret_cast<ld::MineRock *>(stateStart)->rockId;
@@ -47,6 +48,8 @@ public:
       ld::MineRock & rock =
         gameState->mineChasm.rock(startX + offset.x, startY + offset.y);
 
+      if (!canMine && !rock.isMined()) { continue; }
+
       adjacent->push_back(micropather::StateCost {
         .state = reinterpret_cast<void *>(&rock),
         .cost = rock.isMined() ? 1.0f : 3.0f,
@@ -71,6 +74,9 @@ void ld::pathFindInitialize(ld::GameState * state) {
   graphMinable.gameState = state;
   graphUnminable.gameState = state;
 
+  graphMinable.canMine = true;
+  graphUnminable.canMine = false;
+
   // couldnt use make_unique
   patherMinable =
     new micropather::MicroPather(micropather::MicroPather(&graphMinable));
@@ -94,12 +100,13 @@ void ld::pathFind(
 
   float totalCost;
 
-  patherMinable->Solve(
-    reinterpret_cast<void *>(const_cast<ld::MineRock *>(&startTile)),
-    reinterpret_cast<void *>(const_cast<ld::MineRock *>(&endTile)),
-    &microPath,
-    &totalCost
-  );
+  (canMine ? patherMinable : patherUnminable)
+    ->Solve(
+      reinterpret_cast<void *>(const_cast<ld::MineRock *>(&startTile)),
+      reinterpret_cast<void *>(const_cast<ld::MineRock *>(&endTile)),
+      &microPath,
+      &totalCost
+    );
 
   (void) canMine;
 

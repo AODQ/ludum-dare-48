@@ -12,6 +12,19 @@ namespace {
 void ld::MobGroup::Update(ld::GameState & state)
 {
   for (auto & slime : state.mobGroup.slimes) {
+
+    if (slime.sleepTimer > 0) {
+      slime.sleepTimer -= 1;
+
+      // allow slime to come to rest
+      if (slime.animationIdx > 10) {
+        slime.animationIdx = (slime.animationIdx + 5) % (60*5);
+      } else {
+        slime.animationIdx = 0;
+      }
+      continue;
+    }
+
     slime.animationIdx = (slime.animationIdx + 5) % (60*5);
 
     if (slime.pathIdx == 0) {
@@ -34,6 +47,7 @@ void ld::MobGroup::Update(ld::GameState & state)
 
     if (slime.pathSize <= slime.pathIdx) {
       slime.pathIdx = 0;
+      slime.sleepTimer = ::GetRandomValue(0, 2)*60;
       continue;
     }
 
