@@ -3,6 +3,7 @@
 #include <button.hpp>
 #include <gamestate.hpp>
 #include <mob.hpp>
+#include <notifs.hpp>
 #include <overlay.hpp>
 #include <renderer.hpp>
 #include <sounds.hpp>
@@ -45,6 +46,7 @@ void Entry() {
       ld::MinerGroup::Update(gameState);
       ld::MobGroup::Update(gameState);
       ld::MineChasm::Update(gameState);
+      ld::NotifGroup::Update(gameState);
       overlay.Update(gameState);
 
       int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 5 : 1;

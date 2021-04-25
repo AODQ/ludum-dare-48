@@ -28,6 +28,8 @@ void ld::RenderInitialize()
   textures[Idx(ld::TextureType::Miner)] = ::LoadTexture("resources/miner.png");
   textures[Idx(ld::TextureType::SurfacedFg)] =
     ::LoadTexture("resources/surfaced-foreground.png");
+  textures[Idx(ld::TextureType::Misc)] =
+    ::LoadTexture("resources/misc.png");
 
   // -- load shaders
 }
@@ -243,4 +245,30 @@ void ld::RenderScene(ld::GameState const & state)
     }
   }
 
+  { // -- render notifs
+    for (auto & notif : state.notifGroup.notifs) {
+      constexpr std::array<::Vector2, Idx(ld::NotifType::Size)> offsets = {
+        ::Vector2 { 2, 0, },
+        ::Vector2 { 2, 1, },
+        ::Vector2 { 1, 0, },
+        ::Vector2 { 2, 1, },
+        ::Vector2 { 2, 2, },
+      };
+
+      ::DrawTextureRec(
+        ld::TextureGet(ld::TextureType::Misc)
+      , ::Rectangle {
+          .x = offsets[Idx(notif.type)].x * 32.0f,
+          .y = offsets[Idx(notif.type)].y * 32.0f,
+          .width = 32.0f,
+          .height = 32.0f,
+        }
+      , ::Vector2{
+          static_cast<float>(notif.positionX),
+          static_cast<float>(notif.positionY) - state.camera.y
+        }
+      , Color { 255, 255, 255, 255 }
+      );
+    }
+  }
 }

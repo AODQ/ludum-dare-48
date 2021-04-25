@@ -4,6 +4,7 @@
 #include <mine.hpp>
 #include <miner.hpp>
 #include <mob.hpp>
+#include <notifs.hpp>
 #include <research.hpp>
 
 namespace ld {
@@ -50,6 +51,7 @@ namespace ld {
       MinerGroup minerGroup;
       MobGroup mobGroup;
       MineChasm mineChasm;
+      NotifGroup notifGroup;
 
       Miner * getSelectedMiner() {
         Miner * ret = nullptr;

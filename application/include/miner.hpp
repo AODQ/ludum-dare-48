@@ -113,6 +113,7 @@ namespace ld {
           size_t pathSize;
 
           int32_t targetTileX = 0, targetTileY = 0;
+          int32_t targetPosOffX = 0, targetPosOffY = 0;
           bool hasHitTarget = true;
         };
 
@@ -126,6 +127,7 @@ namespace ld {
           AiStateSurfaced state = AiStateSurfaced::Surfacing;
 
           int32_t waitTimer = -1;
+          int32_t targetX, targetY;
         };
 
         Attacking      attacking;

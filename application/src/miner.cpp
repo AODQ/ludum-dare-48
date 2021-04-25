@@ -128,7 +128,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
   }
 }
 
-void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
+void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & /*gameState*/)
 {
   auto & state = miner.aiStateInternal.traversing;
   miner.moveTowards(state.targetTileX, state.targetTileY);
@@ -201,7 +201,10 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
   auto & path = state.path[state.pathIdx];
 
   miner.applyAnimationState(ld::Miner::AnimationState::Travelling);
-  miner.moveTowards(path.x*32.0f, path.y*32.0f);
+  miner.moveTowards(
+    path.x*32.0f + state.targetPosOffX,
+    path.y*32.0f + state.targetPosOffY
+  );
 
   if (miner.animationFinishesThisFrame()) {
     miner.reduceEnergy(5);
@@ -223,6 +226,9 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
     )
   ) {
     state.pathIdx += 1;
+
+    state.targetPosOffX = ::GetRandomValue(0, 32);
+    state.targetPosOffY = ::GetRandomValue(0, 32);
 
     auto rockId = gameState.mineChasm.rockId(path.x, path.y);
     auto & rock = gameState.mineChasm.rock(rockId);
@@ -255,18 +261,24 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         state.state = ld::Miner::AiStateSurfaced::MovingToBase;
         miner.animationState = ld::Miner::AnimationState::Travelling;
         miner.animationIdx = 0;
+
+        state.targetX = ::GetRandomValue(50, 180);
+        state.targetY = ::GetRandomValue(-120, -80);
       }
 
       state.waitTimer -= 1;
     break;
     case ld::Miner::AiStateSurfaced::MovingToBase:
-      miner.moveTowards(200, -100);
+      miner.moveTowards(state.targetX, state.targetY);
 
       if (miner.animationFinishesThisFrame()) {
         miner.reduceEnergy(5);
       }
 
-      if (miner.xPosition == 200 && miner.yPosition == -100) {
+      if (
+          miner.xPosition == state.targetX
+       && miner.yPosition == state.targetY
+      ) {
         miner.animationState = ld::Miner::AnimationState::Idling;
         miner.animationIdx = 0;
         state.waitTimer = 50;
@@ -291,6 +303,9 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         cargo.ownedUnits -= 1;
         UpdateMinerCargo(miner);
         gameState.gold += ld::valuableInfoLookup[Idx(cargo.type)].value;
+        gameState.notifGroup.AddNotif(
+          ld::NotifType::ItemSold, miner.xPosition, miner.yPosition
+        );
       }
 
       if (!hasSold) {
@@ -316,6 +331,9 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         miner.energy =
           std::min(miner.maxEnergy, miner.energy + miner.foodToEnergyRatio);
         readyToContinue = false;
+        gameState.notifGroup.AddNotif(
+          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
+        );
       }
 
       if (readyToContinue) {
@@ -338,14 +356,6 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
 void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
 {
   miner.animationState = ld::Miner::AnimationState::Idling;
-
-  if (!miner.aiStateInternal.mineTraversing.hasHitTarget) {
-    miner.animationIdx = 0;
-    miner.animationState = ld::Miner::AnimationState::Travelling;
-    miner.aiState = ld::Miner::AiState::MineTraversing;
-    miner.aiStateInternal.mineTraversing.pathSize = 0;
-    miner.aiStateInternal.mineTraversing.pathIdx = 0;
-  }
 
   // draw
   if (miner.minerId == gameState.minerSelection) {

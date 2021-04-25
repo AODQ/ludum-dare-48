@@ -10,6 +10,7 @@ target_sources(
     src/mine.cpp
     src/miner.cpp
     src/mob.cpp
+    src/notifs.cpp
     src/overlay.cpp
     src/pathfinder.cpp
     src/renderer.cpp
