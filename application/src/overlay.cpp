@@ -179,6 +179,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     auto idleBtn     = buttons.at("Idle");
     buyMinerBtn.Draw("Hire Miner");
     researchBtn.Draw("Research");
+
     std::vector<int32_t> idleMiners;
     for (auto miner : game.minerGroup.miners) {
         if (miner.aiState == ld::Miner::AiState::Idling) {
@@ -186,11 +187,13 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         }
     }
 
+    static size_t cycle = 0;
     std::string idleText = "Idle: " + std::to_string(idleMiners.size());
     idleBtn.Draw(idleText.c_str(), 10);
     if (idleBtn.IsClicked() && !idleMiners.empty())
     {
-        game.minerSelection = idleMiners.at(0);
+        game.minerSelection = idleMiners.at(cycle);
+        cycle = (cycle+1) % idleMiners.size();
     }
 }
 
@@ -310,6 +313,10 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         std::string valueText = "Total Value: " + std::to_string(cargoValue);
         padding += 30;
         ::DrawText(valueText.c_str(), x, y+padding, 10, ::BLACK);
+    }
+
+    { // -- Cancel current action
+
     }
 
     // Gui sliders
