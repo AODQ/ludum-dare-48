@@ -156,7 +156,7 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
         uint32_t height = 30;
         uint32_t fontSize = 20;
 
-        const char* text = ::TextFormat("Food: %i/%i", game.food, game.maxFood);
+        const char* text = ::TextFormat("Food: %i/%i", game.food, game.MaxFood());
 
         ::DrawRectangle(
           xPos, yPos, width, height,
@@ -165,11 +165,11 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
 
         ::DrawRectangle(
           xPos, yPos - height/2 + 8,
-          width * (game.foodEatTimer / (60.0f*5.0f)), 5,
+          width * (static_cast<float>(game.foodEatTimer) / game.MaxFoodEatTimer()), 5,
           BLUE
         );
 
-        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::RED, static_cast<float>(game.food)/static_cast<float>(game.maxFood));
+        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::RED, static_cast<float>(game.food)/static_cast<float>(game.MaxFood()));
     }
 
     // Resource related buttons

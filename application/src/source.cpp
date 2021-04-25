@@ -49,7 +49,7 @@ void Entry() {
 
       gameState.foodEatTimer = (gameState.foodEatTimer - 1);
       if (gameState.foodEatTimer <= 0) {
-        gameState.foodEatTimer = 60*5;
+        gameState.foodEatTimer = gameState.MaxFoodEatTimer();
         gameState.food -= 1;
       }
     }
