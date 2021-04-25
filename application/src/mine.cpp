@@ -7,7 +7,7 @@
 #include <raylib.h>
 
 #include <algorithm>
-#include <cmath>    // round
+#include <cmath>    // round, floor
 
 
 namespace {
@@ -142,39 +142,8 @@ namespace { // generate passes
     GenerateTiers(self);
   }
 
-  [[maybe_unused]]
-  void GenerateTin(ld::MineChasm& /*self*/)
-  {
-
-  }
-
-  [[maybe_unused]]
-  void GenerateRuby(ld::MineChasm& /*self*/)
-  {
-
-  }
-
-  [[maybe_unused]]
-  void GenerateEmerald(ld::MineChasm& /*self*/)
-  {
-
-  }
-
-  [[maybe_unused]]
-  void GenerateSapphire(ld::MineChasm& /*self*/)
-  {
-
-  }
-
-  // TODO: split this up
   void GenerateGems(ld::MineChasm& self)
   {
-    // TODO:
-    // GenerateTin     (self);
-    // GenerateRuby    (self);
-    // GenerateEmerald (self);
-    // GenerateSapphire(self);
-
     const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
     const auto ps = perlinSize(self);
     auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 80.f);
@@ -188,12 +157,18 @@ namespace { // generate passes
           : fval(perlin, col, row)
         );
         if (gv > 0.7f) {
-          self.rock(col, row).gem = static_cast<ld::RockGemType>(
-            ::GetRandomValue(
-              1,
-              Idx(ld::RockGemType::Size) * (static_cast<float>(row) / rows)
-            )
-          );
+          if (row < 20) {
+            self.rock(col, row).gem = ld::RockGemType::Tin;
+          }
+          else {
+            self.rock(col, row).gem = static_cast<ld::RockGemType>(
+              1 + std::floor(
+                fval(perlin, col, row)
+                * static_cast<float>(row - 20) / (rows - 20)
+                * Idx(ld::RockGemType::Size)
+              )
+            );
+          }
         }
       }
     }
