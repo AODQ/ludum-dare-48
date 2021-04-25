@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <cmath>    // round, floor
-#include <set>
 
 
 namespace {
@@ -18,6 +17,8 @@ namespace {
     ld::RockGemType::Empty,
     5,
   };
+
+  constexpr uint32_t startingRows = 2;
 
   constexpr float lerp(float n1, float n2, float f)
   {
@@ -188,8 +189,7 @@ namespace { // generate passes
     auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 7.f);
     auto cells  = ::GenImageCellular(self.columns, rows, 10);
 
-    // set of (row,col) pairs (implicitly unique), sorted by first member (row)
-    std::set<std::pair<uint32_t, uint32_t>> emptySpaces;
+    std::vector<std::pair<uint32_t, uint32_t>> emptySpaces;
 
     for (uint32_t row = 0; row < rows; ++row) {
       for (uint32_t col = 0; col < self.columns; ++col) {
@@ -207,7 +207,9 @@ namespace { // generate passes
         if (cv < 0.3f) {
           rock.tier = ld::RockTier::Mined;
           rock.gem  = ld::RockGemType::Empty;
-          emptySpaces.emplace(row, col);
+          if (row >= startingRows) {
+            emptySpaces.emplace_back(row, col);
+          }
         }
       }
     }
@@ -272,22 +274,15 @@ ld::MineChasm ld::MineChasm::Initialize(
 
   GenerateEarth(self);
   GenerateGems (self);
-  auto emptySpaces = GenerateCaves(self);
+  const auto emptySpaces = GenerateCaves(self);
 
-  // first 2 rows is walkable
-  for (uint32_t i = 0; i < columns*2; ++i) {
+  // first few rows are walkable
+  for (uint32_t i = 0; i < columns * startingRows; ++i) {
     self.rock(i).type = ld::RockType::Sand;
     self.rock(i).tier = ld::RockTier::Mined;
-    emptySpaces.emplace(0, i);
   }
 
-  std::vector<std::pair<uint32_t, uint32_t>> emptySpacesVec;
-  for (auto& pair : emptySpaces) {
-    emptySpacesVec.emplace_back(pair);
-  }
-  emptySpaces = {};
-
-  GenerateMobs (self, group, emptySpacesVec);
+  GenerateMobs (self, group, emptySpaces);
 
   // compute durabilities
   for (auto & rock : self.rocks) {
