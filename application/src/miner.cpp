@@ -63,6 +63,7 @@ void MinerPickLocation(
   auto & state = miner.aiStateInternal.mineTraversing;
   state.path.clear();
   state.pathIdx = 0;
+  state.hasHitTarget = false;
 
   // *very* naive path finder
   // these miners are DUMB! and very near-sighted!
@@ -460,6 +461,7 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
       miner.animationIdx = 0;
       miner.animationState = ld::Miner::AnimationState::Travelling;
       miner.aiState = ld::Miner::AiState::MineTraversing;
+      miner.aiStateInternal.mineTraversing.hasHitTarget = false;
       miner.aiStateInternal.mineTraversing.path.clear();
       miner.aiStateInternal.mineTraversing.pathIdx = 0;
       miner.aiStateInternal.mineTraversing.targetTileX = mousePos.x / 32.0f;
