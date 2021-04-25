@@ -273,6 +273,16 @@ void ld::Overlay::Draw(ld::GameState & game)
           if (miner.minerId == game.minerSelection) {
             found = true;
             MinerInfo(miner);
+
+            // Circle selected miner
+            uint32_t radius = 10;
+            ::DrawCircleLines(
+                miner.xPosition + radius*0.5f + 1,
+                miner.yPosition + radius - game.camera.y,
+                radius,
+                ::BLUE
+            );
+
             break;
           }
         }
