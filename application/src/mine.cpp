@@ -153,6 +153,10 @@ bool ld::MineRock::receiveDamage(int32_t damage) {
 int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
   auto & self = *this;
 
+  if (y < 0) { return -100; }
+
+  if (x < 0 || x > static_cast<int32_t>(columns)) { return 0; }
+
   auto const & target = self.rock(self.rockId(x, y));
 
   if (target.isMined()) { return 100; }
@@ -160,9 +164,9 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
   int32_t value = 0;
   switch (target.type) {
     default: break;
-    case ld::RockType::Sand:   value -= 200;  break;
+    case ld::RockType::Sand:   value -= 0;  break;
     case ld::RockType::Dirt:   value -= 500;  break;
-    case ld::RockType::Rock:   value -= 850; break;
+    case ld::RockType::Rock:   value -= 850;  break;
     case ld::RockType::Gravel: value -= 1300; break;
   }
 
