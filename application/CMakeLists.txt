@@ -11,6 +11,7 @@ target_sources(
     src/miner.cpp
     src/mob.cpp
     src/overlay.cpp
+    src/pathfinder.cpp
     src/renderer.cpp
     src/scene.cpp
     src/sounds.cpp

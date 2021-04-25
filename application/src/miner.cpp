@@ -1,6 +1,7 @@
 #include <miner.hpp>
 
 #include <gamestate.hpp>
+#include <pathfinder.hpp>
 #include <sounds.hpp>
 
 #include <algorithm>
@@ -52,6 +53,12 @@ void ld::Miner::kill()
 
 namespace {
 
+int32_t MinerTileValue(
+  ld::GameState const & state, int32_t tileX, int32_t tileY
+) {
+  return state.mineChasm.rockPathValue(tileX, tileY);
+}
+
 void MinerPickLocation(
   ld::Miner & miner,
   int32_t const targetTileX,
@@ -64,116 +71,14 @@ void MinerPickLocation(
   state.path.clear();
   state.pathIdx = 0;
 
-  // *very* naive path finder
-  // these miners are DUMB! and very near-sighted!
-  /*
-
-       build a cone in a direction to pick
-
-            *
-          * *
-      X * * *
-          * *
-            *
-  */
-  int32_t previousTileX2 = 0;
-  int32_t previousTileY2 = 0;
-  int32_t previousTileX = static_cast<int32_t>(miner.xPosition / 32.0f);
-  int32_t previousTileY = static_cast<int32_t>(miner.yPosition / 32.0f);
-
-  for (size_t i = 0; i < 3ul; ++ i) {
-
-    struct PossLocs {
-      int32_t x, y;
-    };
-
-    constexpr std::array<PossLocs, 4> directions = {{
-      { -1, 0 }, { +1, 0 }, {  0, +1 }, {  0, -1 },
-    }};
-
-    std::array<int32_t, 4> pathValue = {{ 0, 0, 0, 0, }};
-
-    if (previousTileX > targetTileX) pathValue[0] = 250;
-    if (previousTileX < targetTileX) pathValue[1] = 250;
-    if (previousTileY < targetTileY) pathValue[2] = 250;
-    if (previousTileY > targetTileY) pathValue[3] = 250;
-
-    if (previousTileX - 1 < 0)
-      pathValue[0] = -55000;
-    if (previousTileX + 1 >= static_cast<int32_t>(gameState.mineChasm.columns))
-      pathValue[1] = -55000;
-    if (previousTileY - 1 < 0)
-      pathValue[3] = -55000;
-
-    for (auto & path : pathValue)
-      path += ::GetRandomValue(-20, 80);
-
-    for (size_t directionIt = 0ul; directionIt < 4ul; ++ directionIt) {
-      auto const direction = directions[directionIt];
-      constexpr std::array<PossLocs, 9> offsets = {{
-        { +1, 0 }, { +2,  0 }, { +3,  0 },
-                   { +2, +1 }, { +3, +2 },
-                   { +2, -1 }, { +3, -2 },
-                               { +3, +2 },
-                               { +3, -2 },
-      }};
-
-      for (auto const offset : offsets) {
-        // transform cone into local space
-        int32_t pickTileX =
-           direction.x == -1 ? -offset.x
-        : (direction.x == +1 ?  offset.x
-        : (direction.y == -1 ? -offset.y
-        :                       offset.y
-        ));
-
-        int32_t pickTileY =
-           direction.x == -1 ? -offset.y
-        : (direction.x == +1 ?  offset.y
-        : (direction.y == -1 ? -offset.x
-        :                       offset.x
-        ));
-
-        // transform cone into global space & select rock
-        pathValue[directionIt] +=
-          gameState.mineChasm.rockPathValue(
-            previousTileX+pickTileX,
-            previousTileY+pickTileY
-          )
-          * (1.0f / (offset.x+offset.y));
-
-        if (
-            previousTileX+pickTileX == previousTileX2
-         && previousTileY+pickTileY == previousTileY2
-        ) {
-          pathValue[directionIt] -= 1000;
-        }
-      }
-    }
-
-    int32_t selectedPath = -1;
-    int32_t selectedPathMaxValue = INT32_MIN;
-    for (int32_t pathIt = 0; pathIt < 4; ++ pathIt) {
-      if (pathValue[pathIt] > selectedPathMaxValue) {
-        selectedPath = pathIt;
-        selectedPathMaxValue = pathValue[pathIt];
-      }
-    }
-
-    if (selectedPath == -1) { break; }
-
-    int32_t newTileX = previousTileX + directions[selectedPath].x;
-    int32_t newTileY = previousTileY + directions[selectedPath].y;
-
-    state.path.push_back(
-      ::Vector2{static_cast<float>(newTileX), static_cast<float>(newTileY)}
-    );
-
-    previousTileX2 = previousTileX;
-    previousTileY2 = previousTileY;
-    previousTileX = newTileX;
-    previousTileY = newTileY;
-  }
+  ld::pathFind(
+    gameState,
+    state.path,
+    miner.xPosition, miner.yPosition,
+    targetTileX, targetTileY,
+    true, // can mine
+    &MinerTileValue
+  );
 }
 
 
@@ -284,7 +189,7 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
     );
 
     // if no path was selected just leave
-    if (state.path.size() == 0) {
+    if (state.pathIdx >= state.path.size()) {
       miner.aiStateInternal.mineTraversing.hasHitTarget = true;
       miner.aiState = ld::Miner::AiState::Traversing;
       miner.aiStateInternal.traversing.wantsToSurface = true;
@@ -299,6 +204,10 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
 
   miner.applyAnimationState(ld::Miner::AnimationState::Travelling);
   miner.moveTowards(path.x*32.0f, path.y*32.0f);
+
+  if (miner.animationFinishesThisFrame()) {
+    miner.reduceEnergy(5);
+  }
 
   ::Rectangle rect = {
     .x = path.x*32.0f, .y = path.y*32.0f,
