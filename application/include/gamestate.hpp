@@ -10,6 +10,8 @@
 namespace ld {
   struct GameState
   {
+      bool showCursor = true;
+
       int32_t food = 100;
       int32_t gold = 100;
       int32_t MaxFood() const {

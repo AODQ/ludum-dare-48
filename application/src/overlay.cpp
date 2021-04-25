@@ -442,5 +442,10 @@ void ld::Overlay::Draw(ld::GameState & game)
         }
     }
 
+    if (game.showCursor)
+    {
+        ::DrawCircleV(GetMousePosition(), 2, RED);
+    }
+
     ResourceMenu(game);
 }
