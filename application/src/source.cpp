@@ -75,7 +75,9 @@ for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
 
 void Entry() {
   ::InitWindow(960, 600, "whatever");
-  ::InitAudioDevice();
+
+  // this only works with 3.7
+  /* ::InitAudioDevice(); */
 
   SetTargetFPS(60);
 
