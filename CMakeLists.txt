@@ -20,7 +20,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ## set cmake C flags for emcc
 set(
   CMAKE_CXX_FLAGS
-  "${CMAKE_CXX_FLAGS} -Os -s USE_GLFW=3 -s ASSERTIONS=0 -s WASM=1 -s ASYNCIFY"
+  "${CMAKE_CXX_FLAGS} -O3 -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1"
 )
 
 # Since WASM is used, ALLOW_MEMORY_GROWTH has no extra overheads
@@ -31,16 +31,10 @@ set(
 
 set(
   CMAKE_CXX_FLAGS
-  "${CMAKE_CXX_FLAGS} -s NO_DISABLE_EXCEPTION_CATCHING=1"
-)
-
-
-set(
-  CMAKE_CXX_FLAGS
   "${CMAKE_CXX_FLAGS} --shell-file ${CMAKE_SOURCE_DIR}/scripts/shell.html"
 )
 
-set(CMAKE_EXE_LINKER_FLAGS "-s USE_GLFW=3")
+set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_CXX_FLAGS})
 
 # Remove the -rdynamic flag because otherwise emscripten does not generate
 # HTML+JS+WASM files, only a non-working and fat HTML

@@ -98,12 +98,12 @@ void ld::pathFind(
   patherMinable->Reset();
   patherUnminable->Reset();
 
-  //  TODO limit the end tile to a radius of 4
-  if (std::abs(origTileX - targetTileX) + std::abs(origTileY - targetTileY)) {
-    float theta = atan2(origTileY - targetTileY, origTileX - targetTileX);
-    targetTileX = origTileX - cos(theta)*5;
-    targetTileY = origTileY - sin(theta)*5;
-  }
+  /* //  TODO limit the end tile to a radius of 4 */
+  /* if (std::abs(origTileX - targetTileX) + std::abs(origTileY - targetTileY)) { */
+  /*   float theta = atan2(origTileY - targetTileY, origTileX - targetTileX); */
+  /*   targetTileX = origTileX - cos(theta)*5; */
+  /*   targetTileY = origTileY - sin(theta)*5; */
+  /* } */
 
   auto & endTile   = state.mineChasm.rock(targetTileX, targetTileY);
 

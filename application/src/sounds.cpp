@@ -8,14 +8,12 @@
 
 namespace {
   std::array<::Sound, 4> rockHitSounds;
+  ::Music stream;
 }
 
-::Music stream = LoadMusicStream("resources/audio.xm");
 
 void ld::SoundInitialize()
 {
-  ::InitAudioDevice();
-
   ::SetMasterVolume(100.0f);
 
   TraceLog(LOG_INFO, "audio ready? %d", ::IsAudioDeviceReady());
@@ -30,8 +28,8 @@ void ld::SoundInitialize()
   /* rockHitSounds[2] = ::LoadSound("resources/hit3.ogg"); */
   /* rockHitSounds[3] = ::LoadSound("resources/hit4.ogg"); */
 
-  /* stream = ::LoadMusicStream("resources/audio.xm"); */
-  /* ::PlayMusicStream(stream); */
+  stream = ::LoadMusicStream("resources/mine.ogg");
+  ::PlayMusicStream(stream);
 }
 
 void ld::SoundShutdown()
@@ -42,7 +40,7 @@ void ld::SoundShutdown()
 
 void ld::SoundUpdate()
 {
-  /* ::UpdateMusicStream(stream); */
+  ::UpdateMusicStream(stream);
 }
 
 void ld::SoundPlay(ld::SoundType const type, float const volume)
