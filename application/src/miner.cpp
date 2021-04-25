@@ -401,7 +401,6 @@ void ld::MinerGroup::Update(ld::GameState & state) {
   // selecting a miner via mouse click
   if (::IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
     auto mousePos = ::GetMousePosition();
-    state.minerSelection = -1;
     for (int64_t i = 0; i < self.miners.size(); ++ i) {
       auto & miner = self.miners[i];
       if(

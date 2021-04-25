@@ -5,16 +5,28 @@ typedef enum {
     eStorageHiScore = 1,
 } StorageData;
 
+void ld::DrawOutlinedText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color mainColor, ::Color outlineColor)
+{
+    int offset = 1;
+    // Place a slightly offset text on each quadrant
+    ::DrawText(text, xPos-offset, yPos-offset, fontSize, outlineColor);
+    ::DrawText(text, xPos-offset, yPos+offset, fontSize, outlineColor);
+    ::DrawText(text, xPos+offset, yPos-offset, fontSize, outlineColor);
+    ::DrawText(text, xPos+offset, yPos+offset, fontSize, outlineColor);
+
+    ::DrawText(text, xPos, yPos, fontSize, mainColor);
+}
+
+void ld::DrawOutlinedCenteredText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color color, ::Color outline)
+{
+    int textWidth = ::MeasureText(text, fontSize);
+    ld::DrawOutlinedText(text, xPos - 0.5f*textWidth, yPos + 0.5*fontSize, fontSize, color, outline);
+}
+
 void ld::DrawCenteredText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color color)
 {
     int textWidth = ::MeasureText(text, fontSize);
-    ::DrawText(
-        text,
-        xPos - 0.5f*textWidth,
-        yPos + 0.5*fontSize,
-        fontSize,
-        color
-    );
+    ::DrawText(text, xPos - 0.5f*textWidth, yPos + 0.5*fontSize, fontSize, color);
 }
 
 void ld::DrawBar(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height, uint32_t fontSize, ::Color color, float fillPct)
@@ -22,7 +34,8 @@ void ld::DrawBar(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width,
     int textWidth = ::MeasureText(text, fontSize);
     ::DrawRectangle     (xPos, yPos, width*fillPct, height, color);
     ::DrawRectangleLines(xPos, yPos, width        , height, DARKGRAY);
-    ::DrawText(text, xPos + 0.5f*(width-textWidth), yPos + 0.5*(height-fontSize), fontSize, BLACK);
+    //::DrawText(text, xPos + 0.5f*(width-textWidth), yPos + 0.5*(height-fontSize), fontSize, BLACK);
+    ld::DrawOutlinedText(text, xPos + 0.5f*(width-textWidth), yPos + 0.5*(height-fontSize), fontSize, ::WHITE, ::BLACK);
 }
 
 
@@ -55,7 +68,8 @@ void ld::Overlay::PauseScreen()
 
 void ld::Overlay::GameOverScreen()
 {
-
+    ::DrawRectangle(0, 0, scrWidth, scrHeight, ::Fade(::DARKGRAY, 0.9f));
+    ld::DrawCenteredText("Game Over!", scrWidth*0.5f, scrHeight*0.5f, 30, ::WHITE);
 }
 
 void ld::Overlay::ResearchMenu(ld::GameState & game)
@@ -143,8 +157,9 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         uint32_t height = 30;
         uint32_t fontSize = 20;
 
+        float fillPct = game.gold < 100 ? game.gold / 100.0f : 1.0f;
         const char* text = ::TextFormat("Gold: %i", game.gold);
-        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::GOLD);
+        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::GOLD, fillPct);
     }
 
     currentFood -= ld::sgn(currentFood - game.food);
@@ -177,7 +192,8 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     auto buyMinerBtn = buttons.at("BuyMiner");
     auto researchBtn = buttons.at("Research");
     auto idleBtn     = buttons.at("Idle");
-    buyMinerBtn.Draw("Hire Miner");
+    const char* hireText = ::TextFormat("Hire: %i Gold", game.minerCost);
+    buyMinerBtn.Draw(hireText);
     researchBtn.Draw("Research");
 
     std::vector<int32_t> idleMiners;
@@ -222,7 +238,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
 {
     // Position of the root panel
     uint32_t w = 120;
-    uint32_t h = 200;
+    uint32_t h = 220;
     uint32_t x = scrWidth - w - 20;
     uint32_t y = scrHeight - h - 20;
 
@@ -231,18 +247,16 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
 
     // Increment as we go to get padding between the last element
     uint32_t padding = 0;
-    { // -- Energy
-        const char* energyText = ::TextFormat("Energy: %i/%i", miner.energy, miner.maxEnergy);
-        ld::DrawBar(energyText, x, y+padding, 100, 20, 10, ::GREEN, static_cast<float>(miner.energy) / static_cast<float>(miner.maxEnergy));
-    }
 
-    { // -- Weight
-        padding += 20;
-        const char* cargo = ::TextFormat("Weight: %i/%i", miner.currentCargoCapacity, miner.cargoCapacity);
-        ld::DrawBar(cargo, x, y+padding, 100, 20, 10, ::BLUE, static_cast<float>(miner.currentCargoCapacity) / static_cast<float>(miner.cargoCapacity));
+    { // -- Panel title
+        uint32_t titleSize = 20;
+        ld::DrawOutlinedCenteredText(
+            "Miner Info", x+0.5f*w, y-titleSize, titleSize, ::WHITE, ::BLACK
+        );
     }
 
     { // -- Current action
+        padding += 15;
         std::string action = "Action: ";
         switch (miner.aiState)
         {
@@ -271,16 +285,29 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
                 action = "";
                 break;
         }
+        ld::DrawOutlinedText(action.c_str(), x, y+padding, 10, ::WHITE, ::BLACK);
+    }
+
+    { // -- Energy
+        padding += 15;
+        const char* energyText = ::TextFormat("Energy: %i/%i", miner.energy, miner.maxEnergy);
+        ld::DrawBar(energyText, x, y+padding, w, 20, 10, ::GREEN, static_cast<float>(miner.energy) / static_cast<float>(miner.maxEnergy));
+    }
+
+    { // -- Weight
         padding += 20;
-        ::DrawText(action.c_str(), x, y+padding, 10, ::BLACK);
+        const char* cargo = ::TextFormat("Weight: %i/%i", miner.currentCargoCapacity, miner.cargoCapacity);
+        ld::DrawBar(cargo, x, y+padding, w, 20, 10, ::BLUE, static_cast<float>(miner.currentCargoCapacity) / static_cast<float>(miner.cargoCapacity));
     }
 
     { // -- Equipment
         padding+=20;
-        ::DrawText("Equipment:", x, y+padding, 20, ::BLACK);
+        ld::DrawOutlinedCenteredText("Equipment:", x+w*0.5f, y+padding, 10, ::WHITE);
 
-        uint32_t xOffset = 0;
         padding+=20;
+        uint32_t btnSize = 30;
+        float xPadding = w / 3.0f;
+        uint32_t xOffset = x + 0.5f*(xPadding - btnSize);
         for (auto equip : miner.inventory) {
             // TODO display texture and darken if not owned
             ::Color color = ::DARKGRAY;
@@ -288,35 +315,45 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
                 color = ::WHITE;
             }
 
-            ld::Button itemBtn(x+xOffset, y+padding, 30, 30, color);
+            ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, color);
             // TODO replace with texture
             itemBtn.Draw("TODO", 10);
-            xOffset += 30;
+            xOffset += xPadding;
         }
     }
 
     { // -- Cargo
         padding+=35;
-        ::DrawText("Cargo:", x, y+padding, 20, ::BLACK);
-        uint32_t xOffset = 0;
+        ld::DrawOutlinedCenteredText("Cargo:", x+w*0.5f, y+padding, 10, ::WHITE);
         uint32_t cargoValue = 0;
 
+        uint32_t btnSize = 30;
         padding+=20;
+        float xPadding = w / 3.0f;
+        uint32_t xOffset = x + 0.5f*(xPadding - btnSize);
         for (size_t it = 0u; it < miner.cargo.size(); ++ it) {
             // TODO display texture
-            ld::Button itemBtn(x+xOffset, y+padding, 30, 30, ::WHITE);
+            ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, ::WHITE);
             // Display count of item
             itemBtn.Draw(std::to_string(miner.cargo[it].ownedUnits).c_str(), 10);
-            xOffset += 30;
+            xOffset += xPadding;
             cargoValue += miner.cargo[it].ownedUnits* ld::valuableInfoLookup[it].value;
         }
-        std::string valueText = "Total Value: " + std::to_string(cargoValue);
+        std::string valueText = "Cargo Value: " + std::to_string(cargoValue);
         padding += 30;
-        ::DrawText(valueText.c_str(), x, y+padding, 10, ::BLACK);
+        ld::DrawOutlinedCenteredText(valueText.c_str(), x+w*0.5f, y+padding, 10, ::WHITE);
     }
 
     { // -- Cancel current action
-
+        padding+=20;
+        int btnWidth = 50;
+        int btnHeight = 20;
+        ld::Button btn(x + (w-btnWidth)*0.5f, y+padding, btnWidth, btnHeight, ::WHITE);
+        btn.Draw("Set Idle", 5);
+        if (btn.IsClicked())
+        {
+            miner.aiState = ld::Miner::AiState::Idling;
+        }
     }
 
     // Gui sliders
