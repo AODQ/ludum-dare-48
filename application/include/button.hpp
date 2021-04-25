@@ -8,7 +8,7 @@ namespace ld
 {
     struct Button
     {
-        Button(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t size = 10, ::Color c = ::BLACK)
+        Button(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t size = 10, ::Color c = ::WHITE)
             : xPos(x), yPos(y), width(w), height(h), fontSize(size), color(c)
         {
             bounds = {

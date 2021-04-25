@@ -15,7 +15,7 @@ namespace ld {
         {
             Title = 0,
             Pause = 1,
-            Blueprint,
+            Research,
             GameOver,
             None,
         } menuState;
@@ -33,7 +33,7 @@ namespace ld {
         void InitButtons();
         void PauseScreen();
         void GameOverScreen();
-        void BlueprintsMenu(ld::GameState & game);
+        void ResearchMenu(ld::GameState & game);
         void ResourceMenu(const ld::GameState & game);
 
         uint32_t scrWidth, scrHeight;
