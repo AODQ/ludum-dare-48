@@ -134,19 +134,52 @@ void ld::Overlay::Update(ld::GameState & game)
 
 void ld::Overlay::MinerInfo(ld::Miner & miner)
 {
-    // Menu window positioning
+    // Position of the root panel
     uint32_t w = 300;
     uint32_t h = 200;
-    uint32_t padding = 100;
+    uint32_t padding = 20;
     uint32_t x = scrWidth - w - padding;
     uint32_t y = scrHeight - h - padding;
 
     // Root Menu panel
     DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.5f));
 
-    // Energy
-    const char* energyText = ::TextFormat("Energy: %i/%i", miner.energy, miner.maxEnergy);
-    ld::DrawBar(energyText, x, y+20, 100, 20, 10, ::GREEN, static_cast<float>(miner.energy) / static_cast<float>(miner.maxEnergy));
+    { // -- Energy
+        const char* energyText = ::TextFormat("Energy: %i/%i", miner.energy, miner.maxEnergy);
+        ld::DrawBar(energyText, x, y+20, 100, 20, 10, ::GREEN, static_cast<float>(miner.energy) / static_cast<float>(miner.maxEnergy));
+    }
+
+    { // -- Current action
+        std::string action = "Action: ";
+        switch (miner.aiState)
+        {
+            case Miner::AiState::Attacking:
+                action += "Attacking";
+                break;
+            case Miner::AiState::Dying:
+                action += "Dying";
+                break;
+            case Miner::AiState::Idling:
+                action += "Idling";
+                break;
+            case Miner::AiState::MineTraversing:
+                action += "MineTraversing";
+                break;
+            case Miner::AiState::Mining:
+                action += "Mining";
+                break;
+            case Miner::AiState::Surfaced:
+                action += "Surfaced";
+                break;
+            case Miner::AiState::Traversing:
+                action += "Traversing";
+                break;
+            default:
+                action = "";
+                break;
+        }
+        ::DrawText(action.c_str(), x, y+50, 15, ::BLACK);
+    }
 
     // Inventory
 
