@@ -120,8 +120,11 @@ void ld::Overlay::Update(ld::GameState & game)
     auto buyMinerBtn = buttons.at("BuyMiner");
     if (buyMinerBtn.IsClicked())
     {
-        game.gold -= game.minerCost;
-        game.minerGroup.addMiner();
+        if (game.gold >= static_cast<int32_t>(game.minerCost))
+        {
+            game.gold -= game.minerCost;
+            game.minerGroup.addMiner();
+        }
     }
 
     auto bluePrintBtn = buttons.at("BluePrints");
@@ -193,10 +196,21 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
     }
 
     { // -- Cargo
-        for (auto item : miner.cargo)
+        padding+=20;
+        uint32_t xOffset = 0;
+        uint32_t cargoValue = 0;
+        for (auto valuable : miner.cargo)
         {
-
+            // TODO display texture
+            ld::Button itemBtn(x+xOffset, y+padding, 30, 30, 10, ::WHITE);
+            // Display count of item
+            itemBtn.Draw(std::to_string(valuable.ownedUnits).c_str());
+            xOffset += 30;
+            cargoValue += (valuable.ownedUnits);
         }
+        std::string valueText = "Total Value: " + std::to_string(cargoValue);
+        padding += 20;
+        ::DrawText(valueText.c_str(), x, y+padding, 15, ::BLACK);
     }
 
     // Gui sliders
