@@ -76,9 +76,12 @@ void MinerPickLocation(
           * *
             *
   */
+  int32_t previousTileX2 = 0;
+  int32_t previousTileY2 = 0;
   int32_t previousTileX = static_cast<int32_t>(miner.xPosition / 32.0f);
   int32_t previousTileY = static_cast<int32_t>(miner.yPosition / 32.0f);
-  for (size_t i = 0; i < 4ul; ++ i) {
+
+  for (size_t i = 0; i < 8ul; ++ i) {
 
     struct PossLocs {
       int32_t x, y;
@@ -90,10 +93,16 @@ void MinerPickLocation(
 
     std::array<int32_t, 4> pathValue = {{ 0, 0, 0, 0, }};
 
-    if (previousTileX > targetTileX) pathValue[0] = 500;
-    if (previousTileX < targetTileX) pathValue[1] = 500;
-    if (previousTileY < targetTileY) pathValue[2] = 500;
-    if (previousTileY > targetTileY) pathValue[3] = 500;
+    if (previousTileX > targetTileX) pathValue[0] = 250;
+    if (previousTileX < targetTileX) pathValue[1] = 250;
+    if (previousTileY < targetTileY) pathValue[2] = 250;
+    if (previousTileY > targetTileY) pathValue[3] = 250;
+
+    // down is always better
+    pathValue[3] += 50;
+
+    for (auto & path : pathValue)
+      path += ::GetRandomValue(-20, 100);
 
     for (size_t directionIt = 0ul; directionIt < 4ul; ++ directionIt) {
       auto const direction = directions[directionIt];
@@ -127,6 +136,13 @@ void MinerPickLocation(
             previousTileX+pickTileX,
             previousTileY+pickTileY
           );
+
+        if (
+            previousTileX+pickTileX == previousTileX2
+         && previousTileY+pickTileY == previousTileY2
+        ) {
+          pathValue[directionIt] -= 1000;
+        }
       }
     }
 
@@ -146,6 +162,8 @@ void MinerPickLocation(
       ::Vector2{static_cast<float>(newTileX), static_cast<float>(newTileY)}
     );
 
+    previousTileX2 = previousTileX;
+    previousTileY2 = previousTileY;
     previousTileX = newTileX;
     previousTileY = newTileY;
   }
@@ -235,9 +253,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & /*gameState*/)
   }
 
   // update energy
-  miner.energy = std::max(0, miner.energy-1);
-  if (miner.energy == 0) {
-  }
+  miner.reduceEnergy(1);
 }
 
 void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
@@ -261,6 +277,7 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
       state.targetTileY,
       gameState
     );
+    state.hasHitTarget = false;
 
     // if no path was selected just leave
     if (state.path.size() == 0) {
@@ -275,6 +292,7 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
 
   auto & path = state.path[state.pathIdx];
 
+  miner.applyAnimationState(ld::Miner::AnimationState::Travelling);
   miner.moveTowards(path.x*32.0f, path.y*32.0f);
 
   ::Rectangle rect = {

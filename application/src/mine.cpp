@@ -160,10 +160,10 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
   int32_t value = 0;
   switch (target.type) {
     default: break;
-    case ld::RockType::Sand:   value += 5;  break;
-    case ld::RockType::Dirt:   value -= 5;  break;
-    case ld::RockType::Rock:   value -= 25; break;
-    case ld::RockType::Gravel: value -= 50; break;
+    case ld::RockType::Sand:   value -= 200;  break;
+    case ld::RockType::Dirt:   value -= 500;  break;
+    case ld::RockType::Rock:   value -= 850; break;
+    case ld::RockType::Gravel: value -= 1300; break;
   }
 
   switch (target.tier) {
@@ -175,10 +175,10 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
   switch (target.gem) {
     default: break;
     case ld::RockGemType::Empty: break;
-    case ld::RockGemType::Tin:      value += 10; break;
-    case ld::RockGemType::Ruby:     value += 100; break;
-    case ld::RockGemType::Emerald:  value += 250; break;
-    case ld::RockGemType::Sapphire: value += 500; break;
+    case ld::RockGemType::Tin:      value += 100; break;
+    case ld::RockGemType::Ruby:     value += 200; break;
+    case ld::RockGemType::Emerald:  value += 550; break;
+    case ld::RockGemType::Sapphire: value += 700; break;
   }
 
   return value;
