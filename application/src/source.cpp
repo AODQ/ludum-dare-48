@@ -46,6 +46,12 @@ void Entry() {
 
     // -- update
     if (!gameState.isPaused) {
+
+// DEBUG CODE!!!
+#if 1
+bool isZPressed = ::IsKeyDown(KEY_Z);
+for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
+#endif
       ld::MinerGroup::Update(gameState);
       ld::MobGroup::Update(gameState);
       ld::MineChasm::Update(gameState);
@@ -64,6 +70,9 @@ void Entry() {
         if (gameState.minerGroup.miners.size() > 0)
           gameState.minerGroup.miners.begin()->kill();
       }
+#if 1
+}
+#endif
     }
 
     // -- misc updates
