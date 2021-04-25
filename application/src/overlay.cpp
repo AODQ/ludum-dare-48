@@ -135,18 +135,25 @@ void ld::Overlay::Update(ld::GameState & game)
 void ld::Overlay::MinerInfo(ld::Miner & miner)
 {
     // Position of the root panel
-    uint32_t w = 300;
+    uint32_t w = 200;
     uint32_t h = 200;
-    uint32_t padding = 20;
-    uint32_t x = scrWidth - w - padding;
-    uint32_t y = scrHeight - h - padding;
+    uint32_t x = scrWidth - w - 20;
+    uint32_t y = scrHeight - h - 20;
 
     // Root Menu panel
-    DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.5f));
+    DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.8f));
 
+    // Increment as we go to get padding between the last element
+    uint32_t padding = 0;
     { // -- Energy
         const char* energyText = ::TextFormat("Energy: %i/%i", miner.energy, miner.maxEnergy);
-        ld::DrawBar(energyText, x, y+20, 100, 20, 10, ::GREEN, static_cast<float>(miner.energy) / static_cast<float>(miner.maxEnergy));
+        ld::DrawBar(energyText, x, y+padding, 100, 20, 10, ::GREEN, static_cast<float>(miner.energy) / static_cast<float>(miner.maxEnergy));
+    }
+
+    { // -- Weight
+        padding += 20;
+        const char* cargo = ::TextFormat("Weight: %i/%i", miner.currentCargoCapacity, miner.cargoCapacity);
+        ld::DrawBar(cargo, x, y+padding, 100, 20, 10, ::BLUE, static_cast<float>(miner.currentCargoCapacity) / static_cast<float>(miner.cargoCapacity));
     }
 
     { // -- Current action
@@ -178,15 +185,22 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
                 action = "";
                 break;
         }
-        ::DrawText(action.c_str(), x, y+50, 15, ::BLACK);
+        padding += 20;
+        ::DrawText(action.c_str(), x, y+padding, 15, ::BLACK);
     }
 
-    // Inventory
+    { // -- Equipment
+    }
 
-    // Cargo
+    { // -- Cargo
+        for (auto item : miner.cargo)
+        {
+
+        }
+    }
 
     // Gui sliders
-    //::GuiSliderBar((::Rectangle) { } 
+    //::GuiSliderBar((::Rectangle) { }
 }
 
 void ld::Overlay::Draw(ld::GameState & game)
