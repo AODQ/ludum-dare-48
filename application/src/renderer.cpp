@@ -134,6 +134,49 @@ void ld::RenderScene(ld::GameState const & state)
         }
       , Color { 255, 255, 255, 255 }
       );
+
+      // circle around highlighted miner
+      if (miner.minerId == state.minerSelection) {
+        ::DrawCircleLines(
+          miner.xPosition + 8.0f,
+          miner.yPosition + 8.0f - state.camera.y,
+          9.0f,
+          ::GREEN
+        );
+
+        if (miner.aiState == ld::Miner::AiState::Idling) {
+          auto mousePos = ::GetMousePosition();
+          ::DrawCircleV(
+            ::Vector2{mousePos.x, mousePos.y},
+            32.0f,
+            { 128, 25, 25, 128 }
+          );
+        }
+
+        if (
+            miner.aiState == ld::Miner::AiState::MineTraversing
+         || miner.aiState == ld::Miner::AiState::Mining
+        ) {
+          auto & aiState = miner.aiStateInternal.mineTraversing;
+          ::DrawCircleV(
+            ::Vector2{
+              static_cast<float>(aiState.targetTileX)*32.0f+16.0f,
+              static_cast<float>(aiState.targetTileY)*32.0f+16.0f - state.camera.y
+            },
+            8.0f,
+            { 25, 25, 80, 200 }
+          );
+
+          ::DrawCircleV(
+            ::Vector2{
+              aiState.path[aiState.pathIdx].x*32.0f+16.0f,
+              aiState.path[aiState.pathIdx].y*32.0f+16.0f - state.camera.y
+            },
+            8.0f,
+            { 25, 80, 25, 200 }
+          );
+        }
+      }
     }
   }
 

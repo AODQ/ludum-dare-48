@@ -20,5 +20,24 @@ namespace ld {
       MinerGroup minerGroup;
       MobGroup mobGroup;
       MineChasm mineChasm;
+
+      Miner * getSelectedMiner() {
+        Miner * ret = nullptr;
+        bool found = false;
+        // find miner & check if still alive
+        for (auto & miner : minerGroup.miners) {
+          if (miner.minerId == minerSelection) {
+            found = true;
+            ret = &miner;
+            break;
+          }
+        }
+
+        if (!found) {
+          minerSelection = 0;
+        }
+
+        return ret;
+      }
   };
 }
