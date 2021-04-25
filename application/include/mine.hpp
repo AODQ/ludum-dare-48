@@ -44,8 +44,8 @@ namespace ld {
 
     static ld::MineChasm Initialize(
       ld::MobGroup & group,
-      std::size_t columns = 30,
-      std::size_t rows    = 50
+      std::size_t columns =  30,
+      std::size_t rows    = 250
     );
 
     ld::MineRock & rock(uint32_t rockId) { return rocks[rockId]; }

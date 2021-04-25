@@ -37,9 +37,20 @@ namespace
     );
   }
 
-  float fval(const ::Image& img, std::size_t i)
+  float fval(const ::Image& img, std::size_t x, std::size_t y)
   {
-    return reinterpret_cast<const ::Color*>(img.data)[i].r / 255.f;
+    if (
+      img.width <= 0 || img.height <= 0
+      || x >= static_cast<std::size_t>(img.width)
+      || y >= static_cast<std::size_t>(img.height)
+    ) {
+      return 0.f;
+    }
+    else {
+      return reinterpret_cast<const ::Color*>(img.data)[
+        y * img.width + x
+      ].r / 255.f;
+    }
   }
 }
 
@@ -54,8 +65,10 @@ ld::MineChasm ld::MineChasm::Initialize(
     columns,
     decltype(ld::MineChasm::rocks)(columns * rows, basicRock)
   };
-  auto pn1 = ::GenImagePerlinNoise(columns, rows, 0, 0, 10.f);
-  auto pn2 = ::GenImagePerlinNoise(columns, rows, 0, 0, 20.f);
+  const auto perlinSize = std::max(columns, rows);
+  auto pn1 = ::GenImagePerlinNoise(perlinSize, perlinSize, 0, 0, 10.f);
+  auto pn2 = ::GenImagePerlinNoise(perlinSize, perlinSize, 0, 0, 20.f);
+  auto pn3 = ::GenImagePerlinNoise(perlinSize, perlinSize, 0, 0, 80.f);
   auto cn1 = ::GenImageCellular(columns, rows, 5);
 
   for (std::size_t row = 0; row < rows; ++row) {
@@ -67,8 +80,8 @@ ld::MineChasm ld::MineChasm::Initialize(
         row,
         rows,
         average(
-          fval(pn1, i),
-          fval(cn1, i)
+          fval(pn1, col, row),
+          fval(cn1, col, row)
         )
       );
 
@@ -82,10 +95,10 @@ ld::MineChasm ld::MineChasm::Initialize(
       // fade in gem distribution for the first few rows
       const auto gv = (
         row < 20
-        ? lerp(0.5f, fval(pn2, i), static_cast<float>(row) / 20.f)
-        : fval(pn2, i)
+        ? lerp(0.5f, fval(pn3, col, row), static_cast<float>(row) / 20.f)
+        : fval(pn3, col, row)
       );
-      if (gv > 0.6f) {
+      if (gv > 0.7f) {
         rock.gem = static_cast<ld::RockGemType>(::GetRandomValue(
           1,
           Idx(ld::RockGemType::Size) * (static_cast<float>(row) / rows)
@@ -115,7 +128,7 @@ ld::MineChasm ld::MineChasm::Initialize(
               (Idx(ld::RockTier::Size) - 2) * vertGrade(
                 i - topRow,
                 row - topRow,
-                fval(pn2, i)
+                fval(pn2, col, row)
               )
             )
           );
@@ -132,6 +145,11 @@ ld::MineChasm ld::MineChasm::Initialize(
   group.poisonClouds.push_back({
     .positionX = 400, .positionY = 200
   });
+
+  ::UnloadImage(pn1);
+  ::UnloadImage(pn2);
+  ::UnloadImage(pn3);
+  ::UnloadImage(cn1);
 
   return self;
 }
