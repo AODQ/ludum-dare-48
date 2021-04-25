@@ -26,10 +26,18 @@ void ld::Miner::moveTowards(int32_t x, int32_t y)
   }
 }
 
+int32_t ld::Miner::animationFrames() const
+{
+  auto & self = *this;
+  return self.animationState == ld::Miner::AnimationState::Idling ? 3 : 4;
+}
+
 bool ld::Miner::animationFinishesThisFrame()
 {
   auto & self = *this;
-  return ((self.animationIdx + 5) % (4 * 60) < self.animationIdx);
+  return
+    (self.animationIdx + 5) % (self.animationFrames() * 60) < self.animationIdx
+  ;
 }
 
 void ld::Miner::reduceEnergy(int32_t units)
@@ -113,7 +121,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
   miner.applyAnimationState(ld::Miner::AnimationState::Mining);
 
   if (miner.animationFinishesThisFrame()) {
-    miner.reduceEnergy(50);
+    miner.reduceEnergy(10);
     rock.receiveDamage(-1);
     UpdateMinerInventory(miner, rock);
     ld::SoundPlay(ld::SoundType::RockHit);
@@ -448,7 +456,8 @@ void ld::MinerGroup::Update(ld::GameState & state) {
   }
 
   for (auto & miner : self.miners) {
-    miner.animationIdx = (miner.animationIdx + 5) % (4 * 60);
+    miner.animationIdx =
+      (miner.animationIdx + 5) % (miner.animationFrames() * 60);
   }
 
   // update fog of war

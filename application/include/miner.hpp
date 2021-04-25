@@ -29,12 +29,13 @@ namespace ld {
 
       void moveTowards(int32_t x, int32_t y);
 
+      int32_t animationFrames() const;
       bool animationFinishesThisFrame();
       void reduceEnergy(int32_t units);
       void kill();
 
       uint32_t speed = 1;
-      uint32_t cargoCapacity = 5u;
+      uint32_t cargoCapacity = 50u;
       uint32_t currentCargoCapacity = 0u;
       std::array<ld::Valuable, Idx(ld::ValuableType::Size)> cargo = {{
         {

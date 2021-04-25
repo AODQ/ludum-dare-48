@@ -267,7 +267,7 @@ void ld::RenderScene(ld::GameState const & state)
           static_cast<float>(notif.positionX),
           static_cast<float>(notif.positionY) - state.camera.y
         }
-      , Color { 255, 255, 255, 255 }
+      , { 255, 255, 255, static_cast<uint8_t>(notif.timer / 120.0f * 255) }
       );
     }
   }

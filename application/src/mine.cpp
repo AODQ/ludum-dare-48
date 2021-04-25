@@ -15,7 +15,7 @@ namespace {
     ld::RockType   ::Dirt,
     ld::RockTier   ::Base1,
     ld::RockGemType::Empty,
-    10,
+    5,
   };
 
   constexpr float lerp(float n1, float n2, float f)
@@ -285,7 +285,7 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
 
   if (target.isMined()) { return 0; }
 
-  int32_t value = -target.durability;
+  int32_t value = -target.durability*10;
 
   switch (target.gem) {
     default: break;
