@@ -200,6 +200,8 @@ void ld::RenderScene(ld::GameState const & state)
         ::Vector2 { 4, 0, },
       };
 
+      uint8_t const fow = state.mineChasm.fowU8(slime);
+
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
       , ::Rectangle {
@@ -212,7 +214,7 @@ void ld::RenderScene(ld::GameState const & state)
           static_cast<float>(slime.positionX),
           static_cast<float>(slime.positionY) - state.camera.y
         }
-      , Color { 255, 255, 255, 255 }
+      , Color { fow, fow, fow, 255 }
       );
     }
 
@@ -221,6 +223,8 @@ void ld::RenderScene(ld::GameState const & state)
         ::Vector2 { 4, 3, },
         ::Vector2 { 4, 4, },
       };
+
+      uint8_t const fow = state.mineChasm.fowU8(cloud);
 
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
@@ -234,7 +238,7 @@ void ld::RenderScene(ld::GameState const & state)
           static_cast<float>(cloud.positionX),
           static_cast<float>(cloud.positionY) - state.camera.y
         }
-      , Color { 255, 255, 255, 255 }
+      , Color { fow, fow, fow, 255 }
       );
     }
   }

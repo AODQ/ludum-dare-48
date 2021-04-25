@@ -212,7 +212,11 @@ void ld::MineChasm::Update(ld::GameState & state)
 {
   // update FOW
   for (size_t i = 0; i < 30*4; ++ i) {
-    state.mineChasm.rockFow[i] = 1.0f;
+    state.mineChasm.rockFow[i] =
+      ::fmax(
+        1.0f - (i/30) / 4.0f,
+        state.mineChasm.rockFow[i]
+      );
   }
 
   for (size_t i = 30*4; i < state.mineChasm.rocks.size(); ++ i) {
