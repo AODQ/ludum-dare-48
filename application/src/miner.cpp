@@ -463,7 +463,7 @@ void ld::MinerGroup::Update(ld::GameState & state) {
   if (::IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
   {
       auto mousePos = ::GetMousePosition();
-      state.selection = -1;
+      state.minerSelection = -1;
       for (int64_t i = 0; i < self.miners.size(); ++ i) {
           auto & miner = self.miners[i];
           if(
@@ -471,12 +471,13 @@ void ld::MinerGroup::Update(ld::GameState & state) {
               mousePos,
               ::Vector2 {
                 static_cast<float>(miner.xPosition),
-                static_cast<float>(miner.yPosition),
+                static_cast<float>(miner.yPosition) - state.camera.y,
               },
-              24.0f
+              32.0f
             )
           ) {
-            state.selection = i;
+            state.minerSelection = miner.minerId;
+            break;
           }
       }
   }

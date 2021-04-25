@@ -265,9 +265,21 @@ void ld::Overlay::Draw(ld::GameState & game)
         PauseScreen();
     }
 
-    if (game.selection >= 0)
+    if (game.minerSelection >= 0)
     {
-        MinerInfo(game.minerGroup.miners.at(game.selection));
+        bool found = false;
+        // find miner & check if still alive
+        for (auto & miner : game.minerGroup.miners) {
+          if (miner.minerId == game.minerSelection) {
+            found = true;
+            MinerInfo(miner);
+            break;
+          }
+        }
+
+        if (!found) {
+          game.minerSelection = 0;
+        }
     }
 
     ResourceMenu(game);
