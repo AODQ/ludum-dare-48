@@ -317,7 +317,11 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
 
   if (x < 0 || x > static_cast<int32_t>(columns)) { return 0; }
 
+  auto rockId = self.rockId(x, y);
+
   auto const & target = self.rock(self.rockId(x, y));
+
+  if (self.rockFow[rockId] <= 0.5f) { return 2.0f; } // unknown
 
   if (target.isMined()) { return 1.0f; }
 
@@ -342,7 +346,7 @@ void ld::MineChasm::Update(ld::GameState & state)
     state.mineChasm.rockFow[i] =
       std::max(
         std::clamp(1.0f - (i/30) / 4.0f, 0.0f, 1.0f),
-        state.mineChasm.rockFow[i] - (0.15f/60.0f)
+        state.mineChasm.rockFow[i] - 0.0005f
       );
   }
 }
