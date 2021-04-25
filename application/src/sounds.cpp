@@ -14,8 +14,6 @@ namespace {
 
 void ld::SoundInitialize()
 {
-  ::InitAudioDevice();
-
   ::SetMasterVolume(100.0f);
 
   TraceLog(LOG_INFO, "audio ready? %d", ::IsAudioDeviceReady());

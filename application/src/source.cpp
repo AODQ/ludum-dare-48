@@ -10,6 +10,7 @@
 #include <sounds.hpp>
 
 #include <raylib.h>
+#include <emscripten/emscripten.h>
 
 #include <string>
 #include <vector>
@@ -19,8 +20,63 @@
 uint32_t scrWidth = 960;
 uint32_t scrHeight = 600;
 
+ld::GameState gameState;
+ld::Overlay overlay(scrWidth, scrHeight);
+
+void UpdateFrame() {
+  if (IsKeyPressed(KEY_TAB)) {
+      gameState.isPaused ^= 1;
+  }
+
+  // -- update
+  if (!gameState.isPaused) {
+
+// DEBUG CODE!!!
+#if 1
+bool isZPressed = ::IsKeyDown(KEY_Z);
+for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
+#endif
+    ld::MinerGroup::Update(gameState);
+    ld::MobGroup::Update(gameState);
+    ld::MineChasm::Update(gameState);
+    ld::NotifGroup::Update(gameState);
+    overlay.Update(gameState);
+
+    int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 5 : 1;
+    gameState.foodEatTimer = (gameState.foodEatTimer - foodDecTimer);
+    if (gameState.foodEatTimer <= 0) {
+      gameState.foodEatTimer = gameState.MaxFoodEatTimer();
+      gameState.food -= 1;
+    }
+
+    if (gameState.food <= 0) {
+      gameState.food = 0;
+      if (gameState.minerGroup.miners.size() > 0)
+        gameState.minerGroup.miners.begin()->kill();
+    }
+#if 1
+}
+#endif
+  }
+
+  // -- misc updates
+  gameState.camera.Update();
+  ld::SoundUpdate();
+
+  // -- render
+  BeginDrawing();
+    ClearBackground(BLACK);
+
+    ld::RenderScene(gameState);
+
+    overlay.Draw(gameState);
+  EndDrawing();
+}
+
 void Entry() {
-  InitWindow(960, 600, "whatever");
+  ::InitWindow(960, 600, "whatever");
+  ::InitAudioDevice();
+
   SetTargetFPS(60);
 
   TraceLog(LOG_INFO, "Initializing scene");
@@ -29,65 +85,15 @@ void Entry() {
   ld::RenderInitialize();
   ld::SoundInitialize();
 
-  ld::GameState gameState;
   gameState.mobGroup   = ld::MobGroup::Initialize();
   gameState.mineChasm  = ld::MineChasm::Initialize(gameState.mobGroup);
   gameState.minerGroup = ld::MinerGroup::Initialize();
-  ld::Overlay overlay(scrWidth, scrHeight);
 
   ld::pathFindInitialize(&gameState);
 
   // -- start loop
   TraceLog(LOG_INFO, "entering loop");
-  while (!WindowShouldClose()) {
-    if (IsKeyPressed(KEY_TAB)) {
-        gameState.isPaused ^= 1;
-    }
-
-    // -- update
-    if (!gameState.isPaused) {
-
-// DEBUG CODE!!!
-#if 1
-bool isZPressed = ::IsKeyDown(KEY_Z);
-for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
-#endif
-      ld::MinerGroup::Update(gameState);
-      ld::MobGroup::Update(gameState);
-      ld::MineChasm::Update(gameState);
-      ld::NotifGroup::Update(gameState);
-      overlay.Update(gameState);
-
-      int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 5 : 1;
-      gameState.foodEatTimer = (gameState.foodEatTimer - foodDecTimer);
-      if (gameState.foodEatTimer <= 0) {
-        gameState.foodEatTimer = gameState.MaxFoodEatTimer();
-        gameState.food -= 1;
-      }
-
-      if (gameState.food <= 0) {
-        gameState.food = 0;
-        if (gameState.minerGroup.miners.size() > 0)
-          gameState.minerGroup.miners.begin()->kill();
-      }
-#if 1
-}
-#endif
-    }
-
-    // -- misc updates
-    gameState.camera.Update();
-    ld::SoundUpdate();
-
-    // -- render
-    BeginDrawing();
-      ClearBackground(BLACK);
-
-      ld::RenderScene(gameState);
-
-      overlay.Draw(gameState);
-    EndDrawing();
-  }
+  emscripten_set_main_loop(UpdateFrame, 0, 1);
 
     TraceLog(LOG_INFO, "Closing window\n");
 
