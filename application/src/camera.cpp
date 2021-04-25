@@ -17,13 +17,16 @@ void ld::Camera::Update() {
     self.y = 0.0f;
   }
 
+  bool forcenVelocity = false;
   if (::IsKeyDown(KEY_W) || ::IsKeyDown(KEY_UP))
   {
-      self.yVelocity += 2;
+      self.yVelocity += 16;
+      forcenVelocity = true;
   }
   else if (::IsKeyDown(KEY_S) || ::IsKeyDown(KEY_DOWN))
   {
-      self.yVelocity -= 2;
+      self.yVelocity -= 16;
+      forcenVelocity = true;
   }
   self.yVelocity += GetMouseWheelMove()*16.0f;
 
@@ -37,7 +40,7 @@ void ld::Camera::Update() {
   if (abs(self.yVelocity) < 1.0f) self.yVelocity = 0.0f;
 
   if (self.y < 0.0f)
-    self.yVelocity *= 0.95f;
+    self.yVelocity *= forcenVelocity ? 0.001f : 0.95f;
   else
-    self.yVelocity *= 0.85f;
+    self.yVelocity *= forcenVelocity ? 0.001f : 0.85f;
 }

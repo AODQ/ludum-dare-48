@@ -28,6 +28,10 @@ void ld::RenderInitialize()
   textures[Idx(ld::TextureType::Miner)] = ::LoadTexture("resources/miner.png");
   textures[Idx(ld::TextureType::SurfacedFg)] =
     ::LoadTexture("resources/surfaced-foreground.png");
+  textures[Idx(ld::TextureType::Misc)] =
+    ::LoadTexture("resources/misc.png");
+  textures[Idx(ld::TextureType::RockDamage)] =
+    ::LoadTexture("resources/rock-damage.png");
 
   // -- load shaders
 }
@@ -114,6 +118,26 @@ void ld::RenderScene(ld::GameState const & state)
         , ::Rectangle {
             .x = offsets[Idx(rock.gem)].x * 32.0f,
             .y = offsets[Idx(rock.gem)].y * 32.0f,
+            .width = 32.0f,
+            .height = 32.0f,
+          }
+        , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
+        , Color { fow, fow, fow, 255 }
+        );
+      }
+
+      if (!rock.isMined() && rock.durability != rock.baseDurability) {
+        ::DrawTextureRec(
+          ld::TextureGet(ld::TextureType::RockDamage)
+        , ::Rectangle {
+            .x =
+              static_cast<int32_t>(
+                  4.0f
+                * (1.0f - (
+                     rock.durability / static_cast<float>(rock.baseDurability)
+                  ))
+              ) * 32.0f,
+            .y = 0.0f,
             .width = 32.0f,
             .height = 32.0f,
           }
@@ -243,4 +267,30 @@ void ld::RenderScene(ld::GameState const & state)
     }
   }
 
+  { // -- render notifs
+    for (auto & notif : state.notifGroup.notifs) {
+      constexpr std::array<::Vector2, Idx(ld::NotifType::Size)> offsets = {
+        ::Vector2 { 2, 0, },
+        ::Vector2 { 2, 1, },
+        ::Vector2 { 1, 0, },
+        ::Vector2 { 2, 1, },
+        ::Vector2 { 2, 2, },
+      };
+
+      ::DrawTextureRec(
+        ld::TextureGet(ld::TextureType::Misc)
+      , ::Rectangle {
+          .x = offsets[Idx(notif.type)].x * 32.0f,
+          .y = offsets[Idx(notif.type)].y * 32.0f,
+          .width = 32.0f,
+          .height = 32.0f,
+        }
+      , ::Vector2{
+          static_cast<float>(notif.positionX),
+          static_cast<float>(notif.positionY) - state.camera.y
+        }
+      , { 255, 255, 255, static_cast<uint8_t>(notif.timer / 120.0f * 255) }
+      );
+    }
+  }
 }

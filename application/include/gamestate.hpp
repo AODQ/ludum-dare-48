@@ -4,18 +4,38 @@
 #include <mine.hpp>
 #include <miner.hpp>
 #include <mob.hpp>
+#include <notifs.hpp>
 #include <research.hpp>
 
 namespace ld {
   struct GameState
   {
       int32_t food = 100;
-      int32_t maxFood = 200;
       int32_t gold = 100;
+      int32_t MaxFood() const {
+        size_t idx = static_cast<size_t>(ld::ResearchType::Food);
+        return 200 + researchItems[idx].level*100;
+      }
+
+      uint32_t foodEatTimer = 60 * 5;
+      uint32_t MaxFoodEatTimer() const {
+        size_t idx = static_cast<size_t>(ld::ResearchType::Food);
+        return 60 * (5 + researchItems[idx].level);
+      }
+
+      uint32_t MinerSpeed() const {
+        size_t idx = static_cast<size_t>(ld::ResearchType::Speed);
+        return 1 + researchItems[idx].level;
+      }
+
+      uint32_t MaxCargoCapacity() const {
+        size_t idx = static_cast<size_t>(ld::ResearchType::Cargo);
+        return 20 + researchItems[idx].level;
+      }
+
       uint32_t minerCost = 5;
       int32_t minerSelection = -1;
       bool isPaused = false;
-      int32_t foodEatTimer = 60*5;
 
       std::array<ld::ResearchItem, Idx(ld::ResearchType::Size)> researchItems = {{
         { .type = ld::ResearchType::Pickaxe, .level = 0},
@@ -31,6 +51,7 @@ namespace ld {
       MinerGroup minerGroup;
       MobGroup mobGroup;
       MineChasm mineChasm;
+      NotifGroup notifGroup;
 
       Miner * getSelectedMiner() {
         Miner * ret = nullptr;

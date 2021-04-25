@@ -30,7 +30,8 @@ namespace ld {
     ld::RockTier tier;
     ld::RockGemType gem;
 
-    int32_t durability;
+    int32_t durability = 5u;
+    int32_t baseDurability = 5u;
 
     bool isMined() const { return this->tier == ld::RockTier::Mined; }
 
@@ -74,4 +75,10 @@ namespace ld {
 
     static void Update(ld::GameState & state);
   };
+
+  int32_t baseRockDurability(
+    RockType const type,
+    RockTier const tier,
+    RockGemType const gem
+  );
 }

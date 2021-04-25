@@ -29,11 +29,13 @@ namespace ld {
 
       void moveTowards(int32_t x, int32_t y);
 
+      int32_t animationFrames() const;
       bool animationFinishesThisFrame();
       void reduceEnergy(int32_t units);
       void kill();
 
-      uint32_t cargoCapacity = 5u;
+      uint32_t speed = 1;
+      uint32_t cargoCapacity = 50u;
       uint32_t currentCargoCapacity = 0u;
       std::array<ld::Valuable, Idx(ld::ValuableType::Size)> cargo = {{
         {
@@ -107,10 +109,12 @@ namespace ld {
         };
 
         struct MineTraversing {
-          std::vector<::Vector2> path;
+          std::array<::Vector2, 8> path;
           size_t pathIdx;
+          size_t pathSize;
 
           int32_t targetTileX = 0, targetTileY = 0;
+          int32_t targetPosOffX = 0, targetPosOffY = 0;
           bool hasHitTarget = true;
         };
 
@@ -124,6 +128,7 @@ namespace ld {
           AiStateSurfaced state = AiStateSurfaced::Surfacing;
 
           int32_t waitTimer = -1;
+          int32_t targetX, targetY;
         };
 
         Attacking      attacking;

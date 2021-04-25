@@ -2,6 +2,9 @@
 
 #include <cstdint>
 
+#include <raylib.h>
+
+#include <array>
 #include <vector>
 
 namespace ld { struct GameState; }
@@ -14,6 +17,10 @@ namespace ld {
 
     int32_t targetTileX = -1, targetTileY = -1;
     int32_t chasingMiner = -1;
+
+    std::array<::Vector2, 8> path;
+    size_t pathIdx = 0;
+    size_t pathSize = 0;
   };
 
   struct MobPoisonCloud {

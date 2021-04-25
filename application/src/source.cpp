@@ -3,6 +3,7 @@
 #include <button.hpp>
 #include <gamestate.hpp>
 #include <mob.hpp>
+#include <notifs.hpp>
 #include <overlay.hpp>
 #include <renderer.hpp>
 #include <sounds.hpp>
@@ -45,12 +46,20 @@ void Entry() {
       ld::MinerGroup::Update(gameState);
       ld::MobGroup::Update(gameState);
       ld::MineChasm::Update(gameState);
+      ld::NotifGroup::Update(gameState);
       overlay.Update(gameState);
 
-      gameState.foodEatTimer = (gameState.foodEatTimer - 1);
+      int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 5 : 1;
+      gameState.foodEatTimer = (gameState.foodEatTimer - foodDecTimer);
       if (gameState.foodEatTimer <= 0) {
-        gameState.foodEatTimer = 60*5;
+        gameState.foodEatTimer = gameState.MaxFoodEatTimer();
         gameState.food -= 1;
+      }
+
+      if (gameState.food <= 0) {
+        gameState.food = 0;
+        if (gameState.minerGroup.miners.size() > 0)
+          gameState.minerGroup.miners.begin()->kill();
       }
     }
 

@@ -21,6 +21,7 @@ namespace ld
 
         void Draw(const char* text, uint32_t fontSize = 10);
         bool IsHovered();
+        bool IsPressedDown();
         bool IsClicked();
 
         uint32_t xPos, yPos;
