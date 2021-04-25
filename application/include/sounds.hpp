@@ -3,6 +3,9 @@
 namespace ld {
   enum class SoundType {
     RockHit,
+    RockHit2,
+    RockHit3,
+    RockHit4,
     Size,
   };
 

@@ -6,21 +6,25 @@
 
 #include <array>
 
-namespace { std::array<::Sound, Idx(ld::SoundType::Size)> sounds; }
+namespace {
+  std::array<::Sound, 4> rockHitSounds;
+}
 
 ::Music stream = LoadMusicStream("resources/audio.xm");
 
 void ld::SoundInitialize()
 {
-  /* ::InitAudioDevice(); */
+  ::InitAudioDevice();
 
-  /* ::SetMasterVolume(100.0f); */
+  ::SetMasterVolume(100.0f);
 
   TraceLog(LOG_INFO, "audio ready? %d", ::IsAudioDeviceReady());
 
 
-  /* sounds[Idx(ld::SoundType::RockHit)] = */
-  /*   ::LoadSound("resources/rock-break1.ogg"); */
+  rockHitSounds[0] = ::LoadSound("resources/hit1.ogg");
+  rockHitSounds[1] = ::LoadSound("resources/hit2.ogg");
+  rockHitSounds[2] = ::LoadSound("resources/hit3.ogg");
+  rockHitSounds[3] = ::LoadSound("resources/hit4.ogg");
 
   /* stream = ::LoadMusicStream("resources/audio.xm"); */
   /* ::PlayMusicStream(stream); */
@@ -29,7 +33,7 @@ void ld::SoundInitialize()
 void ld::SoundShutdown()
 {
   // TODO
-  /* ::CloseAudioDevice(); */
+  ::CloseAudioDevice();
 }
 
 void ld::SoundUpdate()
@@ -39,6 +43,7 @@ void ld::SoundUpdate()
 
 void ld::SoundPlay(ld::SoundType const type, float const volume)
 {
-  /* ::PlaySoundMulti(sounds[Idx(type)]); */
-  /* ::PlaySound(sounds[Idx(type)]); */
+  if (type == ld::SoundType::RockHit) {
+    ::PlaySound(rockHitSounds[::GetRandomValue(0, 3)]);
+  }
 }

@@ -36,13 +36,13 @@ void ld::MobGroup::Update(ld::GameState & state)
 
       slime.pathSize = 0;
       slime.pathIdx = 0;
-      ld::pathFind(
-        state,
-        slime.path, slime.pathSize,
-        slime.positionX/32, slime.positionY/32,
-        slime.targetTileX, slime.targetTileY,
-        false // cannot mine
-      );
+      /* ld::pathFind( */
+      /*   state, */
+      /*   slime.path, slime.pathSize, */
+      /*   slime.positionX/32, slime.positionY/32, */
+      /*   slime.targetTileX, slime.targetTileY, */
+      /*   false // cannot mine */
+      /* ); */
     }
 
     if (slime.pathSize <= slime.pathIdx) {
