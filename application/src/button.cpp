@@ -8,6 +8,16 @@ void ld::Button::Draw(const char* text)
     ::DrawText(text, xPos + 0.5f*(width - textWidth), yPos + 0.5f*(height-fontSize), fontSize, BLACK);
 }
 
+bool ld::Button::IsHovered()
+{
+    auto mousePos = ::GetMousePosition();
+    if (::CheckCollisionPointRec(mousePos, bounds))
+    {
+        return true;
+    }
+    return false;
+}
+
 bool ld::Button::IsClicked()
 {
     auto mousePos = ::GetMousePosition();

@@ -14,7 +14,7 @@ namespace ld { struct GameState; }
 namespace ld {
 
   struct Miner {
-      size_t minerId;
+      int32_t minerId;
       // position is in texels, not tiles
       int32_t xPosition = 0, yPosition = 0;
       int32_t prevXPosition = 0, prevYPosition = 0;

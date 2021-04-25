@@ -78,6 +78,15 @@ void ld::RenderScene(ld::GameState const & state)
         y = it / state.mineChasm.columns
       ;
 
+      uint8_t fow =
+        static_cast<int8_t>(
+          std::clamp(
+            state.mineChasm.rockFow[it]*255.0f,
+            0.0f,
+            255.0f
+          )
+        );
+
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Rock)
       , ::Rectangle {
@@ -87,7 +96,7 @@ void ld::RenderScene(ld::GameState const & state)
           .height = 32.0f,
         }
       , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
-      , Color { 255, 255, 255, 255 }
+      , { fow, fow, fow, 255 }
       );
 
       if (!rock.isMined() && rock.gem != ld::RockGemType::Empty) {
@@ -109,7 +118,7 @@ void ld::RenderScene(ld::GameState const & state)
             .height = 32.0f,
           }
         , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
-        , Color { 255, 255, 255, 255 }
+        , Color { fow, fow, fow, 255 }
         );
       }
     }
@@ -134,6 +143,49 @@ void ld::RenderScene(ld::GameState const & state)
         }
       , Color { 255, 255, 255, 255 }
       );
+
+      // circle around highlighted miner
+      if (miner.minerId == state.minerSelection) {
+        ::DrawCircleLines(
+          miner.xPosition + 8.0f,
+          miner.yPosition + 8.0f - state.camera.y,
+          9.0f,
+          ::GREEN
+        );
+
+        if (miner.aiState == ld::Miner::AiState::Idling) {
+          auto mousePos = ::GetMousePosition();
+          ::DrawCircleV(
+            ::Vector2{mousePos.x, mousePos.y},
+            32.0f,
+            { 128, 25, 25, 128 }
+          );
+        }
+
+        if (
+            miner.aiState == ld::Miner::AiState::MineTraversing
+         || miner.aiState == ld::Miner::AiState::Mining
+        ) {
+          auto & aiState = miner.aiStateInternal.mineTraversing;
+          ::DrawCircleV(
+            ::Vector2{
+              static_cast<float>(aiState.targetTileX)*32.0f+16.0f,
+              static_cast<float>(aiState.targetTileY)*32.0f+16.0f - state.camera.y
+            },
+            8.0f,
+            { 25, 25, 80, 200 }
+          );
+
+          ::DrawCircleV(
+            ::Vector2{
+              aiState.path[aiState.pathIdx].x*32.0f+16.0f,
+              aiState.path[aiState.pathIdx].y*32.0f+16.0f - state.camera.y
+            },
+            8.0f,
+            { 25, 80, 25, 200 }
+          );
+        }
+      }
     }
   }
 
@@ -148,6 +200,8 @@ void ld::RenderScene(ld::GameState const & state)
         ::Vector2 { 4, 0, },
       };
 
+      uint8_t const fow = state.mineChasm.fowU8(slime);
+
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
       , ::Rectangle {
@@ -160,7 +214,7 @@ void ld::RenderScene(ld::GameState const & state)
           static_cast<float>(slime.positionX),
           static_cast<float>(slime.positionY) - state.camera.y
         }
-      , Color { 255, 255, 255, 255 }
+      , Color { fow, fow, fow, 255 }
       );
     }
 
@@ -169,6 +223,8 @@ void ld::RenderScene(ld::GameState const & state)
         ::Vector2 { 4, 3, },
         ::Vector2 { 4, 4, },
       };
+
+      uint8_t const fow = state.mineChasm.fowU8(cloud);
 
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
@@ -182,7 +238,7 @@ void ld::RenderScene(ld::GameState const & state)
           static_cast<float>(cloud.positionX),
           static_cast<float>(cloud.positionY) - state.camera.y
         }
-      , Color { 255, 255, 255, 255 }
+      , Color { fow, fow, fow, 255 }
       );
     }
   }

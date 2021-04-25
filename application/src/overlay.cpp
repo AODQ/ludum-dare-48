@@ -33,7 +33,7 @@ void ld::Overlay::InitButtons()
     uint32_t btnHeight = 50;
 
     buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight, 5, ::Fade(::LIGHTGRAY, 0.5f)));
-    buttons.emplace("BluePrints", ld::Button(x, 150, btnWidth, btnHeight, 5, ::Fade(::LIGHTGRAY, 0.5f)));
+    buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight, 5, ::Fade(::LIGHTGRAY, 0.5f)));
 }
 
 void ld::Overlay::PauseScreen()
@@ -57,9 +57,73 @@ void ld::Overlay::GameOverScreen()
 
 }
 
-void ld::Overlay::BlueprintsMenu(ld::GameState & /*game*/)
+void ld::Overlay::ResearchMenu(ld::GameState & game)
 {
+    // Position of the root panel
+    uint32_t w = 500;
+    uint32_t h = 300;
+    uint32_t x = (scrWidth - w) * 0.5f;
+    uint32_t y = (scrHeight - h) * 0.5f;
 
+    // Root Menu panel
+    DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.7f));
+    ld::DrawCenteredText("Research", x+w*0.5f, y, 20, ::BLACK);
+
+    // Upgrade Buttons
+    uint32_t btnWidth = 75;
+    uint32_t btnHeight = 75;
+    const uint32_t numButtons = 4;
+    uint32_t padding = w / numButtons;
+    uint32_t xOffset = x + (padding-btnWidth)*0.5f; // Increment with padding as we add more elements
+
+    std::vector<ld::Button> upgBtns;
+    for (size_t i = 0; i < numButtons; ++i)
+    {
+        upgBtns.push_back(ld::Button(xOffset, y + 100, btnWidth, btnHeight, 15, ::WHITE));
+        xOffset+=padding;
+    }
+
+    std::vector<std::string> descriptions =
+    {
+        "Increase pickaxe power and durability",
+        "Increase armor defense and durability",
+        "Increase food to energy ratio",
+        "Increase vision distance in fog of war",
+    };
+
+    // TODO replace with texture icons
+    std::vector<std::string> icon =
+    {
+        "Pickaxe",
+        "Armor",
+        "Food",
+        "Vision",
+    };
+
+    std::string desc = "Hover over each button to learn more";
+    for (size_t i = 0; i < numButtons; ++i)
+    {
+        upgBtns[i].Draw(icon[i].c_str());
+        if (upgBtns[i].IsHovered())
+        {
+            desc = descriptions[i];
+        }
+        if (upgBtns[i].IsClicked())
+        {
+            // Decrement gold
+            // Increase level
+        }
+    }
+    // Description of upgrade
+    ld::DrawCenteredText(desc.c_str(), x+w*0.5f, y + 200, 20, ::BLACK);
+
+    // -- Close
+    ld::Button closeBtn(x + 0.5f*(w-btnWidth), y+h-30, 50, 30, 15, ::WHITE);
+    closeBtn.Draw("Close");
+    if (closeBtn.IsClicked())
+    {
+        menuState = MenuState::None;
+    }
 }
 
 void ld::Overlay::TitleScreen()
@@ -103,14 +167,21 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
         uint32_t fontSize = 20;
 
         const char* text = ::TextFormat("Food: %i/%i", game.food, game.maxFood);
+
+        ld::DrawBar(
+          text, xPos, yPos, width, height, fontSize,
+          Color{100, 40, 55, 255},
+          1.0f
+        );
+
         ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::RED, static_cast<float>(game.food)/static_cast<float>(game.maxFood));
     }
 
     // Resource related buttons
     auto buyMinerBtn = buttons.at("BuyMiner");
-    auto bluePrintBtn = buttons.at("BluePrints");
-    buyMinerBtn.Draw("Buy Miner");
-    bluePrintBtn.Draw("Buy Blueprint");
+    auto researchBtn = buttons.at("Research");
+    buyMinerBtn.Draw("Hire Miner");
+    researchBtn.Draw("Research");
 
 }
 
@@ -127,10 +198,10 @@ void ld::Overlay::Update(ld::GameState & game)
         }
     }
 
-    auto bluePrintBtn = buttons.at("BluePrints");
-    if (bluePrintBtn.IsClicked())
+    auto researchBtn = buttons.at("Research");
+    if (researchBtn.IsClicked())
     {
-        menuState = MenuState::Blueprint;
+        menuState = MenuState::Research;
     }
 
 }
@@ -244,11 +315,12 @@ void ld::Overlay::Draw(ld::GameState & game)
     switch (menuState)
     {
         case ld::Overlay::MenuState::Title:
+            break;
             // TODO Reenable upon submission
             //TitleScreen();
             //return; // return to Avoid rendering resources
-        case ld::Overlay::MenuState::Blueprint:
-            BlueprintsMenu(game);
+        case ld::Overlay::MenuState::Research:
+            ResearchMenu(game);
             break;
         case ld::Overlay::MenuState::GameOver:
             GameOverScreen();
