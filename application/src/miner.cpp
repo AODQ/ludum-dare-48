@@ -81,7 +81,7 @@ void MinerPickLocation(
   int32_t previousTileX = static_cast<int32_t>(miner.xPosition / 32.0f);
   int32_t previousTileY = static_cast<int32_t>(miner.yPosition / 32.0f);
 
-  for (size_t i = 0; i < 8ul; ++ i) {
+  for (size_t i = 0; i < 3ul; ++ i) {
 
     struct PossLocs {
       int32_t x, y;
@@ -95,11 +95,21 @@ void MinerPickLocation(
 
     if (previousTileX > targetTileX) pathValue[0] = 250;
     if (previousTileX < targetTileX) pathValue[1] = 250;
-    if (previousTileY < targetTileY) pathValue[2] = 250;
-    if (previousTileY > targetTileY) pathValue[3] = 250;
+    if (previousTileY < targetTileY) pathValue[2] = 500;
+    if (previousTileY > targetTileY) pathValue[3] = 550;
+
+    if (previousTileX - 1 < 0)
+      pathValue[0] = -55000;
+    if (previousTileX + 1 >= static_cast<int32_t>(gameState.mineChasm.columns))
+      pathValue[1] = -55000;
+    if (previousTileY - 1 < 0)
+      pathValue[3] = -55000;
 
     // down is always better
-    pathValue[3] += 50;
+    pathValue[2] += 50;
+
+    // up is always slightly worse
+    pathValue[3] += -50;
 
     for (auto & path : pathValue)
       path += ::GetRandomValue(-20, 100);
@@ -135,7 +145,8 @@ void MinerPickLocation(
           gameState.mineChasm.rockPathValue(
             previousTileX+pickTileX,
             previousTileY+pickTileY
-          );
+          )
+          * (1.0f / (offset.x+offset.y));
 
         if (
             previousTileX+pickTileX == previousTileX2
@@ -146,14 +157,25 @@ void MinerPickLocation(
       }
     }
 
-    int32_t selectedPath = 0;
-    int32_t selectedPathMaxValue = 0;
+    TraceLog(LOG_INFO, "path <%d, %d> -> <%d, %d> (left %d) (right %d) (down %d) (up %d)",
+      previousTileX, previousTileY,
+      targetTileX, targetTileY,
+      pathValue[0],
+      pathValue[1],
+      pathValue[2],
+      pathValue[3]
+      );
+
+    int32_t selectedPath = -1;
+    int32_t selectedPathMaxValue = INT32_MIN;
     for (int32_t pathIt = 0; pathIt < 4; ++ pathIt) {
       if (pathValue[pathIt] > selectedPathMaxValue) {
         selectedPath = pathIt;
         selectedPathMaxValue = pathValue[pathIt];
       }
     }
+
+    if (selectedPath == -1) { break; }
 
     int32_t newTileX = previousTileX + directions[selectedPath].x;
     int32_t newTileY = previousTileY + directions[selectedPath].y;

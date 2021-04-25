@@ -50,8 +50,8 @@ void ld::RenderScene(ld::GameState const & state)
 {
   // render background TODO
 
-  // render surface TODO
-  { // -- render chasm miners
+  if (state.camera.y < 0.0f)
+  { // -- render surface
     ::DrawTextureV(
       ld::TextureGet(ld::TextureType::SurfacedFg)
     , ::Vector2{0.0f, -612.0f - state.camera.y}
@@ -65,7 +65,12 @@ void ld::RenderScene(ld::GameState const & state)
 
     // TODO only render in view instead of all
 
-    for (size_t it = 0; it < state.mineChasm.rocks.size(); ++ it) {
+    float const limit = state.mineChasm.rocks.size() / 30;
+
+    int32_t begIt = std::clamp((state.camera.y + 0.0f)   / 32.0f, 0.0f, limit);
+    int32_t endIt = std::clamp((state.camera.y + 650.0f) / 32.0f, 0.0f, limit);
+
+    for (int32_t it = begIt*30; it < endIt*30; ++ it) {
       auto const & rock = state.mineChasm.rocks[it];
 
       int32_t
@@ -113,6 +118,7 @@ void ld::RenderScene(ld::GameState const & state)
   // render gems TODO
 
   { // -- render miners
+    // TODO optimize
     for (auto & miner : state.minerGroup.miners) {
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
@@ -132,7 +138,7 @@ void ld::RenderScene(ld::GameState const & state)
   }
 
   { // -- render mobs
-
+    // TODO optimize
     for (auto & slime : state.mobGroup.slimes) {
       constexpr std::array<::Vector2, Idx(ld::RockGemType::Size)> offsets = {
         ::Vector2 { 4, 0, },
