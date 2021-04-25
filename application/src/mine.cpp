@@ -116,9 +116,6 @@ namespace { // generate passes
 
     for (uint32_t row = 0; row < rows; ++row) {
       for (uint32_t col = 0; col < self.columns; ++col) {
-        const auto i = row * self.columns + col;
-        auto& rock = self.rocks[i];
-
         const auto pv = average(
           fval(perlin, col, row),
           fval(cells , col, row)
@@ -126,7 +123,7 @@ namespace { // generate passes
         const auto nv = vertGrade(row, rows, pv);
 
         if (pv < 0.55f) {
-          rock.type = static_cast<ld::RockType>(
+          self.rock(col, row).type = static_cast<ld::RockType>(
             static_cast<uint32_t>(std::round(
               nv
               * (Idx(ld::RockType::Size) - 1)
@@ -134,7 +131,7 @@ namespace { // generate passes
           );
         }
         else {
-          rock.type = ld::RockType::Granite;
+          self.rock(col, row).type = ld::RockType::Granite;
         }
       }
     }
