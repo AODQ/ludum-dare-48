@@ -79,7 +79,18 @@ ld::MineChasm ld::MineChasm::Initialize(
         ))
       );
 
-      rock.gem = static_cast<ld::RockGemType>(::GetRandomValue(0, 4));
+      // fade in gem distribution for the first few rows
+      const auto gv = (
+        row < 20
+        ? lerp(0.5f, fval(pn2, i), static_cast<float>(row) / 20.f)
+        : fval(pn2, i)
+      );
+      if (gv > 0.6f) {
+        rock.gem = static_cast<ld::RockGemType>(::GetRandomValue(
+          1,
+          Idx(ld::RockGemType::Size) * (static_cast<float>(row) / rows)
+        ));
+      }
 
       // first row is walkable
       if (row < 1) {
@@ -96,10 +107,8 @@ ld::MineChasm ld::MineChasm::Initialize(
     std::size_t topRow = 1;
     for (std::size_t row = 1; row <= rows; ++row) {
       auto&  top = self.rocks[topRow * columns + col];
-      if (row == rows || top.type != self.rocks[row * columns + col].type)
-      {
-        for (std::size_t i = topRow; i < row; ++i)
-        {
+      if (row == rows || top.type != self.rocks[row * columns + col].type) {
+        for (std::size_t i = topRow; i < row; ++i) {
           self.rocks[i * columns + col].tier = static_cast<ld::RockTier>(
             std::round(
               // skips Mined -- that's added separately
