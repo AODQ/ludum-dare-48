@@ -189,7 +189,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
                 break;
         }
         padding += 20;
-        ::DrawText(action.c_str(), x, y+padding, 15, ::BLACK);
+        ::DrawText(action.c_str(), x, y+padding, 10, ::BLACK);
     }
 
     { // -- Equipment
@@ -197,20 +197,22 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
 
     { // -- Cargo
         padding+=20;
+        ::DrawText("Cargo:", x, y+padding, 20, ::BLACK);
         uint32_t xOffset = 0;
         uint32_t cargoValue = 0;
-        for (auto valuable : miner.cargo)
-        {
+
+        padding+=20;
+        for (size_t it = 0u; it < miner.cargo.size(); ++ it) {
             // TODO display texture
             ld::Button itemBtn(x+xOffset, y+padding, 30, 30, 10, ::WHITE);
             // Display count of item
-            itemBtn.Draw(std::to_string(valuable.ownedUnits).c_str());
+            itemBtn.Draw(std::to_string(miner.cargo[it].ownedUnits).c_str());
             xOffset += 30;
-            cargoValue += (valuable.ownedUnits);
+            cargoValue += miner.cargo[it].ownedUnits* ld::valuableInfoLookup[it].value;
         }
         std::string valueText = "Total Value: " + std::to_string(cargoValue);
-        padding += 20;
-        ::DrawText(valueText.c_str(), x, y+padding, 15, ::BLACK);
+        padding += 30;
+        ::DrawText(valueText.c_str(), x, y+padding, 10, ::BLACK);
     }
 
     // Gui sliders
