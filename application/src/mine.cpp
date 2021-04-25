@@ -141,6 +141,8 @@ namespace { // generate passes
 
     ::UnloadImage(perlin);
     ::UnloadImage(cells );
+
+    GenerateTiers(self);
   }
 
   [[maybe_unused]]
