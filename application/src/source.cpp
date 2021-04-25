@@ -55,6 +55,12 @@ void Entry() {
         gameState.foodEatTimer = gameState.MaxFoodEatTimer();
         gameState.food -= 1;
       }
+
+      if (gameState.food <= 0) {
+        gameState.food = 0;
+        if (gameState.minerGroup.miners.size() > 0)
+          gameState.minerGroup.miners.begin()->kill();
+      }
     }
 
     // -- misc updates
