@@ -27,7 +27,7 @@ void ld::RenderInitialize()
   textures[Idx(ld::TextureType::Gem)] = ::LoadTexture("resources/gems.png");
   textures[Idx(ld::TextureType::Miner)] = ::LoadTexture("resources/miner.png");
   textures[Idx(ld::TextureType::SurfacedFg)] =
-    ::LoadTexture("resources/surfaced-foreground.png");
+    ::LoadTexture("resources/surfaced-foreground-new.png");
   textures[Idx(ld::TextureType::Misc)] =
     ::LoadTexture("resources/misc.png");
   textures[Idx(ld::TextureType::RockDamage)] =
