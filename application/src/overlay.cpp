@@ -243,7 +243,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
     uint32_t y = scrHeight - h - 20;
 
     // Root Menu panel
-    ::DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.8f));
+    ::DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.7f));
 
     // Increment as we go to get padding between the last element
     uint32_t padding = 0;
@@ -346,10 +346,10 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
 
     { // -- Cancel current action
         padding+=20;
-        int btnWidth = 50;
-        int btnHeight = 20;
+        int btnWidth = 60;
+        int btnHeight = 25;
         ld::Button btn(x + (w-btnWidth)*0.5f, y+padding, btnWidth, btnHeight, ::WHITE);
-        btn.Draw("Set Idle", 5);
+        btn.Draw("Set Idle", 7);
         if (btn.IsClicked())
         {
             miner.aiState = ld::Miner::AiState::Idling;
