@@ -17,6 +17,14 @@ void ld::Camera::Update() {
     self.y = 0.0f;
   }
 
+  if (::IsKeyDown(KEY_W) || ::IsKeyDown(KEY_UP))
+  {
+      self.yVelocity += 2;
+  }
+  else if (::IsKeyDown(KEY_S) || ::IsKeyDown(KEY_DOWN))
+  {
+      self.yVelocity -= 2;
+  }
   self.yVelocity += GetMouseWheelMove()*16.0f;
 
   self.y -= self.yVelocity;
