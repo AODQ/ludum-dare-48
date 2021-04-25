@@ -19,7 +19,7 @@ void ld::Miner::moveTowards(int32_t x, int32_t y)
   self.prevXPosition = self.xPosition;
   self.prevYPosition = self.yPosition;
 
-  for (int i = 0; i < 3; ++ i) {
+  for (int i = 0; i < 1; ++ i) {
     self.xPosition -= ld::sgn(self.xPosition - x);
     self.yPosition -= ld::sgn(self.yPosition - y);
   }
@@ -229,7 +229,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
   miner.applyAnimationState(ld::Miner::AnimationState::Mining);
 
   if (miner.animationFinishesThisFrame()) {
-    miner.reduceEnergy(1);
+    miner.reduceEnergy(50);
     rock.receiveDamage(-1);
     UpdateMinerInventory(miner, rock);
     ld::SoundPlay(ld::SoundType::RockHit);
@@ -258,7 +258,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & /*gameState*/)
   miner.applyAnimationState(ld::Miner::AnimationState::Travelling);
 
   if (miner.animationFinishesThisFrame()) {
-    miner.reduceEnergy(1);
+    miner.reduceEnergy(5);
   }
 
   if (
@@ -275,7 +275,9 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & /*gameState*/)
   }
 
   // update energy
-  miner.reduceEnergy(1);
+  if (miner.animationFinishesThisFrame()) {
+    miner.reduceEnergy(5);
+  }
 }
 
 void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
@@ -371,6 +373,11 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
     break;
     case ld::Miner::AiStateSurfaced::MovingToBase:
       miner.moveTowards(200, -100);
+
+      if (miner.animationFinishesThisFrame()) {
+        miner.reduceEnergy(5);
+      }
+
       if (miner.xPosition == 200 && miner.yPosition == -100) {
         miner.animationState = ld::Miner::AnimationState::Idling;
         miner.animationIdx = 0;
@@ -439,9 +446,11 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
   }
 }
 
-void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
+void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & /*gameState*/)
 {
   miner.animationState = ld::Miner::AnimationState::Idling;
+
+  /* if (miner.minerId */
 
   miner.animationIdx = 0;
   miner.animationState = ld::Miner::AnimationState::Travelling;
