@@ -10,7 +10,7 @@ namespace ld {
 
   // this since with the rocks.png file vertically
   enum class RockType {
-    Sand, Dirt, Rock, Gravel,
+    Sand, Dirt, Rock, Granite,
     Size,
   };
 
