@@ -15,6 +15,8 @@ namespace ld {
       int32_t minerSelection = -1;
       bool isPaused = false;
 
+      int32_t foodEatTimer = 60*5;
+
       Camera camera;
 
       MinerGroup minerGroup;
