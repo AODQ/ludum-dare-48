@@ -34,7 +34,7 @@ namespace ld {
         void PauseScreen();
         void GameOverScreen();
         void ResearchMenu(ld::GameState & game);
-        void ResourceMenu(const ld::GameState & game);
+        void ResourceMenu(ld::GameState & game);
 
         uint32_t scrWidth, scrHeight;
         ButtonGroup buttons;

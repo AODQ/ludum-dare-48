@@ -34,6 +34,7 @@ void ld::Overlay::InitButtons()
 
     buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
     buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
+    buttons.emplace("Idle"    , ld::Button(x, 200, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
 }
 
 void ld::Overlay::PauseScreen()
@@ -130,7 +131,7 @@ void ld::Overlay::TitleScreen()
     }
 }
 
-void ld::Overlay::ResourceMenu(const ld::GameState & game)
+void ld::Overlay::ResourceMenu(ld::GameState & game)
 {
     currentGold -= ld::sgn(currentGold - game.gold);
 
@@ -175,9 +176,22 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
     // Resource related buttons
     auto buyMinerBtn = buttons.at("BuyMiner");
     auto researchBtn = buttons.at("Research");
+    auto idleBtn     = buttons.at("Idle");
     buyMinerBtn.Draw("Hire Miner");
     researchBtn.Draw("Research");
+    std::vector<int32_t> idleMiners;
+    for (auto miner : game.minerGroup.miners) {
+        if (miner.aiState == ld::Miner::AiState::Idling) {
+            idleMiners.push_back(miner.minerId);
+        }
+    }
 
+    std::string idleText = "Idle: " + std::to_string(idleMiners.size());
+    idleBtn.Draw(idleText.c_str(), 10);
+    if (idleBtn.IsClicked() && !idleMiners.empty())
+    {
+        game.minerSelection = idleMiners.at(0);
+    }
 }
 
 // Update any gamestate changes from button usage
