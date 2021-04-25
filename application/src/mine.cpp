@@ -67,10 +67,11 @@ ld::MineChasm ld::MineChasm::Initialize(
     decltype(ld::MineChasm::rocks)(columns * rows, basicRock),
     decltype(ld::MineChasm::rockFow)(columns * rows, 0.0f)
   };
-  const auto perlinSize = std::max(columns, rows);
-  auto pn1 = ::GenImagePerlinNoise(perlinSize, perlinSize, 0, 0, 10.f);
-  auto pn2 = ::GenImagePerlinNoise(perlinSize, perlinSize, 0, 0, 20.f);
-  auto pn3 = ::GenImagePerlinNoise(perlinSize, perlinSize, 0, 0, 80.f);
+  const auto ps = std::max(columns, rows);
+  const auto pc = [](){ return ::GetRandomValue(0, 197); };
+  auto pn1 = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 10.f);
+  auto pn2 = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 20.f);
+  auto pn3 = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 80.f);
   auto cn1 = ::GenImageCellular(columns, rows, 5);
 
   for (std::size_t row = 0; row < rows; ++row) {
