@@ -217,7 +217,13 @@ namespace { // generate passes
           fval(perlin, col, row),
           fval(cells , col, row)
         );
-        if (vv < 0.3f) {
+        // fade in caverns for the first few rows
+        const auto cv = (
+          row < 5
+          ? lerp(0.5f, vv, static_cast<float>(row) / 5.f)
+          : vv
+        );
+        if (cv < 0.3f) {
           rock.tier = ld::RockTier::Mined;
           rock.gem  = ld::RockGemType::Empty;
         }
