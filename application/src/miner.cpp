@@ -300,6 +300,28 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & /*gameState*/)
 void ld::MinerGroup::Update(ld::GameState & state) {
   auto & self = state.minerGroup;
 
+  // selecting a miner via mouse click
+  if (::IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+  {
+      auto mousePos = ::GetMousePosition();
+      state.selection = -1;
+      for (int64_t i = 0; i < self.miners.size(); ++ i) {
+          auto & miner = self.miners[i];
+          if(
+            ::CheckCollisionPointCircle(
+              mousePos,
+              ::Vector2 {
+                static_cast<float>(miner.xPosition),
+                static_cast<float>(miner.yPosition),
+              },
+              24.0f
+            )
+          ) {
+            state.selection = i;
+          }
+      }
+  }
+
   // TODO update AI
 
   // TODO update mining / fighting

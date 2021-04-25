@@ -146,7 +146,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
 
     // Energy
     const char* energyText = ::TextFormat("Energy: %i/%i", miner.energy, miner.maxEnergy);
-    ld::DrawBar(energyText, x, 200, 100, 20, 20, ::GREEN);
+    ld::DrawBar(energyText, x, y+100, 100, 20, 20, ::GREEN, static_cast<float>(miner.energy) / static_cast<float>(miner.maxEnergy));
 
     // Inventory
 
@@ -180,8 +180,14 @@ void ld::Overlay::Draw(ld::GameState & game)
             break;
     }
 
-    if (game.isPaused) {
+    if (game.isPaused)
+    {
         PauseScreen();
+    }
+
+    if (game.selection >= 0)
+    {
+        MinerInfo(game.minerGroup.miners.at(game.selection));
     }
 
     ResourceMenu(game);
