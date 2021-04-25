@@ -10,7 +10,7 @@ namespace ld { struct GameState; }
 namespace ld {
   void pathFind(
     ld::GameState const & state,
-    std::vector<::Vector2> & path,
+    std::array<::Vector2, 8> & path, size_t & pathSize,
     int32_t const origTileX,   int32_t const origTileY,
     int32_t const targetTileX, int32_t const targetTileY,
     bool const canMine,

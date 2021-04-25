@@ -107,12 +107,12 @@ namespace { // generate passes
 
   void GenerateRock(ld::MineChasm& /*self*/)
   {
-    
+
   }
 
   void GenerateGranite(ld::MineChasm& /*self*/)
   {
-    
+
   }
 
   // grade rock tiers in each column
@@ -158,24 +158,28 @@ namespace { // generate passes
     GenerateTiers  (self);
   }
 
+  [[maybe_unused]]
   void GenerateTin(ld::MineChasm& /*self*/)
   {
-    
+
   }
 
+  [[maybe_unused]]
   void GenerateRuby(ld::MineChasm& /*self*/)
   {
-    
+
   }
 
+  [[maybe_unused]]
   void GenerateEmerald(ld::MineChasm& /*self*/)
   {
-    
+
   }
 
+  [[maybe_unused]]
   void GenerateSapphire(ld::MineChasm& /*self*/)
   {
-    
+
   }
 
   // TODO: split this up
@@ -211,9 +215,10 @@ namespace { // generate passes
     }
   }
 
+  [[maybe_unused]]
   void GenerateCaves(ld::MineChasm& /*self*/)
   {
-    
+
   }
 
   void GenerateMobs(ld::MineChasm& /*self*/, ld::MobGroup & group)

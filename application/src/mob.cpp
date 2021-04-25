@@ -32,11 +32,11 @@ void ld::MobGroup::Update(ld::GameState & state)
       slime.targetTileX = std::clamp(slime.targetTileX, 0, 29);
       slime.targetTileY = std::clamp(slime.targetTileY, 0, 500);
 
-      slime.path.clear();
+      slime.pathSize = 0;
       slime.pathIdx = 0;
       ld::pathFind(
         state,
-        slime.path,
+        slime.path, slime.pathSize,
         slime.positionX/32, slime.positionY/32,
         slime.targetTileX, slime.targetTileY,
         false, // cannot mine

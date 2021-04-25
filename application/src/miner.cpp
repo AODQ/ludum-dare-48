@@ -65,22 +65,20 @@ void MinerPickLocation(
   int32_t const targetTileY,
   ld::GameState const & gameState
 ) {
-
   miner.aiState = ld::Miner::AiState::MineTraversing;
   auto & state = miner.aiStateInternal.mineTraversing;
-  state.path.clear();
+  state.pathSize = 0;
   state.pathIdx = 0;
 
   ld::pathFind(
     gameState,
-    state.path,
+    state.path, state.pathSize,
     miner.xPosition, miner.yPosition,
     targetTileX, targetTileY,
     true, // can mine
     &MinerTileValue
   );
 }
-
 
 void UpdateMinerCargo(ld::Miner & miner) {
   miner.currentCargoCapacity = 0;
@@ -170,7 +168,7 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
 {
   auto & state = miner.aiStateInternal.mineTraversing;
 
-  if (state.pathIdx >= state.path.size()) {
+  if (state.pathIdx >= state.pathSize) {
 
     if (state.hasHitTarget) {
       miner.aiState = ld::Miner::AiState::Traversing;
@@ -189,7 +187,7 @@ void UpdateMinerAiMineTraversing(ld::Miner & miner, ld::GameState & gameState)
     );
 
     // if no path was selected just leave
-    if (state.pathIdx >= state.path.size()) {
+    if (state.pathIdx >= state.pathSize) {
       miner.aiStateInternal.mineTraversing.hasHitTarget = true;
       miner.aiState = ld::Miner::AiState::Traversing;
       miner.aiStateInternal.traversing.wantsToSurface = true;
@@ -345,7 +343,7 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
     miner.animationIdx = 0;
     miner.animationState = ld::Miner::AnimationState::Travelling;
     miner.aiState = ld::Miner::AiState::MineTraversing;
-    miner.aiStateInternal.mineTraversing.path.clear();
+    miner.aiStateInternal.mineTraversing.pathSize = 0;
     miner.aiStateInternal.mineTraversing.pathIdx = 0;
   }
 
@@ -358,7 +356,7 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
       miner.animationState = ld::Miner::AnimationState::Travelling;
       miner.aiState = ld::Miner::AiState::MineTraversing;
       miner.aiStateInternal.mineTraversing.hasHitTarget = false;
-      miner.aiStateInternal.mineTraversing.path.clear();
+      miner.aiStateInternal.mineTraversing.pathSize = 0;
       miner.aiStateInternal.mineTraversing.pathIdx = 0;
       miner.aiStateInternal.mineTraversing.targetTileX = mousePos.x / 32.0f;
       miner.aiStateInternal.mineTraversing.targetTileY =

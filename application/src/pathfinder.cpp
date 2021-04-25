@@ -7,7 +7,7 @@
 
 void ld::pathFind(
   ld::GameState const & state,
-  std::vector<::Vector2> & path,
+  std::array<::Vector2, 8> & path, size_t & pathSize,
   int32_t const origTileX,   int32_t const origTileY,
   int32_t const targetTileX, int32_t const targetTileY,
   bool const canMine,
@@ -31,6 +31,8 @@ void ld::pathFind(
   int32_t previousTileY2 = 0;
   int32_t previousTileX = static_cast<int32_t>(origTileX / 32.0f);
   int32_t previousTileY = static_cast<int32_t>(origTileY / 32.0f);
+
+  pathSize = 0;
 
   for (size_t i = 0; i < 3ul; ++ i) {
     struct PossLocs {
@@ -129,9 +131,9 @@ void ld::pathFind(
     int32_t newTileX = previousTileX + directions[selectedPath].x;
     int32_t newTileY = previousTileY + directions[selectedPath].y;
 
-    path.push_back(
-      ::Vector2{static_cast<float>(newTileX), static_cast<float>(newTileY)}
-    );
+    path[pathSize] =
+      ::Vector2{static_cast<float>(newTileX), static_cast<float>(newTileY)};
+    ++ pathSize;
 
     previousTileX2 = previousTileX;
     previousTileY2 = previousTileY;

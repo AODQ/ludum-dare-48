@@ -108,8 +108,9 @@ namespace ld {
         };
 
         struct MineTraversing {
-          std::vector<::Vector2> path;
+          std::array<::Vector2, 8> path;
           size_t pathIdx;
+          size_t pathSize;
 
           int32_t targetTileX = 0, targetTileY = 0;
           bool hasHitTarget = true;
