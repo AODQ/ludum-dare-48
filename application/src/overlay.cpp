@@ -44,6 +44,8 @@ void ld::Overlay::BlueprintsMenu(ld::GameState & /*game*/)
 
 void ld::Overlay::ResourceMenu(const ld::GameState & game)
 {
+    currentGold -= ld::sgn(currentGold - game.gold);
+
     // Gold supply bar
     {
         uint32_t xPos = 50;
@@ -52,13 +54,14 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
         uint32_t height = 30;
         uint32_t fontSize = 20;
 
-        const char* text = TextFormat("Gold: %i", game.gold);
+        const char* text = TextFormat("Gold: %i", currentGold);
         int textWidth = ::MeasureText(text, fontSize);
         ::DrawRectangle     (xPos, yPos, width, height, GOLD);
         ::DrawRectangleLines(xPos, yPos, width, height, DARKGRAY);
         ::DrawText(text, xPos + 0.5f*(width-textWidth), yPos + 0.5*(height-fontSize), fontSize, BLACK);
     }
 
+    currentFood -= ld::sgn(currentFood - game.food);
     // Food supply bar
     {
         uint32_t xPos = 275;
@@ -67,9 +70,9 @@ void ld::Overlay::ResourceMenu(const ld::GameState & game)
         uint32_t height = 30;
         uint32_t fontSize = 20;
 
-        const char* text = TextFormat("Food %i/%i", game.food, game.maxFood);
+        const char* text = TextFormat("Food %i/%i", currentFood, game.maxFood);
         int textWidth = ::MeasureText(text, fontSize);
-        ::DrawRectangle     (xPos, yPos, width*((float)game.food/game.maxFood), height, RED);
+        ::DrawRectangle     (xPos, yPos, width*std::min(1.0f, (float)currentFood/game.maxFood), height, RED);
         ::DrawRectangleLines(xPos, yPos, width, height, DARKGRAY);
         ::DrawText(text, xPos + 0.5f*(width-textWidth), yPos + 0.5*(height-fontSize), fontSize, BLACK);
     }

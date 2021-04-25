@@ -49,8 +49,12 @@ namespace ld {
     );
 
     ld::MineRock & rock(uint32_t rockId) { return rocks[rockId]; }
+    ld::MineRock const & rock(uint32_t rockId) const { return rocks[rockId]; }
+    uint32_t rockId(uint32_t x, uint32_t y) const {
+      return y*columns + x;
+    }
 
-    int32_t rockPositionX(uint32_t rockId) { return rockId % columns; }
-    int32_t rockPositionY(uint32_t rockId) { return rockId / columns; }
+    int32_t rockPositionX(uint32_t rockId) const { return rockId % columns; }
+    int32_t rockPositionY(uint32_t rockId) const { return rockId / columns; }
   };
 }
