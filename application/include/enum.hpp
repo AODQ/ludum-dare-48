@@ -6,12 +6,12 @@
 // -- useful functions to eliminate need of static_cast
 
 template <typename EnumType> constexpr auto Idx(EnumType const & v) {
-  return static_cast<typename std::underlying_type<EnumType>::type>(v);
+  return static_cast<std::underlying_type_t<EnumType>>(v);
 }
 
 template <typename EnumType>
-constexpr typename std::underlying_type<EnumType>::type & Idx(EnumType & v) {
-  return reinterpret_cast<typename std::underlying_type<EnumType>::type &>(v);
+constexpr const auto & Idx(EnumType & v) {
+  return reinterpret_cast<std::underlying_type_t<EnumType> &>(v);
 }
 
 namespace ld {
