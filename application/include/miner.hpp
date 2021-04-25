@@ -109,6 +109,9 @@ namespace ld {
         struct MineTraversing {
           std::vector<::Vector2> path;
           size_t pathIdx;
+
+          int32_t targetTileX = 0, targetTileY = 0;
+          bool hasHitTarget = false;
         };
 
         struct Idling {

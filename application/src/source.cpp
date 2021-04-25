@@ -36,7 +36,9 @@ void Entry() {
   // -- start loop
   TraceLog(LOG_INFO, "entering loop");
   while (!WindowShouldClose()) {
-    if (IsKeyPressed(KEY_TAB)) { gameState.isPaused ^= 1; }
+    if (IsKeyPressed(KEY_TAB)) {
+        gameState.isPaused ^= 1;
+    }
 
     // -- update
     if (!gameState.isPaused) {

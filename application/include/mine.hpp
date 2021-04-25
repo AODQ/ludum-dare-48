@@ -56,5 +56,7 @@ namespace ld {
 
     int32_t rockPositionX(uint32_t rockId) const { return rockId % columns; }
     int32_t rockPositionY(uint32_t rockId) const { return rockId / columns; }
+
+    int32_t rockPathValue(int32_t x, int32_t y) const;
   };
 }

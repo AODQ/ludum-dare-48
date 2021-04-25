@@ -3,7 +3,8 @@
 void ld::Button::Draw(const char* text)
 {
     int textWidth = ::MeasureText(text, fontSize);
-    ::DrawRectangleLines(xPos, yPos, width, height, color);
+    ::DrawRectangle     (xPos, yPos, width, height, color);
+    ::DrawRectangleLines(xPos, yPos, width, height, ::DARKGRAY);
     ::DrawText(text, xPos + 0.5f*(width - textWidth), yPos + 0.5f*(height-fontSize), fontSize, BLACK);
 }
 
