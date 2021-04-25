@@ -138,7 +138,7 @@ void ld::Overlay::Update(ld::GameState & game)
 void ld::Overlay::MinerInfo(ld::Miner & miner)
 {
     // Position of the root panel
-    uint32_t w = 200;
+    uint32_t w = 120;
     uint32_t h = 200;
     uint32_t x = scrWidth - w - 20;
     uint32_t y = scrHeight - h - 20;
@@ -193,10 +193,27 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
     }
 
     { // -- Equipment
+        padding+=20;
+        ::DrawText("Equipment:", x, y+padding, 20, ::BLACK);
+
+        uint32_t xOffset = 0;
+        padding+=20;
+        for (auto equip : miner.inventory) {
+            // TODO display texture and darken if not owned
+            ::Color color = ::DARKGRAY;
+            if (equip.owns) {
+                color = ::WHITE;
+            }
+
+            ld::Button itemBtn(x+xOffset, y+padding, 30, 30, 10, color);
+            // TODO replace with texture
+            itemBtn.Draw("TODO");
+            xOffset += 30;
+        }
     }
 
     { // -- Cargo
-        padding+=20;
+        padding+=35;
         ::DrawText("Cargo:", x, y+padding, 20, ::BLACK);
         uint32_t xOffset = 0;
         uint32_t cargoValue = 0;
