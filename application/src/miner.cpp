@@ -402,6 +402,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         hasSold = true;
 
         cargo.ownedUnits -= 1;
+        UpdateMinerCargo(miner);
         gameState.gold += ld::valuableInfoLookup[Idx(cargo.type)].value;
       }
 
