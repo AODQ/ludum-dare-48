@@ -71,53 +71,10 @@ namespace {
 
 
 namespace { // generate passes
-  void GenerateDirt(ld::MineChasm& self)
-  {
-    const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
-    const auto ps = perlinSize(self);
-    auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 10.f);
-    auto cells  = ::GenImageCellular(self.columns, rows, 5);
-
-    for (uint32_t row = 0; row < rows; ++row) {
-      for (uint32_t col = 0; col < self.columns; ++col) {
-        const auto i = row * self.columns + col;
-        auto& rock = self.rocks[i];
-
-        const auto nv = vertGrade(
-          row,
-          rows,
-          average(
-            fval(perlin, col, row),
-            fval(cells , col, row)
-          )
-        );
-
-        rock.type = static_cast<ld::RockType>(
-          static_cast<uint32_t>(std::round(
-            nv
-            * (Idx(ld::RockType::Size) - 1)
-          ))
-        );
-      }
-    }
-
-    ::UnloadImage(perlin);
-    ::UnloadImage(cells );
-  }
-
-  void GenerateRock(ld::MineChasm& /*self*/)
-  {
-
-  }
-
-  void GenerateGranite(ld::MineChasm& /*self*/)
-  {
-
-  }
-
   // grade rock tiers in each column
   void GenerateTiers(ld::MineChasm& self)
   {
+    // TODO: make this more noisy
     const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
     const auto ps = perlinSize(self);
     auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 20.f);
@@ -152,10 +109,38 @@ namespace { // generate passes
 
   void GenerateEarth(ld::MineChasm& self)
   {
-    GenerateDirt   (self);
-    GenerateRock   (self);
-    GenerateGranite(self);
-    GenerateTiers  (self);
+    const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
+    const auto ps = perlinSize(self);
+    auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 10.f);
+    auto cells  = ::GenImageCellular(self.columns, rows, 5);
+
+    for (uint32_t row = 0; row < rows; ++row) {
+      for (uint32_t col = 0; col < self.columns; ++col) {
+        const auto i = row * self.columns + col;
+        auto& rock = self.rocks[i];
+
+        const auto pv = average(
+          fval(perlin, col, row),
+          fval(cells , col, row)
+        );
+        const auto nv = vertGrade(row, rows, pv);
+
+        if (pv < 0.55f) {
+          rock.type = static_cast<ld::RockType>(
+            static_cast<uint32_t>(std::round(
+              nv
+              * (Idx(ld::RockType::Size) - 1)
+            ))
+          );
+        }
+        else {
+          rock.type = ld::RockType::Gravel;
+        }
+      }
+    }
+
+    ::UnloadImage(perlin);
+    ::UnloadImage(cells );
   }
 
   [[maybe_unused]]
@@ -253,7 +238,7 @@ ld::MineChasm ld::MineChasm::Initialize(
 
   // first 2 rows is walkable
   for (uint32_t i = 0; i < columns*2; ++i) {
-    // self.rock(i).type = ld::RockType::Sand;
+    self.rock(i).type = ld::RockType::Sand;
     self.rock(i).tier = ld::RockTier::Mined;
   }
 
