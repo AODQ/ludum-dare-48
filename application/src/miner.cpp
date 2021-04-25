@@ -532,16 +532,39 @@ void ld::MinerGroup::Update(ld::GameState & state) {
     }
   }
 
-  // TODO update durability
-
-  // TODO update animation state
   for (auto & miner : self.miners) {
     miner.animationIdx = (miner.animationIdx + 5) % (4 * 60);
   }
 
-  // TODO update surfacing
+  // update fog of war
+  for (auto & miner : self.miners) {
+    if (miner.aiState == ld::Miner::AiState::Surfaced) { continue; }
 
-  // TODO update inventoy
+    int32_t const minBoundsX = std::max(0, miner.xPosition/32 - 3);
+    int32_t const minBoundsY = std::max(0, miner.yPosition/32 - 3);
+    int32_t const maxBoundsX = std::min(30, miner.xPosition/32 + 3);
+    int32_t const maxBoundsY = std::min(30, miner.yPosition/32 + 3);
+
+    for (int32_t x = minBoundsX; x < maxBoundsX; ++ x)
+    for (int32_t y = minBoundsY; y < maxBoundsY; ++ y) {
+      auto & fow = state.mineChasm.rockFow[state.mineChasm.rockId(x, y)];
+
+      float len =
+        std::clamp(
+            (3*::sqrt(2.0f))
+          - static_cast<float>(
+              ::sqrt(
+                (miner.xPosition/32 - x)*(miner.xPosition/32 - x)
+              + (miner.yPosition/32 - y)*(miner.yPosition/32 - y)
+              )
+            )
+          , 0.0f, (3*::sqrt(2.0f))
+        )
+      ;
+
+      fow = std::clamp(len/(3.0f), fow, 1.0f);
+    }
+  }
 }
 
 void ld::MinerGroup::addMiner()

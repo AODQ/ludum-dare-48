@@ -78,6 +78,15 @@ void ld::RenderScene(ld::GameState const & state)
         y = it / state.mineChasm.columns
       ;
 
+      uint8_t fow =
+        static_cast<int8_t>(
+          std::clamp(
+            state.mineChasm.rockFow[it]*255.0f,
+            0.0f,
+            255.0f
+          )
+        );
+
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Rock)
       , ::Rectangle {
@@ -87,7 +96,7 @@ void ld::RenderScene(ld::GameState const & state)
           .height = 32.0f,
         }
       , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
-      , Color { 255, 255, 255, 255 }
+      , { fow, fow, fow, 255 }
       );
 
       if (!rock.isMined() && rock.gem != ld::RockGemType::Empty) {
@@ -109,7 +118,7 @@ void ld::RenderScene(ld::GameState const & state)
             .height = 32.0f,
           }
         , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
-        , Color { 255, 255, 255, 255 }
+        , Color { fow, fow, fow, 255 }
         );
       }
     }

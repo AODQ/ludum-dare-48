@@ -1,6 +1,7 @@
 #include <mine.hpp>
 
 #include <enum.hpp>
+#include <gamestate.hpp>
 #include <mob.hpp>
 
 #include <raylib.h>
@@ -63,7 +64,8 @@ ld::MineChasm ld::MineChasm::Initialize(
 {
   auto self = ld::MineChasm{
     columns,
-    decltype(ld::MineChasm::rocks)(columns * rows, basicRock)
+    decltype(ld::MineChasm::rocks)(columns * rows, basicRock),
+    decltype(ld::MineChasm::rockFow)(columns * rows, 0.0f)
   };
   const auto perlinSize = std::max(columns, rows);
   auto pn1 = ::GenImagePerlinNoise(perlinSize, perlinSize, 0, 0, 10.f);
@@ -204,4 +206,20 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
   }
 
   return value;
+}
+
+void ld::MineChasm::Update(ld::GameState & state)
+{
+  // update FOW
+  for (size_t i = 0; i < 30*4; ++ i) {
+    state.mineChasm.rockFow[i] = 1.0f;
+  }
+
+  for (size_t i = 30*4; i < state.mineChasm.rocks.size(); ++ i) {
+    state.mineChasm.rockFow[i] =
+      std::max(
+        0.0f,
+        state.mineChasm.rockFow[i] - (0.15f/60.0f)
+      );
+  }
 }
