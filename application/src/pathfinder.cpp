@@ -97,7 +97,7 @@ void ld::pathFindInitialize(ld::GameState * state) {
     new micropather::MicroPather(micropather::MicroPather(&graphUnminable));
 }
 
-void ld::pathFind(
+uint32_t ld::pathFind(
   ld::GameState const & state,
   std::array<::Vector2, 4> & path, size_t & pathSize,
   int32_t const origTileX,   int32_t const origTileY,
@@ -138,6 +138,8 @@ void ld::pathFind(
         static_cast<float>(pathId / 30)
       };
   }
+
+  return microPath.size();
 }
 
 void ld::pathClear() {

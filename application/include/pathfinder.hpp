@@ -8,7 +8,8 @@
 namespace ld { struct GameState; }
 
 namespace ld {
-  void pathFind(
+  // returns real path length
+  uint32_t pathFind(
     ld::GameState const & state,
     std::array<::Vector2, 4> & path, size_t & pathSize,
     int32_t const origTileX,   int32_t const origTileY,

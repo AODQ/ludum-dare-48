@@ -38,10 +38,104 @@ void ld::MobGroup::Update(ld::GameState & state)
 
     // look for tile near
 
-    if (slime.chasingMiner >= 0 && slime.pathSize <= slime.pathIdx) {
+    if (slime.chasingMinerId >= 0 && slime.pathSize <= slime.pathIdx) {
       slime.pathIdx = 0;
-      slime.sleepTimer = ::GetRandomValue(0, 2)*60;
+      slime.sleepTimer = ::GetRandomValue(0, 20);
       continue;
+    }
+
+    if (
+        slime.attackTimer < 0 && slime.chasingMinerId < 0
+     && slime.pathSize == 0
+     && state.minerGroup.miners.size() > 0
+    ) {
+      uint32_t minerIdx =
+        ::GetRandomValue(0, state.minerGroup.miners.size()-1);
+      auto const & miner = state.minerGroup.miners[minerIdx];
+
+      slime.pathSize = 0;
+      slime.pathIdx = 0;
+
+      // dont even bother if distance is too large
+      if (
+          std::abs(slime.positionX - miner.xPosition)/32.0f
+        + std::abs(slime.positionY - miner.yPosition)/32.0f
+        <= 7.0f
+      ) {
+        ld::pathFind(
+          state,
+          slime.path, slime.pathSize,
+          slime.positionX/32, slime.positionY/32,
+          miner.xPosition/32, miner.yPosition/32,
+          false // cannot mine
+        );
+      }
+
+      if (slime.pathSize == 0) {
+        slime.attackTimer = 30;
+      } else {
+        slime.chasingMinerId = miner.minerId;
+      }
+    }
+
+    if (slime.chasingMinerId >= 0 && slime.pathSize == 0)
+    {
+      // find miner, in O(N) but this wont be called often enough to matter
+      int32_t minerIdx = -1;
+      for (; minerIdx < (int32_t)state.minerGroup.miners.size(); ++ minerIdx) {
+        if (state.minerGroup.miners[minerIdx].minerId == slime.chasingMinerId)
+          { break; }
+      }
+
+      // force to -1 to avoid size comparisons
+      if (minerIdx == (int32_t)state.minerGroup.miners.size())
+        minerIdx = -1;
+
+      // can either lose focus if miner has died (minerId cant be found),
+      // small random chance, or if miner gets too far away
+      bool const breakChance = ::GetRandomValue(0, 100) < 5;
+
+      ld::Miner const * const miner =
+        (minerIdx == -1)
+          ? nullptr : &state.minerGroup.miners[slime.chasingMinerId]
+      ;
+
+      if (
+          !miner
+       || breakChance
+       || (
+              std::abs(slime.positionX - miner->xPosition)/32.0f
+            + std::abs(slime.positionY - miner->yPosition)/32.0f
+            > 12
+          )
+      ) {
+        slime.chasingMinerId = -1;
+      } else if(miner) /* not really needed lol */ {
+        ld::pathFind(
+          state,
+          slime.path, slime.pathSize,
+          slime.positionX/32, slime.positionY/32,
+          miner->xPosition/32, miner->yPosition/32,
+          false // cannot mine
+        );
+      }
+    }
+
+    if (slime.attackTimer > 0)
+      slime.attackTimer -= 1;
+
+    if (slime.pathSize > 0) {
+      if (slime.pathIdx >= slime.pathSize) {
+        slime.pathIdx = 0;
+        slime.pathSize = 0;
+        continue;
+      }
+
+      auto & path = slime.path[slime.pathIdx];
+      if (slime.targetTileX == -1 && slime.targetTileY == -1) {
+        slime.targetTileX = path.x*32.0f - ::GetRandomValue(2, 8);
+        slime.targetTileX = path.y*32.0f - ::GetRandomValue(2, 8);
+      }
     }
 
     struct Offsets {
@@ -53,15 +147,13 @@ void ld::MobGroup::Update(ld::GameState & state)
     }};
 
     auto offsetCheck = ::GetRandomValue(0, 3);
+    if (slime.targetTileX == -1 && slime.targetTileY == -1)
     {
       auto conformanceX =
         state.mineChasm.limitX(slime.positionX/32 + offsets[offsetCheck].x);
       auto conformanceY =
         state.mineChasm.limitY(slime.positionY/32 + offsets[offsetCheck].y);
-      if (
-          slime.targetTileX == -1 && slime.targetTileY == -1
-       && state.mineChasm.rock(conformanceX, conformanceY).isMined()
-      ) {
+      if (state.mineChasm.rock(conformanceX, conformanceY).isMined()) {
         slime.targetTileX =
           slime.positionX + offsets[offsetCheck].x*32 - ::GetRandomValue(2, 8);
         slime.targetTileY =
@@ -71,7 +163,9 @@ void ld::MobGroup::Update(ld::GameState & state)
 
     if (slime.targetTileX < 0 && slime.targetTileY < 0) { continue; }
 
-    moveTowards(slime, slime.targetTileX, slime.targetTileY);
+    for (int i = 0; i < (slime.chasingMinerId == -1 ? 1 : 4); ++ i) {
+      moveTowards(slime, slime.targetTileX, slime.targetTileY);
+    }
 
     slime.animationIdx = (slime.animationIdx + 5) % (60*5);
 
@@ -79,12 +173,21 @@ void ld::MobGroup::Update(ld::GameState & state)
         slime.positionX == slime.targetTileX
      && slime.positionY == slime.targetTileY
     ) {
+      if (::GetRandomValue(0, 100) < (slime.chasingMinerId>=0 ? 5 : 20)) {
+        slime.sleepTimer = ::GetRandomValue(3, 6)*60;
+      }
+
+      if (slime.pathSize > 0)
+        slime.pathIdx += 1;
+
       slime.targetTileX = -1;
       slime.targetTileY = -1;
     }
 
     // TODO add to FOW if this is detected
   }
+
+  // -- clouds -------------------------------------------
 
   const auto spread = --cloudSpreadTimer == 0;
   std::set<std::pair<int32_t, int32_t>> spreading;

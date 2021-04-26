@@ -16,9 +16,10 @@ namespace ld {
     int32_t positionX, positionY;
 
     int32_t targetTileX = -1, targetTileY = -1;
-    int32_t chasingMiner = -1;
+    int32_t chasingMinerId = -1;
 
     int32_t sleepTimer = 0;
+    int32_t attackTimer = 0;
 
     std::array<::Vector2, 4> path;
     size_t pathIdx = 0;
