@@ -634,6 +634,7 @@ void ld::Overlay::Update(ld::GameState & game)
         {
             game.gold -= game.minerCost;
             game.minerGroup.addMiner();
+            game.minerCost += 3; // perm increase for each miner hired
         }
     }
 
