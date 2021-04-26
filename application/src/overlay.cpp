@@ -153,21 +153,16 @@ void ld::Overlay::PauseScreen(ld::GameState & game)
     uint32_t startY = 100;
     uint32_t yOffset = startY;
 
+    Color color = ::Fade(::DARKBROWN, 0.8f);
     // Title
-    ld::DrawOutlinedCenteredText("LD48", centerX, startY, 50, ::WHITE, ::BLACK);
-
-    if (!isFirstPlay) { // Resume
-        yOffset += 100;
-        const char* pauseText = "PRESS [TAB] TO RESUME";
-        ld::DrawOutlinedCenteredText(pauseText, centerX, yOffset, 30, ::WHITE, ::BLACK);
-    }
+    ld::DrawOutlinedCenteredText("LD48", centerX, startY, 50, color, ::WHITE);
 
     { // Instructions
         yOffset += 120;
         uint32_t btnWidth = 100;
         uint32_t btnHeight = 50;
         ld::Button btn(centerX-btnWidth*0.5f, yOffset, btnWidth, btnHeight);
-        btn.Draw("Instructions", 12);
+        btn.Draw("Instructions", 12, color);
         if (btn.IsClicked())
         {
             menuStack.push(menuState);
@@ -181,9 +176,9 @@ void ld::Overlay::PauseScreen(ld::GameState & game)
         uint32_t btnHeight = 50;
         ld::Button btn(centerX-btnWidth*0.5f, yOffset, btnWidth, btnHeight);
         if (!isFirstPlay) {
-            btn.Draw("Restart", 20);
+            btn.Draw("Restart", 20, color);
         } else {
-            btn.Draw("Play", 20);
+            btn.Draw("Play", 20, color);
         }
         if (btn.IsClicked()) {
             isFirstPlay = false;
@@ -198,7 +193,7 @@ void ld::Overlay::PauseScreen(ld::GameState & game)
         uint32_t btnHeight = 50;
         {
           ld::Button btn(centerX-btnWidth, yOffset, btnWidth, btnHeight);
-          btn.Draw("Mute Sfx", 20);
+          btn.Draw("Mute Sfx", 20, color);
           if (btn.IsClicked())
           {
               ld::ToggleMuteSound();
@@ -207,7 +202,7 @@ void ld::Overlay::PauseScreen(ld::GameState & game)
 
         {
           ld::Button btn(centerX, yOffset, btnWidth, btnHeight);
-          btn.Draw("Audio", 20);
+          btn.Draw("Audio", 20, color);
           if (btn.IsClicked())
           {
               ld::ToggleMuteMedia();
@@ -215,6 +210,11 @@ void ld::Overlay::PauseScreen(ld::GameState & game)
         }
     }
 
+    if (!isFirstPlay) { // Resume
+        yOffset += 100;
+        const char* pauseText = "PRESS [TAB] TO RESUME";
+        ld::DrawOutlinedCenteredText(pauseText, centerX, yOffset, 30, ::WHITE, ::BLACK);
+    }
 }
 
 void ld::Overlay::GameOverScreen(ld::GameState & game)
