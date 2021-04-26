@@ -53,13 +53,78 @@ void ld::Overlay::InitButtons()
     buttons.emplace("FlagCan" , ld::Button(x+32, 250, 32, 32));
 }
 
-void ld::Overlay::PauseScreen()
+void ld::Overlay::Instructions()
 {
-    int fontSize = 30;
+    // Position of the root panel
+    uint32_t w = 500;
+    uint32_t h = 300;
+    uint32_t x = (scrWidth - w) * 0.5f;
+    uint32_t y = (scrHeight - h) * 0.5f - 20.0f;
+    uint32_t yOffset = y;
 
+    { // Root Menu panel
+        uint32_t size = 30;
+        DrawRectangle(x, y, w, h, ::BROWN);
+        ld::DrawOutlinedCenteredText("Instructions", x+w*0.5f, y-size, size, ::WHITE, ::BLACK);
+    }
+
+    { // Back
+        uint32_t btnWidth = 55;
+        uint32_t btnHeight = 25;
+        yOffset += h - btnHeight;
+        ld::Button btn(x + w - btnWidth, yOffset, btnWidth, btnHeight);
+        btn.Draw("Back", 12);
+        if (btn.IsClicked())
+        {
+            if (!menuStack.empty()) {
+                menuState = menuStack.top();
+                menuStack.pop();
+            } else {
+                menuState = MenuState::None;
+            }
+        }
+    }
+}
+
+void ld::Overlay::PauseScreen(ld::GameState & game)
+{
+    uint32_t centerX = 0.5f*scrWidth;
+    uint32_t startY = 100;
+    uint32_t yOffset = startY;
+    // Title
+    ld::DrawOutlinedCenteredText("GAME TITLE", centerX, startY, 50, ::WHITE, ::BLACK);
+
+    // Resume
+    yOffset += 100;
     const char* pauseText = "PRESS [TAB] TO RESUME";
-    int pauseWidth = ::MeasureText(pauseText, fontSize);
-    ::DrawText(pauseText, 0.5f*(scrWidth-pauseWidth), 170, fontSize, GRAY);
+    ld::DrawOutlinedCenteredText(pauseText, centerX, yOffset, 30, ::WHITE, ::BLACK);
+
+    { // Instructions
+        yOffset += 100;
+        uint32_t btnWidth = 100;
+        uint32_t btnHeight = 50;
+        ld::Button btn(centerX-btnWidth*0.5f, yOffset, btnWidth, btnHeight);
+        btn.Draw("Instructions", 12);
+        if (btn.IsClicked())
+        {
+            menuStack.push(menuState);
+            menuState = MenuState::Instructions;
+        }
+    }
+
+    { // Restart
+        yOffset += 100;
+        uint32_t btnWidth = 100;
+        uint32_t btnHeight = 50;
+        ld::Button btn(centerX-btnWidth*0.5f, yOffset, btnWidth, btnHeight);
+        btn.Draw("Restart", 20);
+        if (btn.IsClicked())
+        {
+            menuState = ld::Overlay::MenuState::None;
+            game.Restart();
+        }
+    }
+
 }
 
 void ld::Overlay::GameOverScreen(ld::GameState & game)
@@ -579,7 +644,27 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
 void ld::Overlay::Draw(ld::GameState & game)
 {
     // if game paused, then that should override every other menu
-    //menuState = game.isPaused ? MenuState::Pause : menuState;
+    if (game.isPaused && menuState != MenuState::Pause) {
+        if (!menuStack.empty() && menuStack.top() != MenuState::Pause) {
+            // Hacky, but checks that we weren't coming from a pause state
+            // to prevent pushing another pause menu on top causing it to be
+            // stuck on the pause and other pause related menus like instruction
+            menuStack.push(menuState);
+            menuState = MenuState::Pause;
+        }
+        else if (menuStack.empty()) {
+            menuStack.push(menuState);
+            menuState = MenuState::Pause;
+        }
+    }
+    else if (!game.isPaused && menuState == MenuState::Pause) {
+        if (!menuStack.empty()) {
+            menuState = menuStack.top();
+            menuStack.pop();
+        } else {
+            menuState = MenuState::None;
+        }
+    }
 
     switch (menuState)
     {
@@ -590,23 +675,24 @@ void ld::Overlay::Draw(ld::GameState & game)
             //return; // return to Avoid rendering resources
         case ld::Overlay::MenuState::Research:
             ResearchMenu(game);
+            ResourceMenu(game);
             break;
         case ld::Overlay::MenuState::GameOver:
             GameOverScreen(game);
             break;
+        case ld::Overlay::MenuState::Instructions:
+            Instructions();
+            break;
         case ld::Overlay::MenuState::Pause:
-            PauseScreen();
+            PauseScreen(game);
+            break;
         case ld::Overlay::MenuState::None:
         default:
+            ResourceMenu(game);
             break;
     }
 
-    if (game.isPaused)
-    {
-        PauseScreen();
-    }
-
-    if (game.minerSelection >= 0)
+    if (game.minerSelection >= 0 && !game.isPaused)
     {
         bool found = false;
         // find miner & check if still alive
@@ -622,8 +708,6 @@ void ld::Overlay::Draw(ld::GameState & game)
           game.minerSelection = 0;
         }
     }
-
-    ResourceMenu(game);
 
     // Cursor should be drawn last
     if (game.showCursor)
