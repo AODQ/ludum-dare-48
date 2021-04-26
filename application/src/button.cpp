@@ -32,7 +32,7 @@ void ld::Button::DrawTexture(const char* text, ::Texture2D texture, uint32_t spr
     ld::DrawOutlinedText(text, xPos + 0.5f*(width - textWidth), yPos + 0.5f*(height-fontSize), 10, ::WHITE, ::BLACK);
 }
 
-void ld::Button::Draw(const char* text, uint32_t fontSize)
+void ld::Button::Draw(const char* text, uint32_t fontSize, ::Color color)
 {
     int textWidth = ::MeasureText(text, fontSize);
     ::DrawRectangleLines(xPos, yPos, width, height, ::DARKGRAY);

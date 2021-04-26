@@ -47,11 +47,11 @@ void ld::Overlay::InitButtons()
     uint32_t btnWidth = 70;
     uint32_t btnHeight = 50;
 
-    buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
-    buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
-    buttons.emplace("Idle"    , ld::Button(x, 200, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
-    buttons.emplace("Flag"    , ld::Button(x, 250, 32, 32, ::Fade(::LIGHTGRAY, 0.5f)));
-    buttons.emplace("FlagCan" , ld::Button(x+32, 250, 32, 32, ::Fade(::LIGHTGRAY, 0.5f)));
+    buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight));
+    buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight));
+    buttons.emplace("Idle"    , ld::Button(x, 200, btnWidth, btnHeight));
+    buttons.emplace("Flag"    , ld::Button(x, 250, 32, 32));
+    buttons.emplace("FlagCan" , ld::Button(x+32, 250, 32, 32));
 }
 
 void ld::Overlay::PauseScreen()
@@ -93,7 +93,7 @@ void ld::Overlay::GameOverScreen(ld::GameState & game)
 void ld::Overlay::ResearchMenu(ld::GameState & game)
 {
     // Position of the root panel
-    uint32_t w = 500;
+    uint32_t w = 520;
     uint32_t h = 375;
     uint32_t x = (scrWidth - w) * 0.5f;
     uint32_t y = (scrHeight - h) * 0.5f - 20.0f;
@@ -102,7 +102,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
     {
         uint32_t size = 30;
         DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.7f));
-        ld::DrawOutlinedCenteredText("Research", x+w*0.5f, y-size, size, ::WHITE, ::BLACK);
+        ld::DrawOutlinedCenteredText("Upgrades", x+w*0.5f, y-size, size, ::WHITE, ::BLACK);
     }
 
     { // -- Upgrade Buttons
@@ -118,7 +118,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
         std::vector<ld::Button> upgBtns;
         for (size_t i = 0; i < 3; ++i)
         {
-            upgBtns.push_back(ld::Button(x + 5, y + offset, btnWidth, btnHeight, ::WHITE));
+            upgBtns.push_back(ld::Button(x + 5, y + offset, btnWidth, btnHeight));
             offset += btnHeight + 2;
         }
 
@@ -128,7 +128,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
         offset += fontSize + 10;
         for (size_t i = 3; i < numButtons; ++i)
         {
-            upgBtns.push_back(ld::Button(x + 5, y + offset, btnWidth, btnHeight, ::WHITE));
+            upgBtns.push_back(ld::Button(x + 5, y + offset, btnWidth, btnHeight));
             offset += btnHeight + 2;
         }
 
@@ -167,16 +167,41 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
             uint32_t barWidth = 30;
             uint32_t barPosX = upgBtns[i].xPos+upgBtns[i].width + 10;
             uint32_t barPosY = upgBtns[i].yPos;
+            uint32_t maxUpgrades = ld::researchInfoLookup[i].maxLevel;
             ::DrawRectangle(barPosX, barPosY, barWidth*game.researchItems[i].level, upgBtns[i].height, Fade(researchColor[i], 0.5f));
-            for (size_t j = 0; j < ld::researchInfoLookup[i].maxLevel; ++j)
+            for (size_t j = 0; j < maxUpgrades; ++j)
             {
-                ::DrawRectangleLines(barPosX, barPosY, barWidth, upgBtns[i].height, researchColor[i]);
+                // Make the next level bar a button that will upgrade
+                if (j == game.researchItems[i].level)
+                {
+                    ld::Button upgBtn(barPosX, barPosY, barWidth, upgBtns[i].height);
+                    upgBtn.Draw(std::to_string(cost).c_str(), 5, ::Fade(researchColor[i], 0.15f));
+                    if (upgBtn.IsHovered())
+                    {
+                        desc = ld::researchInfoLookup[i].desc;
+                    }
+                    if (upgBtn.IsClicked())
+                    {
+                        if (
+                               (game.researchItems[i].level < ld::researchInfoLookup[i].maxLevel)
+                            && (game.gold >= cost)
+                        ) {
+                            game.gold -= cost;
+                            game.researchItems[i].level++;
+                        }
+                    }
+                }
+                else
+                {
+                    ::DrawRectangleLines(barPosX, barPosY, barWidth, upgBtns[i].height, ::DARKGRAY);
+                }
                 barPosX += barWidth;
             }
 
+            fontSize = 20;
             uint32_t alignTextPos = upgBtns[i].xPos + upgBtns[i].width + 20 + (barWidth)*10;
-            const char* barText = ::TextFormat("%s Level:%i, Cost:%iG", game.researchItems[i].name.c_str(), game.researchItems[i].level, cost);
-            ld::DrawOutlinedText(barText, alignTextPos, barPosY + 0.5f*(upgBtns[i].height-10), 10, researchColor[i], ::BLACK);
+            const char* barText = ::TextFormat("Level:%i %s", game.researchItems[i].level, game.researchItems[i].name.c_str());
+            ld::DrawOutlinedText(barText, alignTextPos, barPosY + 0.5f*(upgBtns[i].height-fontSize), fontSize, researchColor[i], ::BLACK);
         }
 
         // Description of upgrade
@@ -186,7 +211,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
     { // -- Close
         uint32_t btnWidth = 70;
         uint32_t btnHeight = 35;
-        ld::Button closeBtn(x + 0.5f*(w-btnWidth), y+h-btnHeight*0.5f, 70, 35, ::WHITE);
+        ld::Button closeBtn(x + 0.5f*(w-btnWidth), y+h-btnHeight*0.5f, 70, 35);
         closeBtn.Draw("Close", 20);
         if (closeBtn.IsClicked())
         {
@@ -258,8 +283,8 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     auto researchBtn = buttons.at("Research");
     auto idleBtn     = buttons.at("Idle");
     const char* hireText = ::TextFormat("Hire: %i Gold", game.minerCost);
-    buyMinerBtn.Draw(hireText);
-    researchBtn.Draw("Research");
+    buyMinerBtn.Draw(hireText, 10, ::Fade(::LIGHTGRAY, 0.5f));
+    researchBtn.Draw("Upgrades", 10, ::Fade(::LIGHTGRAY, 0.5f));
 
     std::vector<int32_t> idleMiners;
     for (auto miner : game.minerGroup.miners) {
@@ -270,7 +295,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
 
     static size_t cycle = 0;
     std::string idleText = "Idle: " + std::to_string(idleMiners.size());
-    idleBtn.Draw(idleText.c_str(), 10);
+    idleBtn.Draw(idleText.c_str(), 10, ::Fade(::LIGHTGRAY, 0.5f));
     if (
         (::IsKeyPressed(KEY_SPACE) || idleBtn.IsClicked())
         && !idleMiners.empty()
@@ -443,7 +468,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
                 tint = ::WHITE;
             }
 
-            ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, tint);
+            ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize);
             itemBtn.DrawTexture(
                 std::to_string(equip.level).c_str(),
                 ld::TextureGet(ld::TextureType::Misc),
@@ -471,7 +496,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
             for (uint32_t col = 0u; col < 3; ++col) {
                 size_t it = row * 3 + col;
 
-                ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, ::WHITE);
+                ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize);
                 // Display count of item
                 auto itemCount = miner.cargo[it].ownedUnits;
                 Color tint = itemCount > 0
@@ -505,8 +530,8 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         padding+=20;
         int btnWidth = 60;
         int btnHeight = 25;
-        ld::Button btn(x + (w-btnWidth)*0.5f, y+padding, btnWidth, btnHeight, ::WHITE);
-        btn.Draw("Set Idle", 7);
+        ld::Button btn(x + (w-btnWidth)*0.5f, y+padding, btnWidth, btnHeight);
+        btn.Draw("Set Idle", 7, ::WHITE);
         if (btn.IsClicked())
         {
             miner.aiState = ld::Miner::AiState::Idling;
