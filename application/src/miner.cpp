@@ -274,7 +274,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
   switch (state.state) {
     case ld::Miner::AiStateSurfaced::Surfacing:
       miner.xPosition = 700;
-      miner.yPosition = -100;
+      miner.yPosition = -80;
 
       miner.animationState = ld::Miner::AnimationState::Idling;
 
@@ -287,8 +287,8 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         miner.animationState = ld::Miner::AnimationState::Travelling;
         miner.animationIdx = 0;
 
-        state.targetX = ::GetRandomValue(50, 180);
-        state.targetY = ::GetRandomValue(-120, -80);
+        state.targetX = ::GetRandomValue( 30,  70);
+        state.targetY = ::GetRandomValue(-90, -80);
       }
 
       state.waitTimer -= 1;
@@ -368,8 +368,8 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       }
     } break;
     case ld::Miner::AiStateSurfaced::BackToMine:
-      miner.moveTowards(700, -100);
-      if (miner.xPosition == 700 && miner.yPosition == -100) {
+      miner.moveTowards(700, -80);
+      if (miner.xPosition == 700 && miner.yPosition == -80) {
         miner.aiState = ld::Miner::AiState::Idling;
         miner.xPosition = ::GetRandomValue(100, 700);
         miner.yPosition = ::GetRandomValue(10, 30);
