@@ -1,6 +1,7 @@
 #include <sounds.hpp>
 
 #include <enum.hpp>
+#include <gamestate.hpp>
 
 #include <raylib.h>
 
@@ -53,10 +54,18 @@ void ld::SoundShutdown()
   ::CloseAudioDevice();
 }
 
-void ld::SoundUpdate()
+void ld::SoundUpdate(ld::GameState const & gameState)
 {
-  if (!muteMedia)
+  if (!muteMedia) {
     ::UpdateMusicStream(stream);
+    ::SetMusicVolume(
+      stream,
+      std::clamp(
+        pow((gameState.camera.y + 700.0f)*0.001f, 2.2f),
+        0.0f, 1.0f
+      )
+    );
+  }
 }
 
 void ld::SoundPlay(ld::SoundType const type, float distance)

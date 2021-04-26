@@ -1,5 +1,7 @@
 #pragma once
 
+namespace ld { struct GameState; }
+
 namespace ld {
   enum class SoundType {
     RockHit,
@@ -13,7 +15,7 @@ namespace ld {
   void SoundInitialize();
   void SoundShutdown();
 
-  void SoundUpdate();
+  void SoundUpdate(ld::GameState const & state);
 
   void SoundPlay(SoundType const, float distance);
 

@@ -434,6 +434,8 @@ void ld::MineChasm::Update(ld::GameState & state)
            state.researchItems[Idx(ld::ResearchType::Vision)].level / 10.0f
          )
       );
+
+    state.mineChasm.rockFow[i] =1.0f;
   }
 }
 

@@ -106,13 +106,13 @@ void ld::Overlay::InitButtons()
     uint32_t btnWidth = 70;
     uint32_t btnHeight = 50;
 
-    buttons.emplace("Panic",    ld::Button(x,  50, btnWidth, btnHeight));
-    buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight));
-    buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight));
-    buttons.emplace("Idle"    , ld::Button(x, 200, btnWidth, btnHeight));
-    buttons.emplace("Surface" , ld::Button(x, 250, btnWidth, btnHeight));
-    buttons.emplace("Flag"    , ld::Button(x, 300, 32, 32));
-    buttons.emplace("FlagCan" , ld::Button(x+32, 300, 32, 32));
+    buttons.emplace("Panic",    ld::Button(x,  25, btnWidth, btnHeight));
+    buttons.emplace("BuyMiner", ld::Button(x,  75, btnWidth, btnHeight));
+    buttons.emplace("Research", ld::Button(x, 125, btnWidth, btnHeight));
+    buttons.emplace("Idle"    , ld::Button(x, 175, btnWidth, btnHeight));
+    buttons.emplace("Surface" , ld::Button(x, 225, btnWidth, btnHeight));
+    buttons.emplace("Flag"    , ld::Button(x, 275, 32, 32));
+    buttons.emplace("FlagCan" , ld::Button(x+32, 275, 32, 32));
 }
 
 void ld::Overlay::Instructions()
@@ -515,7 +515,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     // -- flag
     ::DrawRectangle(
       scrWidth-100+32,
-      300, 32, 32, ::Fade(::RED, (game.targetX>=0?0.5f:0.0f))
+      275, 32, 32, ::Fade(::RED, (game.targetX>=0?0.5f:0.0f))
     );
     auto &  flagCan = buttons.at("FlagCan");
     if (game.targetX>=0) {
@@ -542,7 +542,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
       thisFrame = true;
     }
 
-    ::DrawRectangle(scrWidth-100, 300, 32, 32, ::Fade(::LIGHTGRAY, 0.5f));
+    ::DrawRectangle(scrWidth-100, 275, 32, 32, ::Fade(::LIGHTGRAY, 0.5f));
     auto &  flag = buttons.at("Flag");
     flag
       .DrawTexture(
