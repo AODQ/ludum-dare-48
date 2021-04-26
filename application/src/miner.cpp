@@ -245,7 +245,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
 
     auto rockId = gameState.mineChasm.rockId(path.x, path.y);
     auto & rock = gameState.mineChasm.rock(rockId);
-    if (!rock.isMined()) {
+    if (!rock.isMined() && !miner.aiStateInternal.traversing.wantsToSurface) {
       miner.aiState = ld::Miner::AiState::Mining;
       miner.aiStateInternal.mining.targetRockId = rockId;
     }
