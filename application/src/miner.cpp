@@ -350,13 +350,49 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
 
       bool readyToContinue = true;
 
+      // be conservative ; don't eat unless there is 100% efficiency
+      if (
+          readyToContinue
+       &&
+          ( // conserve if they have purchased food, otherwise must waste
+            state.hasPurchasedFood
+              ? (miner.energy < miner.maxEnergy)
+              : (miner.energy <= miner.maxEnergy - miner.foodToEnergyRatio)
+          )
+       && gameState.food > 0
+      ) {
+        state.hasPurchasedFood = true;
+        gameState.food -= 1;
+        miner.energy =
+          std::min(miner.maxEnergy, miner.energy + miner.foodToEnergyRatio);
+        readyToContinue = false;
+        gameState.notifGroup.AddNotif(
+          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
+        );
+      }
+
+      // top off for free only if they have already purchased
+      if (
+          readyToContinue
+       && state.hasPurchasedFood
+       && miner.energy + miner.foodToEnergyRatio >= miner.maxEnergy
+      ) {
+        miner.energy = miner.maxEnergy;
+        readyToContinue = false;
+        gameState.notifGroup.AddNotif(
+          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
+        );
+        state.hasPurchasedFood = false;
+      }
+
+
       // Find the highest upgrade that they can purchase
       // and that the bank can afford
       // TODO add additional purchase states
       // Buy highest / cheapest
       // Conserve money, etc
       bool canBuyUpgrade = false;
-      do {
+      {
         canBuyUpgrade = false;
         uint32_t highestCost = 0;
         size_t selectedUpgradeType = -1;
@@ -376,25 +412,20 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
 
         // Purchase highest upgrade
         if (canBuyUpgrade) {
+          readyToContinue = false;
           miner.netValue -= highestCost;
           gameState.gold -= highestCost;
           miner.inventory[selectedUpgradeType].owns = true;
           miner.inventory[selectedUpgradeType].level++;
-        }
-      } while (canBuyUpgrade);
 
-      // top off for free only if they have already purchased
-      if (
-          readyToContinue
-       && state.hasPurchasedFood
-       && miner.energy + miner.foodToEnergyRatio >= miner.maxEnergy
-      ) {
-        miner.energy = miner.maxEnergy;
-        readyToContinue = false;
-        gameState.notifGroup.AddNotif(
-          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
-        );
-        state.hasPurchasedFood = false;
+          gameState.notifGroup.AddNotif(
+            static_cast<ld::NotifType>(
+              Idx(ld::NotifType::PickaxeGot)+selectedUpgradeType
+            ),
+            miner.xPosition, miner.yPosition
+          );
+          state.waitTimer = 80;
+        }
       }
 
       if (readyToContinue) {

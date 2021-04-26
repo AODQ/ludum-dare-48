@@ -2,11 +2,6 @@
 #include <renderer.hpp> // Texture info
 #include <algorithm>
 
-typedef enum {
-    eStorageScore = 0,
-    eStorageHiScore = 1,
-} StorageData;
-
 void ld::DrawOutlinedText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color mainColor, ::Color outlineColor)
 {
     int offset = 1;
@@ -57,13 +52,6 @@ void ld::Overlay::InitButtons()
 void ld::Overlay::PauseScreen()
 {
     int fontSize = 30;
-
-    int score = ::LoadStorageValue(eStorageScore);
-    int hiScore = ::LoadStorageValue(eStorageHiScore);
-
-    const char* scoreText = ::TextFormat("Score: %i\t Hi-Score: %i", score, hiScore);
-    int scoreWidth = ::MeasureText(scoreText, fontSize);
-    ::DrawText(scoreText, 0.5f*(scrWidth-scoreWidth), 130, fontSize, BLACK);
 
     const char* pauseText = "PRESS [TAB] TO RESUME";
     int pauseWidth = ::MeasureText(pauseText, fontSize);
@@ -308,17 +296,19 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     // -- flag
     ::DrawRectangle(
       scrWidth-100+32,
-      250, 32, 32, ::Fade(::RED, game.targetX>=0?0.5f:0.0f)
+      250, 32, 32, ::Fade(::RED, (game.targetX>=0?0.5f:0.0f))
     );
     auto &  flagCan = buttons.at("FlagCan");
-    flagCan
-      .DrawTexture(
-        "",
-        ld::TextureGet(ld::TextureType::Flag),
-        0, 0,
-        { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(255) : (uint8_t)(0) },
-        true
-      );
+    if (game.targetX>=0) {
+      flagCan
+        .DrawTexture(
+          "",
+          ld::TextureGet(ld::TextureType::Flag),
+          0, 0,
+          { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(255) : (uint8_t)(0) },
+          true
+        );
+    }
     bool thisFrame = false;
     if (flagCan.IsClicked()) {
       game.targetX = -1;
