@@ -327,7 +327,6 @@ void ld::Overlay::Update(ld::GameState & game)
     // End game when we're out of food, don't have miners, and out of gold
     if (game.food <= 0
         && game.minerGroup.miners.empty()
-        && game.gold < static_cast<int32_t>(game.minerCost)
     ) {
         menuState = ld::Overlay::MenuState::GameOver;
     }
