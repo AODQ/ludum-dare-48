@@ -1,5 +1,8 @@
 #include <overlay.hpp>
+
 #include <renderer.hpp> // Texture info
+#include <sounds.hpp>
+
 #include <algorithm>
 
 namespace {
@@ -51,8 +54,9 @@ void ld::Overlay::InitButtons()
     buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight));
     buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight));
     buttons.emplace("Idle"    , ld::Button(x, 200, btnWidth, btnHeight));
-    buttons.emplace("Flag"    , ld::Button(x, 250, 32, 32));
-    buttons.emplace("FlagCan" , ld::Button(x+32, 250, 32, 32));
+    buttons.emplace("Surface" , ld::Button(x, 250, btnWidth, btnHeight));
+    buttons.emplace("Flag"    , ld::Button(x, 300, 32, 32));
+    buttons.emplace("FlagCan" , ld::Button(x+32, 300, 32, 32));
 }
 
 void ld::Overlay::Instructions()
@@ -124,6 +128,29 @@ void ld::Overlay::PauseScreen(ld::GameState & game)
         {
             menuState = ld::Overlay::MenuState::None;
             game.Restart();
+        }
+    }
+
+    { // audio
+        yOffset += 100;
+        uint32_t btnWidth = 100;
+        uint32_t btnHeight = 50;
+        {
+          ld::Button btn(centerX-btnWidth, yOffset, btnWidth, btnHeight);
+          btn.Draw("Mute Sfx", 20);
+          if (btn.IsClicked())
+          {
+              ld::ToggleMuteSound();
+          }
+        }
+
+        {
+          ld::Button btn(centerX, yOffset, btnWidth, btnHeight);
+          btn.Draw("Audio", 20);
+          if (btn.IsClicked())
+          {
+              ld::ToggleMuteMedia();
+          }
         }
     }
 
@@ -302,13 +329,12 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     {
         uint32_t xPos = 50;
         uint32_t yPos = scrHeight - 50;
-        uint32_t width = 200;
+        uint32_t width = 150;
         uint32_t height = 30;
         uint32_t fontSize = 20;
 
-        float fillPct = game.gold < 100 ? game.gold / 100.0f : 1.0f;
         const char* text = ::TextFormat("Gold: %i", game.gold);
-        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::GOLD, fillPct);
+        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::GOLD, 1.0f);
     }
 
     currentFood -= ld::sgn(currentFood - game.food);
@@ -350,6 +376,8 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     auto buyMinerBtn = buttons.at("BuyMiner");
     auto researchBtn = buttons.at("Research");
     auto idleBtn     = buttons.at("Idle");
+    auto surfBtn     = buttons.at("Surface");
+
     const char* hireText = ::TextFormat("Hire: %i Gold", game.minerCost);
     buyMinerBtn.Draw(hireText, 10, ::Fade(::LIGHTGRAY, 0.5f));
     researchBtn.Draw("Upgrades", 10, ::Fade(::LIGHTGRAY, 0.5f));
@@ -378,10 +406,16 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         }
     }
 
+    surfBtn.Draw("Surface", 10, ::Fade(::LIGHTGRAY, 0.5f));
+    if (surfBtn.IsClicked()) {
+      game.camera.y = -618;
+      game.camera.yVelocity = 0.0f;
+    }
+
     // -- flag
     ::DrawRectangle(
       scrWidth-100+32,
-      250, 32, 32, ::Fade(::RED, (game.targetX>=0?0.5f:0.0f))
+      300, 32, 32, ::Fade(::RED, (game.targetX>=0?0.5f:0.0f))
     );
     auto &  flagCan = buttons.at("FlagCan");
     if (game.targetX>=0) {
@@ -404,7 +438,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
       thisFrame = true;
     }
 
-    ::DrawRectangle(scrWidth-100, 250, 32, 32, ::Fade(::LIGHTGRAY, 0.5f));
+    ::DrawRectangle(scrWidth-100, 300, 32, 32, ::Fade(::LIGHTGRAY, 0.5f));
     auto &  flag = buttons.at("Flag");
     flag
       .DrawTexture(
@@ -490,8 +524,8 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
         std::string action = "Action: ";
         switch (miner.aiState)
         {
-            case Miner::AiState::Attacking:
-                action += "Attacking";
+            case Miner::AiState::Fighting:
+                action += "Fighting";
                 break;
             case Miner::AiState::Dying:
                 action += "Dying";
@@ -508,8 +542,11 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
             case Miner::AiState::Surfaced:
                 action += "Surfaced";
                 break;
+            case Miner::AiState::Inventorying:
+                action += "Inventorying";
+                break;
             default:
-                action = "";
+                action = "N/A BROKE!";
                 break;
         }
         ld::DrawOutlinedText(action.c_str(), x, y+padding, 10, ::WHITE, ::BLACK);

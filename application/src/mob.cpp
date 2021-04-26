@@ -31,15 +31,43 @@ void ld::MobGroup::Update(ld::GameState & state)
 
     auto & slime = state.mobGroup.slimes[slimeIdx];
 
-    // dying :(
-    if (slime.health <= 0) {
-      slime.sleepTimer -= 1;
-      slime.alpha = (slime.sleepTimer) / 120.0f;
+    // kill
+    if (slime.health <= 0 && slime.dieTimer < 0) {
+      slime.dieTimer = 120;
+      ld::SoundPlay(
+        ld::SoundType::SlimeDie,
+        std::abs(state.camera.y - slime.positionY) * 0.25f // more audible
+      );
 
-      if (slime.sleepTimer <= 0) {
+      // check if still attacking miner
+      int32_t minerIdx = -1;
+      for (
+        ; slime.chasingMinerId >= 0
+      && minerIdx < (int32_t)state.minerGroup.miners.size()
+        ; ++ minerIdx
+      ) {
+        if (state.minerGroup.miners[minerIdx].minerId == slime.chasingMinerId)
+          { break; }
+      }
+
+      // force to -1 to avoid size comparisons
+      if (minerIdx >= 0 && minerIdx < (int32_t)state.minerGroup.miners.size()) {
+        state.minerGroup.miners[minerIdx].AddUnit(ld::ValuableType::Food, 5);
+        state.minerGroup.miners[minerIdx].resetToTraversal();
+        slime.chasingMinerId = -1;
+      }
+    }
+
+    // dying :(
+    if (slime.health <= 0 && slime.dieTimer >= 0) {
+      slime.dieTimer -= 1;
+      slime.alpha = (slime.dieTimer) / 120.0f;
+
+      if (slime.dieTimer <= 0) {
         state.mobGroup.slimes.erase(state.mobGroup.slimes.begin() + slimeIdx);
         -- slimeIdx;
       }
+      continue;
     }
 
     if (slime.sleepTimer > 0) {
@@ -83,7 +111,7 @@ void ld::MobGroup::Update(ld::GameState & state)
       if (
           std::abs(slime.positionX - miner.xPosition)/32.0f
         + std::abs(slime.positionY - miner.yPosition)/32.0f
-        <= 7.0f
+        <= 10.0f
       ) {
         slime.pathSize = 0;
         ld::pathFind(
@@ -127,12 +155,7 @@ void ld::MobGroup::Update(ld::GameState & state)
 
       if (
           !attackingMiner
-       || (
-            // broke off
-              attackingMiner
-           && slime.inCombat
-           && attackingMiner->aiState != ld::Miner::AiState::Fighting
-          )
+       || attackingMiner->aiState == ld::Miner::AiState::Dying
        || (!slime.inCombat && breakChance)
        || attackingMiner->aiState == ld::Miner::AiState::Surfaced
        || (
@@ -141,7 +164,10 @@ void ld::MobGroup::Update(ld::GameState & state)
             > 12
           )
       ) {
-        slime.chasingMinerId = -1;
+        {
+          slime.chasingMinerId = -1;
+        }
+
         if (attackingMiner && slime.inCombat) {
           attackingMiner->resetToTraversal();
           slime.inCombat = false;
@@ -168,10 +194,13 @@ void ld::MobGroup::Update(ld::GameState & state)
 
       auto & miner = *attackingMiner;
 
+      // force into combat state (in case other slimes set this to traversal)
+      miner.aiState = ld::Miner::AiState::Fighting;
+
       if ((slime.animationIdx + 5) % (60 * 5) < slime.animationIdx) {
         miner.reduceEnergy(
           miner.inventory[Idx(ld::ItemType::Armor)].owns
-            ? 20 : 50
+            ? 20 : 100
         );
         miner.damageEquipment(ld::ItemType::Armor);
       }
@@ -183,21 +212,20 @@ void ld::MobGroup::Update(ld::GameState & state)
         miner.aiStateInternal.fighting.hasSwung = true;
         slime.health -= 1;
 
+        if (slime.health <= 0) {
+          miner.AddUnit(ld::ValuableType::Food, 5);
+          slime.animationIdx = 0;
+        }
+
         ld::SoundPlay(
           ld::SoundType::Slime,
-          (miner.yPosition - slime.positionY) * 0.25f // more audible
+          (state.camera.y - slime.positionY) * 0.25f // more audible
         );
 
-        bool const breakChance =
-            ::GetRandomValue(0, 100)
-          < (miner.energy >= miner.wantsToSurface() ? 25 : 5)
-        ;
-
-        if (breakChance) {
-          slime.chasingMinerId = -1;
-          slime.inCombat = false;
-          attackingMiner->resetToTraversal();
-        }
+        // always break off
+        slime.chasingMinerId = -1;
+        slime.inCombat = false;
+        attackingMiner->resetToTraversal();
       }
 
       // force miner to face this direction
@@ -210,16 +238,11 @@ void ld::MobGroup::Update(ld::GameState & state)
         ? miner.yPosition-1 : miner.yPosition+1
       ;
 
-      if (slime.health <= 0) {
-        attackingMiner->resetToTraversal();
-        slime.sleepTimer = 120;
-        slime.animationIdx = 0;
-      }
-
       continue;
 
     } else if (
         attackingMiner
+     && attackingMiner->aiState == ld::Miner::AiState::Dying
      && ::CheckCollisionPointCircle(
           ::Vector2 {
             (float)attackingMiner->xPosition,
@@ -229,7 +252,7 @@ void ld::MobGroup::Update(ld::GameState & state)
             (float)slime.positionX,
             (float)slime.positionY,
           },
-          32.0f
+          48.0f
         )
     ) {
       slime.inCombat = true;
@@ -282,6 +305,9 @@ void ld::MobGroup::Update(ld::GameState & state)
 
     if (slime.targetTileX < 0 && slime.targetTileY < 0) { continue; }
 
+    if (slime.targetTileX > 30*32-16)
+      slime.targetTileX = 30*32-16;
+
     for (int i = 0; i < (slime.chasingMinerId == -1 ? 1 : 2); ++ i) {
       moveTowards(slime, slime.targetTileX, slime.targetTileY);
     }
@@ -293,7 +319,8 @@ void ld::MobGroup::Update(ld::GameState & state)
      && slime.positionY == slime.targetTileY
     ) {
       if (::GetRandomValue(0, 100) < (slime.chasingMinerId>=0 ? 5 : 20)) {
-        slime.sleepTimer = ::GetRandomValue(1, 3)*60;
+        slime.sleepTimer =
+          slime.chasingMinerId < 0 ? ::GetRandomValue(1, 3)*60 : 5;
       }
 
       if (slime.pathSize > 0)
@@ -344,6 +371,11 @@ void ld::MobGroup::Update(ld::GameState & state)
       // BOOM
       if (tnt.animationIdx != 30*4) { continue; }
 
+      ld::SoundPlay(
+        ld::SoundType::Explosion,
+        (tnt.positionY - state.camera.y) * 0.05f
+      );
+
       for (auto & miner : state.minerGroup.miners) {
         if (
           ::CheckCollisionPointCircle(
@@ -358,7 +390,13 @@ void ld::MobGroup::Update(ld::GameState & state)
             64.0f
           )
         ) {
-          miner.kill();
+          if (miner.inventory[Idx(ld::ItemType::Armor)].owns) {
+            miner.inventory[Idx(ld::ItemType::Armor)].owns = false;
+            miner.inventory[Idx(ld::ItemType::Armor)].level = 0;
+            miner.inventory[Idx(ld::ItemType::Armor)].durability = 0;
+          } else {
+            miner.kill();
+          }
         }
       }
 
@@ -396,6 +434,8 @@ void ld::MobGroup::Update(ld::GameState & state)
             64.0f
           )
         ) {
+          // this should hopefully let slime detach itself from
+          // miners on its next frame
           slime.health = 0;
           -- it;
         }

@@ -4,9 +4,11 @@ namespace ld {
   enum class SoundType {
     RockHit,
     Slime,
+    SlimeDie,
+    MinerDie,
+    Explosion,
     Size,
   };
-
 
   void SoundInitialize();
   void SoundShutdown();
@@ -14,4 +16,7 @@ namespace ld {
   void SoundUpdate();
 
   void SoundPlay(SoundType const, float distance);
+
+  void ToggleMuteSound();
+  void ToggleMuteMedia();
 }

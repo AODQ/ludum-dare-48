@@ -55,7 +55,7 @@ namespace {
     }
   }
 
-  // rayblib Perlin noise size
+  // raylib Perlin noise size
   auto perlinSize(ld::MineChasm const& self)
   {
     return std::max(
@@ -196,8 +196,10 @@ namespace { // generate passes
           fval(perlin, col, row),
           fval(cells , col, row)
         );
-        if (::GetRandomValue(0, 100) > 95 && vv < 0.4f && !rock.isMined())
-        {
+        if (
+            ::GetRandomValue(0, 100) > 95 && vv < 0.35f && !rock.isMined()
+         && row > 8 // ban from first few rows
+        ) {
           rock.gem = ld::RockGemType::Food;
         }
       }
@@ -205,6 +207,30 @@ namespace { // generate passes
 
     ::UnloadImage(perlin);
     ::UnloadImage(cells );
+  }
+
+  void GenerateSlimePockets(ld::MineChasm& self, ld::MobGroup & group)
+  {
+    // bluenoise would be noice
+    const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
+
+    int32_t gen = 0;
+
+    for (uint32_t row = 8; row < rows-1; ++row) {
+      for (uint32_t col = 1; col < self.columns-1; ++col) {
+        auto& rock = self.rock(col, row);
+        gen += 1 + row/3;
+        if (::GetRandomValue(0, 100) < (gen/50) && !rock.isMined()) {
+          gen = 0;
+          rock.tier = ld::RockTier::Mined;
+          rock.gem  = ld::RockGemType::Empty;
+          group.slimes.push_back({
+            .positionX = MobPos(col),
+            .positionY = MobPos(row)
+          });
+        }
+      }
+    }
   }
 
   // add caves & caverns
@@ -315,6 +341,7 @@ ld::MineChasm ld::MineChasm::Initialize(
   GenerateEarth(self);
   GenerateGems (self);
   GenerateFood (self);
+  GenerateSlimePockets(self, group);
   const auto emptySpaces = GenerateCaves(self);
 
   // first few rows are walkable
@@ -400,7 +427,12 @@ void ld::MineChasm::Update(ld::GameState & state)
     state.mineChasm.rockFow[i] =
       std::max(
         std::clamp(1.0f - std::clamp(i/30, 0ul, 4ul) / 4.0f, 0.05f, 1.0f),
-        state.mineChasm.rockFow[i] - 0.0005f
+        state.mineChasm.rockFow[i]
+       - std::lerp(
+           0.00005f,
+           0.0005f,
+           state.researchItems[Idx(ld::ResearchType::Vision)].level / 10.0f
+         )
       );
   }
 }

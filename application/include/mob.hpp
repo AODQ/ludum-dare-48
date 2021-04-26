@@ -23,7 +23,8 @@ namespace ld {
 
     bool inCombat = false;
 
-    int32_t sleepTimer = 0; // also kill timer
+    int32_t dieTimer   = -1;
+    int32_t sleepTimer = 0;
     int32_t attackTimer = 0;
 
     std::array<::Vector2, 4> path;
