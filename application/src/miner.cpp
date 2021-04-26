@@ -20,7 +20,8 @@ void ld::Miner::moveTowards(int32_t x, int32_t y)
   self.prevXPosition = self.xPosition;
   self.prevYPosition = self.yPosition;
 
-  for (uint32_t i = 0; i < speed; ++ i) {
+  uint32_t speedLevel = inventory[Idx(ld::ItemType::Speed)].level + 1;
+  for (uint32_t i = 0; i < speedLevel; ++ i) {
     self.xPosition -= ld::sgn(self.xPosition - x);
     self.yPosition -= ld::sgn(self.yPosition - y);
   }
