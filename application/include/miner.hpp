@@ -85,7 +85,6 @@ namespace ld {
         Attacking,
         Dying,
         Idling,
-        MineTraversing,
         Mining,
         Surfaced,
         Traversing,
@@ -111,20 +110,14 @@ namespace ld {
         };
 
         struct Traversing {
-          int32_t targetTileX = 0, targetTileY = 0;
-
-          bool wantsToSurface = false;
-          int32_t waitTimer = 0;
-        };
-
-        struct MineTraversing {
           std::array<::Vector2, 4> path;
           size_t pathIdx;
           size_t pathSize;
 
           int32_t targetTileX = 0, targetTileY = 0;
           int32_t targetPosOffX = 0, targetPosOffY = 0;
-          bool hasHitTarget = true;
+
+          bool wantsToSurface = false;
         };
 
         struct Idling {
@@ -143,7 +136,6 @@ namespace ld {
         Attacking      attacking;
         Dying          dying;
         Idling         idling;
-        MineTraversing mineTraversing;
         Mining         mining;
         Surfaced       surfaced;
         Traversing     traversing;

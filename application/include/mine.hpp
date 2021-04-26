@@ -76,6 +76,20 @@ namespace ld {
     int32_t rockPathValue(int32_t x, int32_t y) const;
 
     static void Update(ld::GameState & state);
+
+    int32_t limitX(int32_t x) {
+      if (x < 0) return 0;
+      if (x >= static_cast<int32_t>(columns))
+        return columns - 1;
+      return x;
+    }
+
+    int32_t limitY(int32_t y) {
+      if (y < 0) return 0;
+      if (y >= static_cast<int32_t>(rocks.size() / columns))
+        return (rocks.size() / columns) - 1;
+      return y;
+    }
   };
 
   int32_t baseRockDurability(

@@ -305,7 +305,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
             case Miner::AiState::Idling:
                 action += "Idling";
                 break;
-            case Miner::AiState::MineTraversing:
+            case Miner::AiState::Traversing:
                 action += "Traversing";
                 break;
             case Miner::AiState::Mining:
@@ -313,9 +313,6 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
                 break;
             case Miner::AiState::Surfaced:
                 action += "Surfaced";
-                break;
-            case Miner::AiState::Traversing:
-                action += "Traversing";
                 break;
             default:
                 action = "";
