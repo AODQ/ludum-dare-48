@@ -121,7 +121,19 @@ void UpdateMinerInventory(ld::Miner & miner, ld::MineRock const & rock)
   switch (rock.gem) {
     default:
       miner.cargo[Idx(ld::ValuableType::Stone)].ownedUnits += 1;
-    break;
+      break;
+    case ld::RockGemType::Tin:
+      miner.cargo[Idx(ld::ValuableType::Tin)].ownedUnits += 1;
+      break;
+    case ld::RockGemType::Ruby:
+      miner.cargo[Idx(ld::ValuableType::Ruby)].ownedUnits += 1;
+      break;
+    case ld::RockGemType::Emerald:
+      miner.cargo[Idx(ld::ValuableType::Emerald)].ownedUnits += 1;
+      break;
+    case ld::RockGemType::Sapphire:
+      miner.cargo[Idx(ld::ValuableType::Sapphire)].ownedUnits += 1;
+      break;
   }
 
   UpdateMinerCargo(miner);
