@@ -440,7 +440,7 @@ void ld::MinerGroup::Update(ld::GameState & state) {
     int32_t const minBoundsX = state.mineChasm.limitX(miner.xPosition/32 - 3);
     int32_t const minBoundsY = state.mineChasm.limitY(miner.yPosition/32 - 3);
     int32_t const maxBoundsX = state.mineChasm.limitX(miner.xPosition/32 + 3);
-    int32_t const maxBoundsY = state.mineChasm.limitX(miner.yPosition/32 + 3);
+    int32_t const maxBoundsY = state.mineChasm.limitY(miner.yPosition/32 + 3);
 
     for (int32_t x = minBoundsX; x < maxBoundsX; ++ x)
     for (int32_t y = minBoundsY; y < maxBoundsY; ++ y) {
