@@ -14,6 +14,7 @@ namespace ld {
     PickaxeGot,
     DrillGot,
     ArmorGot,
+    ThrowAway,
     Size,
   };
 

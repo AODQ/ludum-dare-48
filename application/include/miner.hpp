@@ -13,6 +13,8 @@ namespace ld { struct GameState; }
 
 namespace ld {
 
+  int32_t PickLevelDamage(int32_t level);
+
   struct Miner {
       enum class PurchaseState {
         BuyHighest,
@@ -37,6 +39,12 @@ namespace ld {
         { .type = ld::ItemType::Armor,   .owns = false, .durability = 10, .level = 0 },
         { .type = ld::ItemType::Speed,   .owns = false, .durability = 10, .level = 0 },
       }};
+
+      void damageEquipment(ld::ItemType type);
+
+      bool wantsToSurface() const {
+        return energy <= 100 + yPosition/5;
+      }
 
       void moveTowards(int32_t x, int32_t y);
 
@@ -96,6 +104,7 @@ namespace ld {
         Dying,
         Fighting,
         Idling,
+        Inventorying,
         Mining,
         Surfaced,
         Traversing,
@@ -139,6 +148,10 @@ namespace ld {
           int32_t waitTimer = -1;
         };
 
+        struct Inventorying {
+          int32_t waitTimer = -1;
+        };
+
         struct Dying {
         };
 
@@ -155,6 +168,7 @@ namespace ld {
         };
 
         Attacking      attacking;
+        Inventorying   inventorying;
         Dying          dying;
         Idling         idling;
         Fighting       fighting;

@@ -55,7 +55,7 @@ namespace ld {
 
       uint32_t MaxCargoCapacity() const {
         size_t idx = static_cast<size_t>(ld::ResearchType::Cargo);
-        return 20 + 5*researchItems[idx].level;
+        return 5 + 5*researchItems[idx].level;
       }
 
       uint32_t FoodToEnergyRatio() const {

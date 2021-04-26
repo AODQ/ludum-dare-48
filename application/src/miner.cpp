@@ -6,12 +6,44 @@
 
 #include <algorithm>
 
+int32_t ld::PickLevelDamage(int32_t level) {
+  switch (level) {
+    default: return 0;
+    case 1:  return 5;
+    case 2:  return 10;
+    case 3:  return 15;
+    case 4:  return 20;
+    case 5:  return 25;
+    case 6:  return 30;
+    case 7:  return 40;
+    case 8:  return 50;
+    case 9:  return 60;
+    case 10: return 75;
+  }
+}
+
 ld::MinerGroup ld::MinerGroup::Initialize() {
   ld::MinerGroup self;
 
   self.addMiner();
 
   return self;
+}
+
+void ld::Miner::damageEquipment(ld::ItemType type)
+{
+  auto & self = *this;
+  auto & item = self.inventory[Idx(type)];
+  if (item.owns && item.level > 0) {
+    item.durability -= 1;
+    if (item.durability <= 0) {
+      item.level = std::max(0, (int32_t)(item.level)-1);
+      item.durability = item.level > 0 ? 10 : 0;
+      if (item.level == 0) {
+        item.owns = false;
+      }
+    }
+  }
 }
 
 void ld::Miner::moveTowards(int32_t x, int32_t y)
@@ -122,17 +154,14 @@ void MinerPickLocation(
     state.path, state.pathSize,
     miner.xPosition / 32, miner.yPosition / 32,
     targetTileX, targetTileY,
-    state.wantsToSurface ? false : true // can mine
+    state.wantsToSurface ? nullptr : &miner
   );
 }
 
 void UpdateMinerCargo(ld::Miner & miner) {
   miner.currentCargoCapacity = 0;
   for (size_t it = 0u; it < miner.cargo.size(); ++ it) {
-    miner.currentCargoCapacity +=
-        miner.cargo[it].ownedUnits
-      * ld::valuableInfoLookup[it].weightUnitMultiplier
-    ;
+    miner.currentCargoCapacity += miner.cargo[it].ownedUnits;
   }
 }
 
@@ -140,23 +169,56 @@ void UpdateMinerInventory(ld::Miner & miner, ld::MineRock const & rock)
 {
   switch (rock.gem) {
     default:
-      miner.cargo[Idx(ld::ValuableType::Stone)].ownedUnits += 1;
+      miner.cargo[Idx(ld::ValuableType::Stone)].ownedUnits += 2;
       break;
     case ld::RockGemType::Tin:
-      miner.cargo[Idx(ld::ValuableType::Tin)].ownedUnits += 1;
+      miner.cargo[Idx(ld::ValuableType::Tin)].ownedUnits += 5;
       break;
     case ld::RockGemType::Ruby:
-      miner.cargo[Idx(ld::ValuableType::Ruby)].ownedUnits += 1;
+      miner.cargo[Idx(ld::ValuableType::Ruby)].ownedUnits += 10;
       break;
     case ld::RockGemType::Emerald:
-      miner.cargo[Idx(ld::ValuableType::Emerald)].ownedUnits += 1;
+      miner.cargo[Idx(ld::ValuableType::Emerald)].ownedUnits += 20;
       break;
     case ld::RockGemType::Sapphire:
-      miner.cargo[Idx(ld::ValuableType::Sapphire)].ownedUnits += 1;
+      miner.cargo[Idx(ld::ValuableType::Sapphire)].ownedUnits += 25;
       break;
   }
 
   UpdateMinerCargo(miner);
+}
+
+void UpdateMinerAiInventorying(ld::Miner & miner, ld::GameState & gameState) {
+  miner.applyAnimationState(ld::Miner::AnimationState::Idling);
+
+  auto & state = miner.aiStateInternal.inventorying;
+  if (state.waitTimer < 0) {
+    state.waitTimer = 40;
+    return;
+  }
+
+  state.waitTimer -= 1;
+
+  if (state.waitTimer >= 0) { return; }
+
+  UpdateMinerCargo(miner);
+
+  if (miner.currentCargoCapacity <= miner.cargoCapacity) {
+    miner.aiState = ld::Miner::AiState::Traversing;
+    return;
+  }
+
+  for (size_t i = 0; i < Idx(ld::RockGemType::Size); ++ i) {
+    if (miner.cargo[i].ownedUnits > 0) {
+      -- miner.cargo[i].ownedUnits;
+      UpdateMinerCargo(miner);
+      break;
+    }
+  }
+
+  gameState.notifGroup.AddNotif(
+    ld::NotifType::ThrowAway, miner.xPosition-8, miner.yPosition-16
+  );
 }
 
 void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
@@ -177,14 +239,24 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
 
   if (miner.animationFinishesThisFrame()) {
     miner.reduceEnergy(10);
-    rock.receiveDamage(-5);
-    UpdateMinerInventory(miner, rock);
+    rock.receiveDamage(
+        -5
+      - ld::PickLevelDamage(miner.inventory[Idx(ld::ItemType::Pickaxe)].level)
+    );
+
+    if (rock.isMined()) {
+      UpdateMinerInventory(miner, rock);
+    }
+
     ld::SoundPlay(
       ld::SoundType::RockHit,
       miner.yPosition - state.camera.y
     );
 
-    if (miner.currentCargoCapacity >= miner.cargoCapacity) {
+    if (
+        miner.currentCargoCapacity >= miner.cargoCapacity
+     || miner.wantsToSurface()
+    ) {
       miner.surfaceMiner();
     }
   }
@@ -226,6 +298,11 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
     .x = path.x*32.0f, .y = path.y*32.0f,
     .width = 32.0f, .height = 32.0f,
   };
+
+  if (!state.wantsToSurface && miner.wantsToSurface()) {
+    miner.surfaceMiner();
+    return;
+  }
 
   if (
     ::CheckCollisionCircleRec(
@@ -341,7 +418,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         cargo.ownedUnits -= 1;
         UpdateMinerCargo(miner);
         gameState.notifGroup.AddNotif(
-          ld::NotifType::ItemSold, miner.xPosition, miner.yPosition
+          ld::NotifType::ItemSold, miner.xPosition-8, miner.yPosition-16
         );
       }
 
@@ -396,7 +473,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
             static_cast<ld::NotifType>(
               Idx(ld::NotifType::PickaxeGot)+selectedUpgradeType
             ),
-            miner.xPosition, miner.yPosition
+            miner.xPosition-8, miner.yPosition-16
           );
           state.waitTimer = 80;
         }
@@ -419,7 +496,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
           std::min(miner.maxEnergy, miner.energy + miner.foodToEnergyRatio);
         readyToContinue = false;
         gameState.notifGroup.AddNotif(
-          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
+          ld::NotifType::FoodGot, miner.xPosition-8, miner.yPosition-16
         );
       }
 
@@ -433,7 +510,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         miner.energy = miner.maxEnergy;
         readyToContinue = false;
         gameState.notifGroup.AddNotif(
-          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
+          ld::NotifType::FoodGot, miner.xPosition-8, miner.yPosition-16
         );
         state.hasPurchasedFood = false;
       }
@@ -562,7 +639,24 @@ void ld::MinerGroup::Update(ld::GameState & state) {
   for (int64_t i = 0; i < self.miners.size(); ++ i) {
     auto & miner = self.miners[i];
 
+    if (
+        miner.aiState != ld::Miner::AiState::Dying
+     && miner.aiState != ld::Miner::AiState::Fighting
+    ) {
+      if (miner.currentCargoCapacity > miner.cargoCapacity) {
+        miner.aiState = ld::Miner::AiState::Inventorying;
+      }
+    }
+
+    // force dying state (in case overriden by inventorying / fighting)
+    if (miner.energy <= 0) {
+      miner.aiState = ld::Miner::AiState::Dying;
+    }
+
     switch (miner.aiState) {
+      case ld::Miner::AiState::Inventorying:
+        UpdateMinerAiInventorying(miner, state);
+      break;
       case ld::Miner::AiState::Mining:
         UpdateMinerAiMining(miner, state);
       break;

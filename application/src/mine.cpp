@@ -321,24 +321,34 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
 
   auto const & target = self.rock(self.rockId(x, y));
 
-  if (target.isMined()) { return 1.0f; }
+  if (target.isMined()) { return 0.0f; }
 
-  int32_t value = ::GetRandomValue(0.0f, 5.0f);
+  int32_t value = ::GetRandomValue(-5.0f, 5.0f);
 
   // can only see rocks if visible
   if (self.rockFow[rockId] >= 0.1f) {
-    value += target.durability;
     switch (target.gem) {
       default: break;
       case ld::RockGemType::Empty: break;
-      case ld::RockGemType::Tin:      value -= 200; break;
-      case ld::RockGemType::Ruby:     value -= 400; break;
-      case ld::RockGemType::Emerald:  value -= 850; break;
-      case ld::RockGemType::Sapphire: value -= 1500; break;
+      case ld::RockGemType::Tin:      value += 20; break;
+      case ld::RockGemType::Ruby:     value += 200; break;
+      case ld::RockGemType::Emerald:  value += 350; break;
+      case ld::RockGemType::Sapphire: value += 400; break;
     }
   }
 
   return std::clamp(1.0f + value, 0.5f, 500.0f);
+}
+
+int32_t ld::MineChasm::rockPathDurability(int32_t x, int32_t y) const {
+  auto & self = *this;
+
+  if (y < 0) { return 5000; }
+
+  if (x < 0 || x > static_cast<int32_t>(columns)) { return 5000; }
+
+  auto rock = self.rock(x, y);
+  return ld::baseRockDurability(rock.type, rock.tier, rock.gem);
 }
 
 void ld::MineChasm::Update(ld::GameState & state)
@@ -351,7 +361,7 @@ void ld::MineChasm::Update(ld::GameState & state)
         state.mineChasm.rockFow[i] - 0.0005f
       );
 
-    state.mineChasm.rockFow[i] = 1.0f;
+    /* state.mineChasm.rockFow[i] = 1.0f; */
   }
 }
 
@@ -377,10 +387,10 @@ int32_t ld::baseRockDurability(
   switch (gem) {
     default: break;
     case ld::RockGemType::Empty: break;
-    case ld::RockGemType::Tin:      durability += 10; break;
-    case ld::RockGemType::Ruby:     durability += 30; break;
-    case ld::RockGemType::Emerald:  durability += 80; break;
-    case ld::RockGemType::Sapphire: durability += 130; break;
+    case ld::RockGemType::Tin:      durability += 20; break;
+    case ld::RockGemType::Ruby:     durability += 70; break;
+    case ld::RockGemType::Emerald:  durability += 130; break;
+    case ld::RockGemType::Sapphire: durability += 230; break;
   }
 
   return durability;
