@@ -129,8 +129,6 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
             ::RAYWHITE, // Speed
         };
 
-        uint32_t maxUpgrades = 10;
-
         std::string desc = "Hover over each button to learn more";
         for (size_t i = 0; i < numButtons; ++i)
         {
@@ -141,7 +139,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
             }
             if (
                    upgBtns[i].IsClicked()
-                && game.researchItems[i].level < maxUpgrades
+                && game.researchItems[i].level < ld::researchInfoLookup[i].maxLevel
             ) {
                 if (game.gold >= cost)
                 {
@@ -157,13 +155,15 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
             uint32_t barPosX = upgBtns[i].xPos+upgBtns[i].width + 10;
             uint32_t barPosY = upgBtns[i].yPos;
             ::DrawRectangle(barPosX, barPosY, barWidth*game.researchItems[i].level, upgBtns[i].height, Fade(researchColor[i], 0.5f));
-            for (size_t j = 0; j < maxUpgrades; ++j)
+            for (size_t j = 0; j < ld::researchInfoLookup[i].maxLevel; ++j)
             {
                 ::DrawRectangleLines(barPosX, barPosY, barWidth, upgBtns[i].height, researchColor[i]);
                 barPosX += barWidth;
             }
+
+            uint32_t alignTextPos = upgBtns[i].xPos + upgBtns[i].width + 20 + (barWidth)*10;
             const char* barText = ::TextFormat("%s Level:%i, Cost:%iG", game.researchItems[i].name.c_str(), game.researchItems[i].level, cost);
-            ld::DrawOutlinedText(barText, barPosX + 10, barPosY + 0.5f*(upgBtns[i].height-10), 10, researchColor[i], ::BLACK);
+            ld::DrawOutlinedText(barText, alignTextPos, barPosY + 0.5f*(upgBtns[i].height-10), 10, researchColor[i], ::BLACK);
         }
 
         // Description of upgrade
