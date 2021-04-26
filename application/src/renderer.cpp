@@ -252,6 +252,78 @@ void ld::RenderScene(ld::GameState & state)
     }
   }
 
+  { // -- render notifs
+    for (auto & notif : state.notifGroup.notifs) {
+      constexpr std::array<::Vector2, Idx(ld::NotifType::Size)> offsets = {
+        ::Vector2 { 2, 0, },
+        ::Vector2 { 2, 1, },
+        ::Vector2 { 1, 0, },
+        ::Vector2 { 1, 1, },
+        ::Vector2 { 1, 2, },
+        ::Vector2 { 2, 2, },
+      };
+
+      ::DrawTextureRec(
+        ld::TextureGet(ld::TextureType::Misc)
+      , ::Rectangle {
+          .x = offsets[Idx(notif.type)].x * 32.0f,
+          .y = offsets[Idx(notif.type)].y * 32.0f,
+          .width = 32.0f,
+          .height = 32.0f,
+        }
+      , ::Vector2{
+          static_cast<float>(notif.positionX),
+          static_cast<float>(notif.positionY) - state.camera.y
+        }
+      , { 255, 255, 255, static_cast<uint8_t>(notif.timer / 120.0f * 255) }
+      );
+    }
+  }
+
+  if (state.targetX >= 0 && state.targetY >= 0)
+  { // -- render flag
+    ::DrawTexturePro(
+      ld::TextureGet(ld::TextureType::Flag)
+    , ::Rectangle {
+        .x = 0.0f,
+        .y = 0.0f,
+        .width = 32.0f,
+        .height = 32.0f,
+      }
+    , ::Rectangle {
+        .x = state.targetX*32.0f,
+        .y = state.targetY*32.0f - state.camera.y,
+        .width = 16.0f,
+        .height = 16.0f,
+      }
+    , ::Vector2{0.0f, 0.0f}
+    , 0.0f
+    , { 255, 255, 255, 255 }
+    );
+  }
+
+  if (state.targetActive)
+  { // -- render flag for mouse
+    ::DrawTexturePro(
+      ld::TextureGet(ld::TextureType::Flag)
+    , ::Rectangle {
+        .x = 0.0f,
+        .y = 0.0f,
+        .width = 32.0f,
+        .height = 32.0f,
+      }
+    , ::Rectangle {
+        .x = ::GetMousePosition().x,
+        .y = ::GetMousePosition().y,
+        .width = 16.0f,
+        .height = 16.0f,
+      }
+    , ::Vector2{0.0f, 0.0f}
+    , 0.0f
+    , { 255, 255, 255, 255 }
+    );
+  }
+
   { // -- render miners
     for (auto & miner : state.minerGroup.miners) {
 
@@ -358,77 +430,5 @@ void ld::RenderScene(ld::GameState & state)
         }
       }
     }
-  }
-
-  { // -- render notifs
-    for (auto & notif : state.notifGroup.notifs) {
-      constexpr std::array<::Vector2, Idx(ld::NotifType::Size)> offsets = {
-        ::Vector2 { 2, 0, },
-        ::Vector2 { 2, 1, },
-        ::Vector2 { 1, 0, },
-        ::Vector2 { 1, 1, },
-        ::Vector2 { 1, 2, },
-        ::Vector2 { 2, 2, },
-      };
-
-      ::DrawTextureRec(
-        ld::TextureGet(ld::TextureType::Misc)
-      , ::Rectangle {
-          .x = offsets[Idx(notif.type)].x * 32.0f,
-          .y = offsets[Idx(notif.type)].y * 32.0f,
-          .width = 32.0f,
-          .height = 32.0f,
-        }
-      , ::Vector2{
-          static_cast<float>(notif.positionX),
-          static_cast<float>(notif.positionY) - state.camera.y
-        }
-      , { 255, 255, 255, static_cast<uint8_t>(notif.timer / 120.0f * 255) }
-      );
-    }
-  }
-
-  if (state.targetX >= 0 && state.targetY >= 0)
-  { // -- render flag
-    ::DrawTexturePro(
-      ld::TextureGet(ld::TextureType::Flag)
-    , ::Rectangle {
-        .x = 0.0f,
-        .y = 0.0f,
-        .width = 32.0f,
-        .height = 32.0f,
-      }
-    , ::Rectangle {
-        .x = state.targetX*32.0f,
-        .y = state.targetY*32.0f - state.camera.y,
-        .width = 16.0f,
-        .height = 16.0f,
-      }
-    , ::Vector2{0.0f, 0.0f}
-    , 0.0f
-    , { 255, 255, 255, 255 }
-    );
-  }
-
-  if (state.targetActive)
-  { // -- render flag for mouse
-    ::DrawTexturePro(
-      ld::TextureGet(ld::TextureType::Flag)
-    , ::Rectangle {
-        .x = 0.0f,
-        .y = 0.0f,
-        .width = 32.0f,
-        .height = 32.0f,
-      }
-    , ::Rectangle {
-        .x = ::GetMousePosition().x,
-        .y = ::GetMousePosition().y,
-        .width = 16.0f,
-        .height = 16.0f,
-      }
-    , ::Vector2{0.0f, 0.0f}
-    , 0.0f
-    , { 255, 255, 255, 255 }
-    );
   }
 }
