@@ -143,6 +143,7 @@ namespace ld {
 
           int32_t waitTimer = -1;
           int32_t targetX, targetY;
+          bool hasPurchasedFood = false;
         };
 
         Attacking      attacking;

@@ -164,7 +164,10 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
     miner.reduceEnergy(10);
     rock.receiveDamage(-5);
     UpdateMinerInventory(miner, rock);
-    ld::SoundPlay(ld::SoundType::RockHit);
+    ld::SoundPlay(
+      ld::SoundType::RockHit,
+      miner.yPosition - state.camera.y
+    );
 
     if (miner.currentCargoCapacity >= miner.cargoCapacity) {
       miner.aiState = ld::Miner::AiState::Traversing;
@@ -273,7 +276,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
   switch (state.state) {
     case ld::Miner::AiStateSurfaced::Surfacing:
       miner.xPosition = 700;
-      miner.yPosition = -100;
+      miner.yPosition = -80;
 
       miner.animationState = ld::Miner::AnimationState::Idling;
 
@@ -286,8 +289,8 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         miner.animationState = ld::Miner::AnimationState::Travelling;
         miner.animationIdx = 0;
 
-        state.targetX = ::GetRandomValue(50, 180);
-        state.targetY = ::GetRandomValue(-120, -80);
+        state.targetX = ::GetRandomValue( 30,  70);
+        state.targetY = ::GetRandomValue(-90, -80);
       }
 
       state.waitTimer -= 1;
@@ -334,6 +337,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
 
       if (!hasSold) {
         state.state = ld::Miner::AiStateSurfaced::PurchasingUpgrades;
+        state.hasPurchasedFood = false;
         state.waitTimer = 20;
       }
 
@@ -344,21 +348,6 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       state.waitTimer = 20;
 
       bool readyToContinue = true;
-
-      // be conservative ; don't eat unless there is 100% efficiency
-      if (
-          readyToContinue
-       && miner.energy < miner.maxEnergy - miner.foodToEnergyRatio
-       && gameState.food > 0
-      ) {
-        gameState.food -= 1;
-        miner.energy =
-          std::min(miner.maxEnergy, miner.energy + miner.foodToEnergyRatio);
-        readyToContinue = false;
-        gameState.notifGroup.AddNotif(
-          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
-        );
-      }
 
       // Find the highest upgrade that they can purchase
       // and that the bank can afford
@@ -393,6 +382,20 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         }
       } while (canBuyUpgrade);
 
+      // top off for free only if they have already purchased
+      if (
+          readyToContinue
+       && state.hasPurchasedFood
+       && miner.energy + miner.foodToEnergyRatio >= miner.maxEnergy
+      ) {
+        miner.energy = miner.maxEnergy;
+        readyToContinue = false;
+        gameState.notifGroup.AddNotif(
+          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
+        );
+        state.hasPurchasedFood = false;
+      }
+
       if (readyToContinue) {
         state.state = ld::Miner::AiStateSurfaced::BackToMine;
         miner.animationState = ld::Miner::AnimationState::Travelling;
@@ -400,8 +403,8 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       }
     } break;
     case ld::Miner::AiStateSurfaced::BackToMine:
-      miner.moveTowards(700, -100);
-      if (miner.xPosition == 700 && miner.yPosition == -100) {
+      miner.moveTowards(700, -80);
+      if (miner.xPosition == 700 && miner.yPosition == -80) {
         miner.aiState = ld::Miner::AiState::Idling;
         miner.xPosition = ::GetRandomValue(100, 700);
         miner.yPosition = ::GetRandomValue(10, 30);
@@ -440,7 +443,6 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
     }
   } else if (gameState.targetX >= 0 && gameState.targetY >= 0)
   {
-      auto mousePos = ::GetMousePosition();
       miner.animationIdx = 0;
       miner.animationState = ld::Miner::AnimationState::Travelling;
       miner.aiState = ld::Miner::AiState::Traversing;

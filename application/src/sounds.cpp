@@ -43,9 +43,18 @@ void ld::SoundUpdate()
   ::UpdateMusicStream(stream);
 }
 
-void ld::SoundPlay(ld::SoundType const type, float const volume)
+void ld::SoundPlay(ld::SoundType const type, float distance)
 {
+  distance = 1.0f - std::clamp(std::abs(distance) / 900.0f, 0.0f, 1.0f);
+
+  ::Sound * sound = nullptr;
+
   if (type == ld::SoundType::RockHit) {
-    ::PlaySound(rockHitSounds[::GetRandomValue(0, 3)]);
+    sound = &rockHitSounds[::GetRandomValue(0, 3)];
   }
+
+  ::SetSoundVolume(*sound, distance);
+  ::PlaySound(*sound);
+
+  if (!sound) { return; }
 }
