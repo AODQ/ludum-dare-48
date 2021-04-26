@@ -101,7 +101,7 @@ void ld::RenderScene(ld::GameState const & state)
       , { fow, fow, fow, 255 }
       );
 
-      if (!rock.isMined() && rock.gem != ld::RockGemType::Empty) {
+      if (!rock.isMined() && rock.gem != ld::RockGemType::Empty && fow>=40) {
 
         constexpr std::array<::Vector2, Idx(ld::RockGemType::Size)> offsets = {
           ::Vector2 { 0, 0, }, // none
@@ -120,11 +120,11 @@ void ld::RenderScene(ld::GameState const & state)
             .height = 32.0f,
           }
         , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
-        , Color { fow, fow, fow, 255 }
+        , Color { fow, fow, fow, fow < (uint8_t)(40) ? (uint8_t)(0) : fow }
         );
       }
 
-      if (!rock.isMined() && rock.durability != rock.baseDurability) {
+      if (!rock.isMined() && rock.durability != rock.baseDurability && fow>=40){
         ::DrawTextureRec(
           ld::TextureGet(ld::TextureType::RockDamage)
         , ::Rectangle {
@@ -314,7 +314,7 @@ void ld::RenderScene(ld::GameState const & state)
 
   if (state.targetX >= 0 && state.targetY >= 0)
   { // -- render flag
-    ::DrawTextureRec(
+    ::DrawTexturePro(
       ld::TextureGet(ld::TextureType::Flag)
     , ::Rectangle {
         .x = 0.0f,
@@ -322,17 +322,21 @@ void ld::RenderScene(ld::GameState const & state)
         .width = 32.0f,
         .height = 32.0f,
       }
-    , ::Vector2{
-        state.targetX*32.0f,
-        state.targetY*32.0f - state.camera.y
+    , ::Rectangle {
+        .x = state.targetX*32.0f,
+        .y = state.targetY*32.0f - state.camera.y,
+        .width = 16.0f,
+        .height = 16.0f,
       }
+    , ::Vector2{0.0f, 0.0f}
+    , 0.0f
     , { 255, 255, 255, 255 }
     );
   }
 
   if (state.targetActive)
   { // -- render flag for mouse
-    ::DrawTextureRec(
+    ::DrawTexturePro(
       ld::TextureGet(ld::TextureType::Flag)
     , ::Rectangle {
         .x = 0.0f,
@@ -340,7 +344,14 @@ void ld::RenderScene(ld::GameState const & state)
         .width = 32.0f,
         .height = 32.0f,
       }
-    , ::GetMousePosition()
+    , ::Rectangle {
+        .x = ::GetMousePosition().x,
+        .y = ::GetMousePosition().y,
+        .width = 16.0f,
+        .height = 16.0f,
+      }
+    , ::Vector2{0.0f, 0.0f}
+    , 0.0f
     , { 255, 255, 255, 255 }
     );
   }

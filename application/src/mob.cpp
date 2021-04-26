@@ -9,6 +9,15 @@
 namespace {
   constexpr uint32_t cloudSpreadFrame = 15 * 60;
   uint32_t cloudSpreadTimer = cloudSpreadFrame;
+
+
+template <typename T>
+void moveTowards(T & thing, int32_t x, int32_t y)
+{
+  thing.positionX -= ld::sgn(thing.positionX - x);
+  thing.positionY -= ld::sgn(thing.positionY - y);
+}
+
 } // -- namespace
 
 void ld::MobGroup::Update(ld::GameState & state)
@@ -27,11 +36,9 @@ void ld::MobGroup::Update(ld::GameState & state)
       continue;
     }
 
-    slime.animationIdx = (slime.animationIdx + 5) % (60*5);
-
     // look for tile near
 
-    if (slime.pathSize <= slime.pathIdx) {
+    if (slime.chasingMiner >= 0 && slime.pathSize <= slime.pathIdx) {
       slime.pathIdx = 0;
       slime.sleepTimer = ::GetRandomValue(0, 2)*60;
       continue;
@@ -46,34 +53,31 @@ void ld::MobGroup::Update(ld::GameState & state)
     }};
 
     auto offsetCheck = ::GetRandomValue(0, 3);
-    if (
-      state.mineChasm.rock(
-        slime.positionX/32 + offsets[offsetCheck].x,
-        slime.positionY/32 + offsets[offsetCheck].y
-      ).isMined()
-    ) {
-      slime.targetTileX =
-        slime.positionX + offsets[offsetCheck].x + ::GetRandomValue(0, +16);
-      slime.targetTileY =
-        slime.positionY + offsets[offsetCheck].y + ::GetRandomValue(0, +16);
+    {
+      auto conformanceX =
+        state.mineChasm.limitX(slime.positionX/32 + offsets[offsetCheck].x);
+      auto conformanceY =
+        state.mineChasm.limitY(slime.positionY/32 + offsets[offsetCheck].y);
+      if (
+          slime.targetTileX == -1 && slime.targetTileY == -1
+       && state.mineChasm.rock(conformanceX, conformanceY).isMined()
+      ) {
+        slime.targetTileX =
+          slime.positionX + offsets[offsetCheck].x*32 - ::GetRandomValue(2, 8);
+        slime.targetTileY =
+          slime.positionY + offsets[offsetCheck].y*32 - ::GetRandomValue(2, 8);
+      }
     }
 
     if (slime.targetTileX < 0 && slime.targetTileY < 0) { continue; }
 
-    ::Rectangle rect = {
-      .x = (float)(slime.targetTileX), .y = (float)(slime.targetTileY),
-      .width = 32.0f, .height = 32.0f,
-    };
+    moveTowards(slime, slime.targetTileX, slime.targetTileY);
+
+    slime.animationIdx = (slime.animationIdx + 5) % (60*5);
 
     if (
-      ::CheckCollisionCircleRec(
-        ::Vector2 {
-          static_cast<float>(slime.positionX),
-          static_cast<float>(slime.positionY),
-        },
-        24.0f,
-        rect
-      )
+        slime.positionX == slime.targetTileX
+     && slime.positionY == slime.targetTileY
     ) {
       slime.targetTileX = -1;
       slime.targetTileY = -1;
