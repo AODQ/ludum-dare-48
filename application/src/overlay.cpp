@@ -528,10 +528,6 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
           { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(255) : (uint8_t)(0) },
           true
         );
-      ld::DrawTooltip(
-          "Remove current rally point.",
-          flagCan.xPos, flagCan.yPos, flagCan.width, flagCan.height
-      );
     }
     bool thisFrame = false;
     if (flagCan.IsClicked()) {
@@ -567,6 +563,14 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
       thisFrame = true;
       game.minerSelection = -1;
       game.lockOnMiner = false;
+    }
+
+    // tooltip here to avoid layering issue
+    if (game.targetX>=0) {
+      ld::DrawTooltip(
+          "Remove current rally point.",
+          flagCan.xPos, flagCan.yPos, flagCan.width, flagCan.height
+      );
     }
 
     if (
