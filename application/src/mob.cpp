@@ -222,12 +222,12 @@ void ld::MobGroup::Update(ld::GameState & state)
         attackingMiner
      && ::CheckCollisionPointCircle(
           ::Vector2 {
-            (float)attackingMiner->xPosition + 16,
-            (float)attackingMiner->yPosition + 16,
+            (float)attackingMiner->xPosition,
+            (float)attackingMiner->yPosition,
           },
           ::Vector2 {
-            (float)slime.positionX + 8,
-            (float)slime.positionY + 8,
+            (float)slime.positionX,
+            (float)slime.positionY,
           },
           32.0f
         )
@@ -304,6 +304,147 @@ void ld::MobGroup::Update(ld::GameState & state)
     }
 
     // TODO add to FOW if this is detected
+  }
+
+  // -- tnt ----------------------------------------------
+  for (size_t it = 0; it < state.mobGroup.tnts.size(); ++ it) {
+    auto & tnt = state.mobGroup.tnts[it];
+
+    if (state.mineChasm.fowU8(tnt) <= 20) { continue; }
+
+    if (tnt.animationIdx >= 0) {
+      tnt.animationIdx += 1;
+
+      if (tnt.animationIdx >= 5*30) {
+        state.mobGroup.tnts.erase(state.mobGroup.tnts.begin() + it);
+        -- it;
+        continue;
+      }
+
+      struct Offsets {
+        int32_t x, y;
+      };
+
+      constexpr std::array<Offsets, 13> offsets = {{
+        {  0, 0 },
+        { -1, 0 }, { -1, 0 }, { +1, 0 }, {  0, +1 },
+        { -2, 0 }, { -2, 0 }, { +2, 0 }, {  0, +2 },
+        { -1, -1 }, { -1, +1 }, { +1, -1 }, {  +1, +1 },
+      }};
+
+      for (auto & offset : offsets) {
+        auto conformanceX = state.mineChasm.limitX(tnt.positionX/32) + offset.x;
+        auto conformanceY = state.mineChasm.limitY(tnt.positionY/32) + offset.y;
+        state.mineChasm.rockFow[
+          state.mineChasm.rockId(conformanceX, conformanceY)
+        ] = 1.0f;
+      }
+
+
+      // BOOM
+      if (tnt.animationIdx != 30*4) { continue; }
+
+      for (auto & miner : state.minerGroup.miners) {
+        if (
+          ::CheckCollisionPointCircle(
+            ::Vector2 {
+              (float)miner.xPosition,
+              (float)miner.yPosition,
+            },
+            ::Vector2 {
+              (float)tnt.positionX,
+              (float)tnt.positionY,
+            },
+            64.0f
+          )
+        ) {
+          miner.kill();
+        }
+      }
+
+      for (auto & tntChain : state.mobGroup.tnts) {
+        if (&tnt == &tntChain) { continue; }
+        if (
+            tntChain.animationIdx < 0
+        &&  ::CheckCollisionPointCircle(
+              ::Vector2 {
+                (float)tnt.positionX,
+                (float)tnt.positionY,
+              },
+              ::Vector2 {
+                (float)tntChain.positionX,
+                (float)tntChain.positionY,
+              },
+              64.0f
+          )
+        ) {
+          tntChain.animationIdx = 30*2;
+        }
+      }
+
+      for (auto & slime : state.mobGroup.slimes) {
+        if (
+          ::CheckCollisionPointCircle(
+            ::Vector2 {
+              (float)slime.positionX,
+              (float)slime.positionY,
+            },
+            ::Vector2 {
+              (float)tnt.positionX,
+              (float)tnt.positionY,
+            },
+            64.0f
+          )
+        ) {
+          slime.health = 0;
+          -- it;
+        }
+      }
+
+      for (auto & offset : offsets) {
+        auto conformanceX = state.mineChasm.limitX(tnt.positionX/32 + offset.x);
+        auto conformanceY = state.mineChasm.limitY(tnt.positionY/32 + offset.y);
+        state.mineChasm.rock(conformanceX, conformanceY).receiveDamage(300);
+      }
+      continue;
+    }
+
+    // if mob steps on it
+    for (auto & miner : state.minerGroup.miners) {
+      if (
+        ::CheckCollisionPointCircle(
+          ::Vector2 {
+            (float)miner.xPosition,
+            (float)miner.yPosition,
+          },
+          ::Vector2 {
+            (float)tnt.positionX,
+            (float)tnt.positionY,
+          },
+          48.0f
+        )
+      ) {
+        tnt.animationIdx = 0;
+      }
+    }
+
+    for (auto & slime : state.mobGroup.slimes) {
+      if (
+        ::CheckCollisionPointCircle(
+          ::Vector2 {
+            (float)slime.positionX,
+            (float)slime.positionY,
+          },
+          ::Vector2 {
+            (float)tnt.positionX,
+            (float)tnt.positionY,
+          },
+          48.0f
+        )
+      ) {
+        tnt.animationIdx = 0;
+      }
+    }
   }
 
   // -- clouds -------------------------------------------

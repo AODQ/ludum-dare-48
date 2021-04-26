@@ -179,6 +179,9 @@ void UpdateMinerInventory(ld::Miner & miner, ld::MineRock const & rock)
     case ld::RockGemType::Sapphire:
       miner.cargo[Idx(ld::ValuableType::Sapphire)].ownedUnits += 25;
       break;
+    case ld::RockGemType::Food:
+      miner.cargo[Idx(ld::ValuableType::Food)].ownedUnits += 25;
+      break;
   }
 
   UpdateMinerCargo(miner);
@@ -285,9 +288,9 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
       gameState
     );
 
-    // if no path was selected just leave
+    // if no path was selected just change target
     if (state.pathIdx >= state.pathSize) {
-      miner.surfaceMiner();
+      miner.chooseNewTarget(gameState);
       return;
     }
   }
@@ -347,7 +350,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
     if (state.targetTileX == path.x && state.targetTileY == path.y) {
 
       // should just leave
-      if (miner.energy <= 200) {
+      if (miner.wantsToSurface()) {
         miner.surfaceMiner();
         return;
       }
@@ -421,6 +424,18 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
 
       for (auto & cargo : miner.cargo) {
         if (cargo.ownedUnits == 0) { continue; }
+
+        if (cargo.type == ld::ValuableType::Food) {
+          gameState.food += 25;
+          hasSold = true;
+          cargo.ownedUnits -= 1;
+          UpdateMinerCargo(miner);
+          gameState.notifGroup.AddNotif(
+            ld::NotifType::FoodGot, miner.xPosition-8, miner.yPosition-16
+          );
+          break;
+        }
+
         auto value = ld::valuableInfoLookup[Idx(cargo.type)].value;
         miner.netValue += value;
         gameState.gold += value;
@@ -430,6 +445,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         gameState.notifGroup.AddNotif(
           ld::NotifType::ItemSold, miner.xPosition-8, miner.yPosition-16
         );
+        break;
       }
 
       if (!hasSold) {
@@ -523,6 +539,19 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
           ld::NotifType::FoodGot, miner.xPosition-8, miner.yPosition-16
         );
         state.hasPurchasedFood = false;
+      }
+
+      // waste food
+      if (gameState.food > gameState.MaxFood()) {
+        readyToContinue = false;
+        gameState.food -= 20;
+
+        if (gameState.food < gameState.MaxFood()) {
+          gameState.food = gameState.MaxFood();
+        }
+        gameState.notifGroup.AddNotif(
+          ld::NotifType::ThrowAway, miner.xPosition-8, miner.yPosition-16
+        );
       }
 
 
@@ -704,7 +733,7 @@ void ld::MinerGroup::Update(ld::GameState & state) {
 
     int32_t const minBoundsX = state.mineChasm.limitX(miner.xPosition/32 - 3);
     int32_t const minBoundsY = state.mineChasm.limitY(miner.yPosition/32 - 3);
-    int32_t const maxBoundsX = state.mineChasm.limitX(miner.xPosition/32 + 3);
+    int32_t const maxBoundsX = state.mineChasm.limitX(miner.xPosition/32 + 3,1);
     int32_t const maxBoundsY = state.mineChasm.limitY(miner.yPosition/32 + 3);
 
     for (int32_t x = minBoundsX; x < maxBoundsX; ++ x)

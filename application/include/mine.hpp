@@ -21,7 +21,7 @@ namespace ld {
   };
 
   enum class RockGemType {
-    Empty, Tin, Ruby, Emerald, Sapphire,
+    Empty, Tin, Ruby, Emerald, Sapphire, Food,
     Size,
   };
 
@@ -78,10 +78,10 @@ namespace ld {
 
     static void Update(ld::GameState & state);
 
-    int32_t limitX(int32_t x) {
+    int32_t limitX(int32_t x, bool weirdOff=false) {
       if (x < 0) return 0;
       if (x >= static_cast<int32_t>(columns))
-        return columns;
+        return columns + (weirdOff ? 0 : -1);
       return x;
     }
 

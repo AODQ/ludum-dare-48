@@ -31,6 +31,13 @@ namespace ld {
     size_t pathSize = 0;
   };
 
+  struct Tnt {
+    int32_t positionX = 0, positionY = 0;
+
+    // triggers at 0
+    int32_t animationIdx = -1;
+  };
+
   struct MobPoisonCloud {
     int32_t animationIdx = 0;
 
@@ -42,6 +49,7 @@ namespace ld {
   struct MobGroup {
     std::vector<MobSlime> slimes;
     std::vector<MobPoisonCloud> poisonClouds;
+    std::vector<Tnt> tnts;
 
     static void Update(ld::GameState & state);
     static MobGroup Initialize();

@@ -172,13 +172,39 @@ namespace { // generate passes
               1 + std::floor(
                 fval(perlin, col, row)
                 * static_cast<float>(row - 20) / (rows - 20)
-                * Idx(ld::RockGemType::Size)
+                * Idx(ld::RockGemType::Food) // dont gen food here
               )
             );
           }
         }
       }
     }
+  }
+
+  // who put food in the walls??
+  void GenerateFood(ld::MineChasm& self)
+  {
+    const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
+    const auto ps = perlinSize(self);
+    auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 7.f);
+    auto cells  = ::GenImageCellular(self.columns, rows, 10);
+
+    for (uint32_t row = 0; row < rows; ++row) {
+      for (uint32_t col = 0; col < self.columns; ++col) {
+        auto& rock = self.rock(col, row);
+        const auto vv = average(
+          fval(perlin, col, row),
+          fval(cells , col, row)
+        );
+        if (::GetRandomValue(0, 100) > 95 && vv < 0.4f && !rock.isMined())
+        {
+          rock.gem = ld::RockGemType::Food;
+        }
+      }
+    }
+
+    ::UnloadImage(perlin);
+    ::UnloadImage(cells );
   }
 
   // add caves & caverns
@@ -226,6 +252,9 @@ namespace { // generate passes
     std::vector<std::pair<uint32_t, uint32_t>> const& emptySpaces
   )
   {
+    const auto numTnts = static_cast<uint32_t>(
+      self.rocks.size() / 100
+    );
     const auto numSlimes = static_cast<uint32_t>(
       self.rocks.size() / 375
     );
@@ -233,6 +262,17 @@ namespace { // generate passes
       // half as many clouds
       self.rocks.size() / 750
     );
+
+    for (uint32_t i = 0; i < numTnts; ++i) {
+      auto spot = emptySpaces.begin() + ::GetRandomValue(
+        0,
+        emptySpaces.size() - 1
+      );
+      group.tnts.push_back({
+        .positionX = MobPos(spot->second),
+        .positionY = MobPos(spot->first )
+      });
+    }
 
     for (uint32_t i = 0; i < numSlimes; ++i) {
       auto spot = emptySpaces.begin() + ::GetRandomValue(
@@ -274,6 +314,7 @@ ld::MineChasm ld::MineChasm::Initialize(
 
   GenerateEarth(self);
   GenerateGems (self);
+  GenerateFood (self);
   const auto emptySpaces = GenerateCaves(self);
 
   // first few rows are walkable
@@ -334,6 +375,7 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
       case ld::RockGemType::Ruby:     value += 200; break;
       case ld::RockGemType::Emerald:  value += 350; break;
       case ld::RockGemType::Sapphire: value += 400; break;
+      case ld::RockGemType::Food:     value += 200; break;
     }
   }
 
@@ -360,8 +402,7 @@ void ld::MineChasm::Update(ld::GameState & state)
         std::clamp(1.0f - std::clamp(i/30, 0ul, 4ul) / 4.0f, 0.05f, 1.0f),
         state.mineChasm.rockFow[i] - 0.0005f
       );
-
-    /* state.mineChasm.rockFow[i] = 1.0f; */
+    state.mineChasm.rockFow[i] =1.0f;
   }
 }
 
@@ -391,6 +432,7 @@ int32_t ld::baseRockDurability(
     case ld::RockGemType::Ruby:     durability += 70; break;
     case ld::RockGemType::Emerald:  durability += 130; break;
     case ld::RockGemType::Sapphire: durability += 230; break;
+    case ld::RockGemType::Food:     durability += 20; break;
   }
 
   return durability;

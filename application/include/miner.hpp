@@ -40,10 +40,13 @@ namespace ld {
         { .type = ld::ItemType::Speed,   .owns = false, .durability = 10, .level = 0 },
       }};
 
+      uint32_t cargoCapacity = 50u;
+      uint32_t currentCargoCapacity = 0u;
+
       void damageEquipment(ld::ItemType type);
 
       bool wantsToSurface() const {
-        return energy <= 100 + yPosition/5;
+        return energy <= (currentCargoCapacity > 0 ? (100 + yPosition/5) : 20);
       }
 
       void moveTowards(int32_t x, int32_t y);
@@ -53,8 +56,6 @@ namespace ld {
       void reduceEnergy(int32_t units);
       void kill();
 
-      uint32_t cargoCapacity = 50u;
-      uint32_t currentCargoCapacity = 0u;
       std::array<ld::Valuable, Idx(ld::ValuableType::Size)> cargo = {{
         {
           .type = ld::ValuableType::Stone,

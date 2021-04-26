@@ -58,8 +58,11 @@ for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
     if (gameState.food <= 0) {
       gameState.food = 0;
       if (gameState.minerGroup.miners.size() > 0) {
-        for (auto & miner : gameState.minerGroup.miners)
-          miner.reduceEnergy(5);
+        for (auto & miner : gameState.minerGroup.miners) {
+          if (miner.animationFinishesThisFrame()) {
+            miner.reduceEnergy(15);
+          }
+        }
       }
     }
 #if 1

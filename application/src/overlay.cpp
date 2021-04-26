@@ -31,6 +31,8 @@ void ld::DrawCenteredText(const char* text, uint32_t xPos, uint32_t yPos, uint32
 
 void ld::DrawBar(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height, uint32_t fontSize, ::Color color, float fillPct)
 {
+    if (fillPct > 1.0f) fillPct = 1.0f;
+    if (fillPct < 0.0f) fillPct = 0.0f;
     int textWidth = ::MeasureText(text, fontSize);
     ::DrawRectangle     (xPos, yPos, width*fillPct, height, color);
     ::DrawRectangleLines(xPos, yPos, width        , height, DARKGRAY);
@@ -362,6 +364,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     static size_t cycle = 0;
     std::string idleText = "Idle: " + std::to_string(idleMiners.size());
     idleBtn.Draw(idleText.c_str(), 10, ::Fade(::LIGHTGRAY, 0.5f));
+    bool wasIdle = game.minerSelection >= 0;
     if (
         (::IsKeyPressed(KEY_SPACE) || idleBtn.IsClicked())
         && !idleMiners.empty()
@@ -369,6 +372,10 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         // wrap cycle first in case it corresponds to an invalid index within the list
         cycle = (cycle+1) % idleMiners.size();
         game.minerSelection = idleMiners.at(cycle);
+
+        if (wasIdle && idleMiners.size() == 1) {
+          game.minerSelection = -1;
+        }
     }
 
     // -- flag

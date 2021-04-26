@@ -109,6 +109,7 @@ void ld::RenderScene(ld::GameState const & state)
           ::Vector2 { 0, 1, }, // ruby
           ::Vector2 { 1, 0, }, // emerald
           ::Vector2 { 1, 1, }, // sapphire
+          ::Vector2 { 2, 0, }, // food
         };
 
         ::DrawTextureRec(
@@ -159,7 +160,7 @@ void ld::RenderScene(ld::GameState const & state)
         continue;
       }
 
-      constexpr std::array<::Vector2, Idx(ld::RockGemType::Size)> offsets = {
+      constexpr std::array<::Vector2, 5> offsets = {
         ::Vector2 { 4, 0, },
         ::Vector2 { 4, 1, },
         ::Vector2 { 4, 2, },
@@ -167,11 +168,16 @@ void ld::RenderScene(ld::GameState const & state)
         ::Vector2 { 4, 0, },
       };
 
+      int32_t animationX =
+        slime.health > 0 ? offsets[slime.animationIdx / 60].x : 3;
+      int32_t animationY =
+        slime.health > 0 ? offsets[slime.animationIdx / 60].y : 3;
+
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
       , ::Rectangle {
-          .x = offsets[slime.animationIdx / 60].x * 16.0f,
-          .y = offsets[slime.animationIdx / 60].y * 16.0f,
+          .x = animationX * 16.0f,
+          .y = animationY * 16.0f,
           .width = 16.0f,
           .height = 16.0f,
         }
@@ -182,6 +188,33 @@ void ld::RenderScene(ld::GameState const & state)
         , Color {
             fow, fow, fow, (uint8_t)(fow * slime.alpha)
           }
+      );
+    }
+
+    for (auto & tnt : state.mobGroup.tnts) {
+      uint8_t const fow = state.mineChasm.fowU8(tnt);
+
+      if (
+          tnt.positionY+8.0f < state.camera.y
+       || tnt.positionY-8.0f > state.camera.y+600
+       || fow < 40
+      ) {
+        continue;
+      }
+
+      ::DrawTextureRec(
+        ld::TextureGet(ld::TextureType::Miner)
+      , ::Rectangle {
+          .x = std::max(0, tnt.animationIdx / 30) * 16.0f,
+          .y = 5 * 16.0f,
+          .width = 16.0f,
+          .height = 16.0f,
+        }
+      , ::Vector2{
+          static_cast<float>(tnt.positionX),
+          static_cast<float>(tnt.positionY) - state.camera.y
+        }
+        , Color { 255, 255, 255, fow }
       );
     }
 
