@@ -23,7 +23,6 @@ void ld::DrawTooltip(const char* text, uint32_t xPos, uint32_t yPos, uint32_t wi
         float fontSize = 10;
         uint32_t padding = 3;
         int textWidth = ::MeasureText(text, fontSize) + 2.0f*padding;
-        TraceLog(LOG_INFO, "TextWidth = %i", textWidth);
 
         float maxWidth = 120;
         // Scale box width if text amount is less than maxWidth
