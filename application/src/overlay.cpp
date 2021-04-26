@@ -1,8 +1,64 @@
 #include <overlay.hpp>
 #include <renderer.hpp> // Texture info
 #include <algorithm>
+#include <cmath>
 
 namespace {
+}
+
+void ld::DrawTooltip(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height)
+{
+    auto mousePos = ::GetMousePosition();
+    ::Rectangle bounds = {
+        static_cast<float>(xPos), static_cast<float>(yPos),
+        static_cast<float>(width), static_cast<float>(height)
+    };
+
+    // Display tooltip near mouse while area is hovered
+    if (::CheckCollisionPointRec(mousePos, bounds))
+    {
+        float fontSize = 10;
+        uint32_t padding = 3;
+        int textWidth = ::MeasureText(text, fontSize) + 2.0f*padding;
+        TraceLog(LOG_INFO, "TextWidth = %i", textWidth);
+
+        float maxWidth = 120;
+        // Scale box width if text amount is less than maxWidth
+        maxWidth = maxWidth > textWidth ? textWidth : maxWidth;
+        float boxWidth = maxWidth;
+        float boxHeight = fontSize * (std::ceil(textWidth/boxWidth) + 1) + 2.0f*padding;
+        float roundness = 0.05f;
+        int segments = 5;
+        int lineThickness = 2;
+
+        ::Rectangle container = {
+            mousePos.x - 0.5f*boxWidth,
+            mousePos.y - boxHeight - 10,
+            boxWidth, boxHeight
+        };
+
+        // Panel
+        ::DrawRectangleRounded(
+            container, roundness, segments, ::Fade(::WHITE, 0.8f)
+        );
+
+        // Border
+        DrawRectangleRoundedLines(
+            container, roundness, segments, lineThickness, ::DARKGRAY
+        );
+
+        // Tooltip text
+        ::Rectangle textBox = {
+            container.x+padding, container.y+padding,
+            container.width-padding, container.height-padding
+        };
+
+        float spacing = 0.3f;
+        bool wordWrap = true;
+        ::DrawTextRec(::GetFontDefault(), text, textBox,
+            fontSize, spacing, wordWrap, ::BLACK
+        );
+    }
 }
 
 void ld::DrawOutlinedText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color mainColor, ::Color outlineColor)
@@ -133,17 +189,34 @@ void ld::Overlay::GameOverScreen(ld::GameState & game)
 {
     ::DrawRectangle(0, 0, scrWidth, scrHeight, ::Fade(::BLACK, 0.8f));
 
-    ld::DrawOutlinedCenteredText("Game Over!", scrWidth*0.5f, scrHeight*0.5f-100, 50, ::RED, ::WHITE);
+    uint32_t startY = scrHeight*0.5f - 200;
+    uint32_t yPadding = startY;
 
-    ld::DrawOutlinedCenteredText("You ran out of food!", scrWidth*0.5f, scrHeight*0.5f, 30, ::WHITE, ::BLACK);
+    ld::DrawOutlinedCenteredText("Game Over!", scrWidth*0.5f, yPadding, 75, ::RED, ::WHITE);
 
+    yPadding += 100;
+    ld::DrawOutlinedCenteredText("You ran out of food!", scrWidth*0.5f, yPadding, 30, ::WHITE, ::BLACK);
+
+    yPadding += 100;
+    const std::vector<std::string> loseTips = {
+        "Passive upgrades will apply to all miners without extra gold",
+        "Equipment is puchased automatically when miner is surfaced",
+        "Having too many miners will deplete food faster",
+    };
+
+    static size_t tipIndex = 0;
+    std::string tipText = "Tip: " + loseTips.at(tipIndex);
+    ld::DrawOutlinedCenteredText(tipText.c_str(), scrWidth*0.5f, yPadding, 25, ::WHITE, ::BLACK);
+
+    yPadding += 50;
     uint32_t btnWidth = 100;
     uint32_t btnHeight = 50;
-    ld::Button replayBtn((scrWidth-btnWidth)*0.5f, scrHeight*0.5f + 100, btnWidth, btnHeight);
+    ld::Button replayBtn((scrWidth-btnWidth)*0.5f, yPadding, btnWidth, btnHeight);
 
     replayBtn.Draw("Replay", 20);
     if (replayBtn.IsClicked())
     {
+        tipIndex = (tipIndex + 1) % loseTips.size(); // cycle tooltip
         menuState = ld::Overlay::MenuState::None;
         game.Restart();
     }
@@ -309,6 +382,10 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         float fillPct = game.gold < 100 ? game.gold / 100.0f : 1.0f;
         const char* text = ::TextFormat("Gold: %i", game.gold);
         ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::GOLD, fillPct);
+        ld::DrawTooltip(
+            "For hiring miners and upgrades.",
+            xPos, yPos, width, height
+        );
     }
 
     currentFood -= ld::sgn(currentFood - game.food);
@@ -335,12 +412,20 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         );
 
         ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::RED, static_cast<float>(game.food)/static_cast<float>(game.MaxFood()));
+        ld::DrawTooltip(
+            "Lose when this is 0. Replenishes miners' energy levels.",
+            xPos, yPos, width, height
+        );
     }
 
     // Resource related buttons
     auto panicBtn    = buttons.at("Panic");
 
     panicBtn.Draw("Panic Return", 10, ::Fade(::RED, 0.5));
+    ld::DrawTooltip(
+        "Send all miners back to the surface.",
+        panicBtn.xPos, panicBtn.yPos, panicBtn.width, panicBtn.height
+    );
     if (panicBtn.IsClicked()) {
       for (auto & miner : game.minerGroup.miners)
         miner.surfaceMiner();
@@ -350,9 +435,17 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     auto buyMinerBtn = buttons.at("BuyMiner");
     auto researchBtn = buttons.at("Research");
     auto idleBtn     = buttons.at("Idle");
-    const char* hireText = ::TextFormat("Hire: %i Gold", game.minerCost);
-    buyMinerBtn.Draw(hireText, 10, ::Fade(::LIGHTGRAY, 0.5f));
+    buyMinerBtn.Draw("Hire", 10, ::Fade(::LIGHTGRAY, 0.5f));
+    ld::DrawTooltip(
+        ::TextFormat("Hire a new miner for %i Gold.", game.minerCost),
+        buyMinerBtn.xPos, buyMinerBtn.yPos, buyMinerBtn.width, buyMinerBtn.height
+    );
+
     researchBtn.Draw("Upgrades", 10, ::Fade(::LIGHTGRAY, 0.5f));
+    ld::DrawTooltip(
+        "Purchase equipment and passive upgrades to improve the miners.",
+        researchBtn.xPos, researchBtn.yPos, researchBtn.width, researchBtn.height
+    );
 
     std::vector<int32_t> idleMiners;
     for (auto miner : game.minerGroup.miners) {
@@ -364,6 +457,10 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     static size_t cycle = 0;
     std::string idleText = "Idle: " + std::to_string(idleMiners.size());
     idleBtn.Draw(idleText.c_str(), 10, ::Fade(::LIGHTGRAY, 0.5f));
+    ld::DrawTooltip(
+        "Select the next idle miner (Hotkey: SPACE).",
+        idleBtn.xPos, idleBtn.yPos, idleBtn.width, idleBtn.height
+    );
     bool wasIdle = game.minerSelection >= 0;
     if (
         (::IsKeyPressed(KEY_SPACE) || idleBtn.IsClicked())
@@ -393,6 +490,10 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
           { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(255) : (uint8_t)(0) },
           true
         );
+      ld::DrawTooltip(
+          "Remove current rally point.",
+          flagCan.xPos, flagCan.yPos, flagCan.width, flagCan.height
+      );
     }
     bool thisFrame = false;
     if (flagCan.IsClicked()) {
@@ -414,6 +515,10 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(128) : (uint8_t)(255) },
         true
       );
+    ld::DrawTooltip(
+        "Set a rally point that all idle miners will head to.",
+        flag.xPos, flag.yPos, flag.width, flag.height
+    );
 
     if (flag.IsClicked()) {
       game.targetX = -1;
@@ -512,19 +617,25 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
                 action = "";
                 break;
         }
-        ld::DrawOutlinedText(action.c_str(), x, y+padding, 10, ::WHITE, ::BLACK);
+        ld::DrawOutlinedText(action.c_str(), x+5, y+padding, 10, ::WHITE, ::BLACK);
     }
 
     { // -- Energy
         padding += 15;
         const char* energyText = ::TextFormat("Energy: %i/%i", miner.energy, miner.maxEnergy);
         ld::DrawBar(energyText, x, y+padding, w, 20, 10, ::GREEN, static_cast<float>(miner.energy) / static_cast<float>(miner.maxEnergy));
+        ld::DrawTooltip(
+          "Available energy for actions and replenished by food. This miner will die if his energy is fully depleted.",
+          x, y+padding, w, 20);
     }
 
     { // -- Weight
         padding += 20;
         const char* cargo = ::TextFormat("Weight: %i/%i", miner.currentCargoCapacity, miner.cargoCapacity);
         ld::DrawBar(cargo, x, y+padding, w, 20, 10, ::BLUE, static_cast<float>(miner.currentCargoCapacity) / static_cast<float>(miner.cargoCapacity));
+        ld::DrawTooltip(
+          "Max weight a miner can hold. This can be upgraded.",
+          x, y+padding, w, 20);
     }
 
     { // -- Equipment
@@ -535,6 +646,12 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
         uint32_t btnSize = 30;
         float xPadding = w / 3.0f;
         uint32_t xOffset = x + 0.5f*(xPadding - btnSize);
+
+        const std::array<std::string, Idx(ld::ItemType::Size)> equipDesc = {
+            "Pickaxe determines attack power. Higher levels can be purchased from the 'Upgrades' Menu.",
+            "Armor lowers the energy drain from monster fights. Must first be unlocked from the 'Upgrades' Menu.",
+            "Speed determines the miner's walking speed. Higher levels can be purchased from 'Upgrades' Menu.",
+        };
 
         int i = 0;
         for (auto equip : miner.inventory) {
@@ -549,6 +666,11 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
                 ld::TextureGet(ld::TextureType::Misc),
                 i, 1, tint
             );
+            // Equipment descriptions
+            ld::DrawTooltip(
+              equipDesc.at(i).c_str(),
+              xOffset, y+padding, btnSize, btnSize);
+
             xOffset += xPadding;
 
             i++;
@@ -563,6 +685,16 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
         uint32_t btnSize = 30;
         padding+=20;
         float xPadding = static_cast<float>(w) / 3.0f;
+
+
+        const std::array<std::string, Idx(ld::ValuableType::Size)> cargoDesc = {
+            "Stone",
+            "Food",
+            "Tin",
+            "Ruby",
+            "Emerald",
+            "Sapphire",
+        };
 
         for (uint32_t row = 0u; row < 2; ++row) {
 
@@ -583,6 +715,11 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
                     std::to_string(miner.cargo[it].ownedUnits).c_str(),
                     ld::TextureGet(ld::TextureType::Cargo), row, col, tint
                 );
+
+                // Cargo descriptions
+                ld::DrawTooltip(
+                    cargoDesc.at(it).c_str(),
+                    xOffset, y+padding, btnSize, btnSize);
 
                 xOffset += xPadding;
                 cargoValue += miner.cargo[it].ownedUnits* ld::valuableInfoLookup[it].value;

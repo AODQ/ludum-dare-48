@@ -7,6 +7,8 @@
 
 namespace ld {
 
+    void DrawTooltip(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height);
+
     /* Draw a colored text with black outlines */
     void DrawOutlinedText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color mainColor, ::Color outlineColor);
     void DrawOutlinedCenteredText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color color, ::Color outline = ::BLACK);

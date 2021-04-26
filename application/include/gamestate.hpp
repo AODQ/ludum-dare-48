@@ -11,7 +11,6 @@ namespace ld {
   struct GameState
   {
       bool showCursor = true;
-
       // below is in tiles
       int32_t targetX = -1, targetY = -1;
       bool targetActive = 0;
