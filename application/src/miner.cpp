@@ -165,7 +165,10 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
     miner.reduceEnergy(10);
     rock.receiveDamage(-5);
     UpdateMinerInventory(miner, rock);
-    ld::SoundPlay(ld::SoundType::RockHit);
+    ld::SoundPlay(
+      ld::SoundType::RockHit,
+      miner.yPosition - state.camera.y
+    );
 
     if (miner.currentCargoCapacity >= miner.cargoCapacity) {
       miner.aiState = ld::Miner::AiState::Traversing;
@@ -408,7 +411,6 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
     }
   } else if (gameState.targetX >= 0 && gameState.targetY >= 0)
   {
-      auto mousePos = ::GetMousePosition();
       miner.animationIdx = 0;
       miner.animationState = ld::Miner::AnimationState::Travelling;
       miner.aiState = ld::Miner::AiState::Traversing;

@@ -15,5 +15,5 @@ namespace ld {
 
   void SoundUpdate();
 
-  void SoundPlay(SoundType const, float const volume = 1.0f);
+  void SoundPlay(SoundType const, float distance);
 }
