@@ -131,6 +131,16 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
   auto rockId = miner.aiStateInternal.mining.targetRockId;
   auto & rock = state.mineChasm.rock(rockId);
 
+  if (miner.currentCargoCapacity >= miner.cargoCapacity) {
+    miner.aiState = ld::Miner::AiState::Traversing;
+    miner.aiStateInternal.traversing.wantsToSurface = true;
+    miner.aiStateInternal.traversing.pathSize = 0;
+    miner.aiStateInternal.traversing.pathIdx  = 0;
+    miner.aiStateInternal.traversing.targetTileX = miner.xPosition/32;
+    miner.aiStateInternal.traversing.targetTileY = 0;
+  }
+
+
   // reset back to traversing as before
   if (rock.isMined()) {
     miner.aiState = ld::Miner::AiState::Traversing;
@@ -359,6 +369,15 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
 void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
 {
   miner.animationState = ld::Miner::AnimationState::Idling;
+
+  if (miner.currentCargoCapacity >= miner.cargoCapacity) {
+    miner.aiState = ld::Miner::AiState::Traversing;
+    miner.aiStateInternal.traversing.wantsToSurface = true;
+    miner.aiStateInternal.traversing.pathSize = 0;
+    miner.aiStateInternal.traversing.pathIdx  = 0;
+    miner.aiStateInternal.traversing.targetTileX = miner.xPosition/32;
+    miner.aiStateInternal.traversing.targetTileY = 0;
+  }
 
   // draw
   if (miner.minerId == gameState.minerSelection) {

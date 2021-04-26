@@ -316,7 +316,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     ) {
       game.targetX = game.mineChasm.limitX(::GetMousePosition().x / 32);
       game.targetY =
-        game.mineChasm.limitY((::GetMousePosition().y - game.camera.y) / 32);
+        game.mineChasm.limitY((::GetMousePosition().y + game.camera.y) / 32);
       game.targetActive = 0;
     }
 }
@@ -327,7 +327,6 @@ void ld::Overlay::Update(ld::GameState & game)
     // End game when we're out of food, don't have miners, and out of gold
     if (game.food <= 0
         && game.minerGroup.miners.empty()
-        && game.gold < static_cast<int32_t>(game.minerCost)
     ) {
         menuState = ld::Overlay::MenuState::GameOver;
     }
