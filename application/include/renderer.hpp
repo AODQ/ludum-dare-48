@@ -28,7 +28,8 @@ namespace ld {
   ::Texture2D const & TextureGet(ld::TextureType const);
 
   // -- mine renderer
-  void RenderScene(ld::GameState const & state);
+  // was const but was hacked for overlay buttons
+  void RenderScene(ld::GameState & state);
 
   void RenderOverlay(
     ld::ButtonGroup const & buttonGroup

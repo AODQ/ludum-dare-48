@@ -66,7 +66,7 @@ void UpdateFrame() {
   }
 
   // -- misc updates
-  gameState.camera.Update();
+  gameState.camera.Update(gameState);
   ld::SoundUpdate(gameState);
 
   // -- render

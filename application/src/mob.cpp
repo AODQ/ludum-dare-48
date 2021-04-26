@@ -164,9 +164,7 @@ void ld::MobGroup::Update(ld::GameState & state)
             > 12
           )
       ) {
-        {
-          slime.chasingMinerId = -1;
-        }
+        slime.chasingMinerId = -1;
 
         if (attackingMiner && slime.inCombat) {
           attackingMiner->resetToTraversal();
@@ -242,7 +240,7 @@ void ld::MobGroup::Update(ld::GameState & state)
 
     } else if (
         attackingMiner
-     && attackingMiner->aiState == ld::Miner::AiState::Dying
+     && attackingMiner->aiState != ld::Miner::AiState::Dying
      && ::CheckCollisionPointCircle(
           ::Vector2 {
             (float)attackingMiner->xPosition,

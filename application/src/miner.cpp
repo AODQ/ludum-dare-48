@@ -599,7 +599,10 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
 {
   miner.animationState = ld::Miner::AnimationState::Idling;
 
-  if (miner.currentCargoCapacity >= miner.cargoCapacity) {
+  if (
+      miner.currentCargoCapacity >= miner.cargoCapacity
+   || miner.wantsToSurface()
+  ) {
     miner.surfaceMiner();
   }
 

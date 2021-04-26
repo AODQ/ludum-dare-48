@@ -55,7 +55,7 @@ void ld::RenderOverlay(
     }
 }
 
-void ld::RenderScene(ld::GameState const & state)
+void ld::RenderScene(ld::GameState & state)
 {
   if (state.camera.y < 0.0f)
   { // -- render surface
@@ -252,74 +252,6 @@ void ld::RenderScene(ld::GameState const & state)
     }
   }
 
-  { // -- render miners
-    for (auto & miner : state.minerGroup.miners) {
-
-      if (
-          miner.yPosition+8.0f < state.camera.y
-       || miner.yPosition-8.0f > state.camera.y+600
-      ) { continue; }
-
-      ::DrawTextureRec(
-        ld::TextureGet(ld::TextureType::Miner)
-      , ::Rectangle {
-          .x = static_cast<float>(miner.animationIdx / 60) * 16.0f,
-          .y = static_cast<float>(miner.animationState) * 16.0f,
-          .width = 16.0f - 32.0f*(miner.xPosition < miner.prevXPosition),
-          .height = 16.0f,
-        }
-      , ::Vector2{
-          static_cast<float>(miner.xPosition),
-          static_cast<float>(miner.yPosition) - state.camera.y
-        }
-      , Color { 255, 255, 255, miner.alpha }
-      );
-
-      // circle around highlighted miner
-      if (miner.minerId == state.minerSelection) {
-        ::DrawCircleLines(
-          miner.xPosition + 8.0f,
-          miner.yPosition + 8.0f - state.camera.y,
-          9.0f,
-          ::GREEN
-        );
-
-        if (miner.aiState == ld::Miner::AiState::Idling) {
-          auto mousePos = ::GetMousePosition();
-          ::DrawCircleV(
-            ::Vector2{mousePos.x, mousePos.y},
-            32.0f,
-            { 128, 25, 25, 128 }
-          );
-        }
-
-        if (
-            miner.aiState == ld::Miner::AiState::Traversing
-         || miner.aiState == ld::Miner::AiState::Mining
-        ) {
-          auto & aiState = miner.aiStateInternal.traversing;
-          ::DrawCircleV(
-            ::Vector2{
-              static_cast<float>(aiState.targetTileX)*32.0f+16.0f,
-              static_cast<float>(aiState.targetTileY)*32.0f+16.0f - state.camera.y
-            },
-            8.0f,
-            { 25, 25, 80, 200 }
-          );
-
-          ::DrawCircleV(
-            ::Vector2{
-              aiState.path[aiState.pathIdx].x*32.0f+16.0f,
-              aiState.path[aiState.pathIdx].y*32.0f+16.0f - state.camera.y
-            },
-            8.0f,
-            { 25, 80, 25, 200 }
-          );
-        }
-      }
-    }
-  }
-
   { // -- render notifs
     for (auto & notif : state.notifGroup.notifs) {
       constexpr std::array<::Vector2, Idx(ld::NotifType::Size)> offsets = {
@@ -390,5 +322,113 @@ void ld::RenderScene(ld::GameState const & state)
     , 0.0f
     , { 255, 255, 255, 255 }
     );
+  }
+
+  { // -- render miners
+    for (auto & miner : state.minerGroup.miners) {
+
+      if (
+          miner.yPosition+8.0f < state.camera.y
+       || miner.yPosition-8.0f > state.camera.y+600
+      ) { continue; }
+
+      ::DrawTextureRec(
+        ld::TextureGet(ld::TextureType::Miner)
+      , ::Rectangle {
+          .x = static_cast<float>(miner.animationIdx / 60) * 16.0f,
+          .y = static_cast<float>(miner.animationState) * 16.0f,
+          .width = 16.0f - 32.0f*(miner.xPosition < miner.prevXPosition),
+          .height = 16.0f,
+        }
+      , ::Vector2{
+          static_cast<float>(miner.xPosition),
+          static_cast<float>(miner.yPosition) - state.camera.y
+        }
+      , Color { 255, 255, 255, miner.alpha }
+      );
+
+      // render on UI
+      if (state.minerSelection == miner.minerId) {
+
+        ::Rectangle cont = {
+          775, 550, 16, 16
+        };
+
+        // Panel
+        ::DrawRectangleRounded(
+          cont, 0.05f, 5, ::Fade(state.lockOnMiner ? ::GREEN : ::WHITE, 0.8f)
+        );
+
+        // Border
+        DrawRectangleRoundedLines(
+          cont, 0.05f, 5, 1.0f, ::DARKGRAY
+        );
+
+        ::DrawTextureRec(
+          ld::TextureGet(ld::TextureType::Miner)
+        , ::Rectangle {
+            .x = static_cast<float>(miner.animationIdx / 60) * 16.0f,
+            .y = static_cast<float>(miner.animationState) * 16.0f,
+            .width = 16.0f - 32.0f*(miner.xPosition < miner.prevXPosition),
+            .height = 16.0f,
+          }
+        , ::Vector2{
+            775,
+            550
+          }
+        , Color { 255, 255, 255, miner.alpha }
+        );
+
+        if (
+            ::IsMouseButtonPressed(MOUSE_LEFT_BUTTON)
+         && ::CheckCollisionPointRec(::GetMousePosition(), cont)
+        ) {
+          state.lockOnMiner ^= 1;
+        }
+      }
+
+      // circle around highlighted miner
+      if (miner.minerId == state.minerSelection) {
+        ::DrawCircleLines(
+          miner.xPosition + 8.0f,
+          miner.yPosition + 8.0f - state.camera.y,
+          9.0f,
+          ::GREEN
+        );
+
+        if (miner.aiState == ld::Miner::AiState::Idling) {
+          auto mousePos = ::GetMousePosition();
+          ::DrawCircleV(
+            ::Vector2{mousePos.x, mousePos.y},
+            32.0f,
+            { 128, 25, 25, 128 }
+          );
+        }
+
+        if (
+            miner.aiState == ld::Miner::AiState::Traversing
+         || miner.aiState == ld::Miner::AiState::Mining
+        ) {
+          auto & aiState = miner.aiStateInternal.traversing;
+          ::DrawCircleV(
+            ::Vector2{
+              static_cast<float>(aiState.targetTileX)*32.0f+16.0f,
+              static_cast<float>(aiState.targetTileY)*32.0f+16.0f - state.camera.y
+            },
+            8.0f,
+            { 25, 25, 80, 200 }
+          );
+
+          ::DrawCircleV(
+            ::Vector2{
+              aiState.path[aiState.pathIdx].x*32.0f+16.0f,
+              aiState.path[aiState.pathIdx].y*32.0f+16.0f - state.camera.y
+            },
+            8.0f,
+            { 25, 80, 25, 200 }
+          );
+        }
+      }
+    }
   }
 }

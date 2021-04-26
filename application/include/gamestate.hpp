@@ -16,6 +16,8 @@ namespace ld {
       int32_t targetX = -1, targetY = -1;
       bool targetActive = 0;
 
+      bool lockOnMiner = false;
+
       int32_t food = 500;
       int32_t gold = 100;
       uint32_t foodEatTimer = 60 * 5;

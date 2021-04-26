@@ -23,7 +23,6 @@ void ld::DrawTooltip(const char* text, uint32_t xPos, uint32_t yPos, uint32_t wi
         float fontSize = 10;
         uint32_t padding = 3;
         int textWidth = ::MeasureText(text, fontSize) + 2.0f*padding;
-        TraceLog(LOG_INFO, "TextWidth = %i", textWidth);
 
         float maxWidth = 120;
         // Scale box width if text amount is less than maxWidth
@@ -531,6 +530,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
 
         if (wasIdle && idleMiners.size() == 1) {
           game.minerSelection = -1;
+          game.lockOnMiner = false;
         }
     }
 
@@ -560,10 +560,6 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
           { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(255) : (uint8_t)(0) },
           true
         );
-      ld::DrawTooltip(
-          "Remove current rally point.",
-          flagCan.xPos, flagCan.yPos, flagCan.width, flagCan.height
-      );
     }
     bool thisFrame = false;
     if (flagCan.IsClicked()) {
@@ -572,6 +568,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
 
       game.targetActive = 0;
       game.minerSelection = -1;
+      game.lockOnMiner = false;
       thisFrame = true;
     }
 
@@ -597,6 +594,15 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
       game.targetActive = 1;
       thisFrame = true;
       game.minerSelection = -1;
+      game.lockOnMiner = false;
+    }
+
+    // tooltip here to avoid layering issue
+    if (game.targetX>=0) {
+      ld::DrawTooltip(
+          "Remove current rally point.",
+          flagCan.xPos, flagCan.yPos, flagCan.width, flagCan.height
+      );
     }
 
     if (
@@ -842,6 +848,7 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
           hasClickedKill = 0; // clicked off screen
           miner.kill();
           game.minerSelection = -1;
+          game.lockOnMiner = false;
         }
 
         if (!btn.IsHovered()) {
