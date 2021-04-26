@@ -85,6 +85,25 @@ void ld::Miner::chooseNewTarget(ld::GameState & gameState)
     );
 }
 
+void ld::Miner::surfaceMiner()
+{
+  auto & self = *this;
+  if (self.aiState == ld::Miner::AiState::Surfaced) { return; }
+  self.aiState = ld::Miner::AiState::Traversing;
+  self.aiStateInternal.traversing.wantsToSurface = true;
+  self.aiStateInternal.traversing.pathSize = 0;
+  self.aiStateInternal.traversing.pathIdx  = 0;
+  self.aiStateInternal.traversing.targetTileX = self.xPosition/32;
+  self.aiStateInternal.traversing.targetTileY = 0;
+
+  if (self.yPosition < 48) {
+    self.aiState = ld::Miner::AiState::Surfaced;
+    self.aiStateInternal.surfaced.state =
+      ld::Miner::AiStateSurfaced::Surfacing;
+    self.aiStateInternal.surfaced.waitTimer = -1;
+  }
+}
+
 namespace {
 
 void MinerPickLocation(
@@ -145,12 +164,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
   auto & rock = state.mineChasm.rock(rockId);
 
   if (miner.currentCargoCapacity >= miner.cargoCapacity) {
-    miner.aiState = ld::Miner::AiState::Traversing;
-    miner.aiStateInternal.traversing.wantsToSurface = true;
-    miner.aiStateInternal.traversing.pathSize = 0;
-    miner.aiStateInternal.traversing.pathIdx  = 0;
-    miner.aiStateInternal.traversing.targetTileX = miner.xPosition/32;
-    miner.aiStateInternal.traversing.targetTileY = 0;
+    miner.surfaceMiner();
   }
 
   // reset back to traversing as before
@@ -171,12 +185,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
     );
 
     if (miner.currentCargoCapacity >= miner.cargoCapacity) {
-      miner.aiState = ld::Miner::AiState::Traversing;
-      miner.aiStateInternal.traversing.wantsToSurface = true;
-      miner.aiStateInternal.traversing.pathSize = 0;
-      miner.aiStateInternal.traversing.pathIdx  = 0;
-      miner.aiStateInternal.traversing.targetTileX = miner.xPosition/32;
-      miner.aiStateInternal.traversing.targetTileY = 0;
+      miner.surfaceMiner();
     }
   }
 }
@@ -196,12 +205,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
 
     // if no path was selected just leave
     if (state.pathIdx >= state.pathSize) {
-      miner.aiState = ld::Miner::AiState::Traversing;
-      miner.aiStateInternal.traversing.wantsToSurface = true;
-      miner.aiStateInternal.traversing.pathSize = 0;
-      miner.aiStateInternal.traversing.pathIdx  = 0;
-      miner.aiStateInternal.traversing.targetTileX = miner.xPosition/32;
-      miner.aiStateInternal.traversing.targetTileY = 0;
+      miner.surfaceMiner();
       return;
     }
   }
@@ -257,12 +261,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
 
       // should just leave
       if (miner.energy <= 200) {
-        miner.aiState = ld::Miner::AiState::Traversing;
-        miner.aiStateInternal.traversing.pathSize = 0;
-        miner.aiStateInternal.traversing.pathIdx  = 0;
-        miner.aiStateInternal.traversing.wantsToSurface = true;
-        miner.aiStateInternal.traversing.targetTileX = miner.xPosition/32;
-        miner.aiStateInternal.traversing.targetTileY = 0;
+        miner.surfaceMiner();
         return;
       }
 
@@ -276,16 +275,26 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
   auto & state = miner.aiStateInternal.surfaced;
   switch (state.state) {
     case ld::Miner::AiStateSurfaced::Surfacing:
-      miner.xPosition = 700;
-      miner.yPosition = -80;
 
       miner.animationState = ld::Miner::AnimationState::Idling;
 
       if (state.waitTimer < 0) {
-        state.waitTimer = 1*60;
+        state.waitTimer = 4*60;
+      }
+
+      miner.alpha =
+        state.waitTimer > 120
+          ? (1.0f - (120 - state.waitTimer)/120.0f) * 255
+          : (1.0f - state.waitTimer/120.0f) * 255
+      ;
+
+      if (state.waitTimer <= 120) {
+        miner.xPosition = 700;
+        miner.yPosition = -80;
       }
 
       if (state.waitTimer == 0) {
+        miner.alpha = 255;
         state.state = ld::Miner::AiStateSurfaced::MovingToBase;
         miner.animationState = ld::Miner::AnimationState::Travelling;
         miner.animationIdx = 0;
@@ -461,12 +470,7 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
   miner.animationState = ld::Miner::AnimationState::Idling;
 
   if (miner.currentCargoCapacity >= miner.cargoCapacity) {
-    miner.aiState = ld::Miner::AiState::Traversing;
-    miner.aiStateInternal.traversing.wantsToSurface = true;
-    miner.aiStateInternal.traversing.pathSize = 0;
-    miner.aiStateInternal.traversing.pathIdx  = 0;
-    miner.aiStateInternal.traversing.targetTileX = miner.xPosition/32;
-    miner.aiStateInternal.traversing.targetTileY = 0;
+    miner.surfaceMiner();
   }
 
   // draw

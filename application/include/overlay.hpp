@@ -31,7 +31,7 @@ namespace ld {
 
         void Update(ld::GameState & game);
         void Draw(ld::GameState & game);
-        void MinerInfo(ld::Miner & miner);
+        void MinerInfo(ld::GameState & game, ld::Miner & miner);
         void TitleScreen();
         void InitButtons();
         void PauseScreen();

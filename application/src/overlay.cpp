@@ -2,6 +2,9 @@
 #include <renderer.hpp> // Texture info
 #include <algorithm>
 
+namespace {
+}
+
 void ld::DrawOutlinedText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color mainColor, ::Color outlineColor)
 {
     int offset = 1;
@@ -42,6 +45,7 @@ void ld::Overlay::InitButtons()
     uint32_t btnWidth = 70;
     uint32_t btnHeight = 50;
 
+    buttons.emplace("Panic",    ld::Button(x,  50, btnWidth, btnHeight));
     buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight));
     buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight));
     buttons.emplace("Idle"    , ld::Button(x, 200, btnWidth, btnHeight));
@@ -267,6 +271,15 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     }
 
     // Resource related buttons
+    auto panicBtn    = buttons.at("Panic");
+
+    panicBtn.Draw("Panic Return", 10, ::Fade(::RED, 0.5));
+    if (panicBtn.IsClicked()) {
+      for (auto & miner : game.minerGroup.miners)
+        miner.surfaceMiner();
+    }
+
+
     auto buyMinerBtn = buttons.at("BuyMiner");
     auto researchBtn = buttons.at("Research");
     auto idleBtn     = buttons.at("Idle");
@@ -379,7 +392,7 @@ void ld::Overlay::Update(ld::GameState & game)
 
 }
 
-void ld::Overlay::MinerInfo(ld::Miner & miner)
+void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
 {
     // Position of the root panel
     uint32_t w = 120;
@@ -516,15 +529,46 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         ld::DrawOutlinedCenteredText(valueText.c_str(), x+w*0.5f, y+padding, 10, ::WHITE);
     }
 
+    padding+=20;
+
+    if (miner.aiState != ld::Miner::AiState::Surfaced)
     { // -- Cancel current action
-        padding+=20;
         int btnWidth = 60;
         int btnHeight = 25;
-        ld::Button btn(x + (w-btnWidth)*0.5f, y+padding, btnWidth, btnHeight);
-        btn.Draw("Set Idle", 7, ::WHITE);
+        ld::Button btn(x, y+padding, btnWidth, btnHeight);
+        btn.Draw("Return", 7, ::WHITE);
         if (btn.IsClicked())
         {
-            miner.aiState = ld::Miner::AiState::Idling;
+          miner.surfaceMiner();
+        }
+    }
+
+    { // -- Kill
+        int btnWidth = 60;
+        int btnHeight = 25;
+        ld::Button btn(x + (w-btnWidth), y+padding, btnWidth, btnHeight);
+        // sorry this is shit
+        static int32_t hasClickedKill = 0;
+        btn.Draw(hasClickedKill > 0 ? "Confirm" : "Kill", 7, ::RED);
+
+        if (btn.IsClicked() && hasClickedKill == 0)
+          hasClickedKill = 1;
+
+        if (btn.IsClicked() && hasClickedKill == 2)
+        {
+          hasClickedKill = 0; // clicked off screen
+          miner.kill();
+          game.minerSelection = -1;
+        }
+
+        if (!btn.IsHovered()) {
+          hasClickedKill = 0;
+        }
+
+        if (hasClickedKill == 1) {
+          if (!::IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            hasClickedKill = 2;
+          }
         }
     }
 
@@ -569,7 +613,7 @@ void ld::Overlay::Draw(ld::GameState & game)
         for (auto & miner : game.minerGroup.miners) {
           if (miner.minerId == game.minerSelection) {
             found = true;
-            MinerInfo(miner);
+            MinerInfo(game, miner);
             break;
           }
         }

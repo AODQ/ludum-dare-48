@@ -24,12 +24,11 @@ namespace ld {
       // he will purchase only what he's contributed
       uint32_t netValue = 0;
 
-      uint8_t alpha = 255;
-
       int32_t minerId;
       // position is in texels, not tiles
       int32_t xPosition = 0, yPosition = 0;
       int32_t prevXPosition = 0, prevYPosition = 0;
+      uint8_t alpha = 255;
       int32_t maxEnergy = 1'000;
       int32_t energy = 500;
       int32_t foodToEnergyRatio = 100;
@@ -111,6 +110,7 @@ namespace ld {
       };
 
       void chooseNewTarget(ld::GameState & state);
+      void surfaceMiner();
 
       // struct, not a union, in order to preserve memory to chain commands
       // like mine -> mineTraversing

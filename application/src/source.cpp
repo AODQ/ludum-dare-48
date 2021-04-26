@@ -43,7 +43,7 @@ for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
     ld::NotifGroup::Update(gameState);
     overlay.Update(gameState);
 
-    int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 5 : 1;
+    int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 120 : 1;
     gameState.foodEatTimer =
       std::clamp(
         (int32_t)(gameState.foodEatTimer - foodDecTimer),
