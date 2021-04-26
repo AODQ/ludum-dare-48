@@ -41,7 +41,11 @@ public:
       int32_t x = startX + offset.x;
       int32_t y = startY + offset.y;
 
-      if (x < 0 || x >= 30 || y < 0 || y > 250) {
+      if (
+          x < 0 || x >= 30
+       || y < 0
+       || y > static_cast<int32_t>(gameState->mineChasm.rocks.size()/30)
+      ) {
         continue;
       }
 
@@ -67,8 +71,8 @@ GraphPathFinder graphMinable;
 GraphPathFinder graphUnminable;
 
 // couldnt use unique ptr here?
-micropather::MicroPather * patherMinable;
-micropather::MicroPather * patherUnminable;
+micropather::MicroPather * patherMinable = nullptr;
+micropather::MicroPather * patherUnminable = nullptr;
 } // -- namespace
 
 void ld::pathFindInitialize(ld::GameState * state) {
@@ -77,6 +81,14 @@ void ld::pathFindInitialize(ld::GameState * state) {
 
   graphMinable.canMine = true;
   graphUnminable.canMine = false;
+
+  if (patherMinable) {
+    delete patherMinable;
+  }
+
+  if (patherUnminable) {
+    delete patherUnminable;
+  }
 
   // couldnt use make_unique
   patherMinable =
@@ -117,9 +129,7 @@ void ld::pathFind(
       &totalCost
     );
 
-  (void) canMine;
-
-  pathSize = std::min(4u, microPath.size());
+  pathSize = std::min(3u, microPath.size());
   for (uint32_t i = 0u; i < pathSize; ++ i) {
     uint32_t pathId = reinterpret_cast<ld::MineRock *>(microPath[i])->rockId;
     path[i] =

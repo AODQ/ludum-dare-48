@@ -345,7 +345,7 @@ void ld::MineChasm::Update(ld::GameState & state)
   for (size_t i = 0; i < state.mineChasm.rocks.size(); ++ i) {
     state.mineChasm.rockFow[i] =
       std::max(
-        std::clamp(1.0f - (i/30) / 4.0f, 0.0f, 1.0f),
+        std::clamp(1.0f - std::clamp(i/30, 0ul, 4ul) / 4.0f, 0.0f, 1.0f),
         state.mineChasm.rockFow[i] - 0.0005f
       );
   }

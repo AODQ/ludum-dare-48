@@ -44,7 +44,12 @@ for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
     overlay.Update(gameState);
 
     int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 5 : 1;
-    gameState.foodEatTimer = (gameState.foodEatTimer - foodDecTimer);
+    gameState.foodEatTimer =
+      std::clamp(
+        (int32_t)(gameState.foodEatTimer - foodDecTimer),
+        (int32_t)(0),
+        (int32_t)(gameState.MaxFoodEatTimer())
+      );
     if (gameState.foodEatTimer <= 0) {
       gameState.foodEatTimer = gameState.MaxFoodEatTimer();
       gameState.food -= 1;
@@ -52,8 +57,10 @@ for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
 
     if (gameState.food <= 0) {
       gameState.food = 0;
-      if (gameState.minerGroup.miners.size() > 0)
-        gameState.minerGroup.miners.begin()->kill();
+      if (gameState.minerGroup.miners.size() > 0) {
+        for (auto & miner : gameState.minerGroup.miners)
+          miner.reduceEnergy(5);
+      }
     }
 #if 1
 }

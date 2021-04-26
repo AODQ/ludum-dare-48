@@ -73,12 +73,11 @@ void ld::RenderScene(ld::GameState const & state)
 
     // TODO only render in view instead of all
 
-    float const limit = state.mineChasm.rocks.size() / 30;
-
-    int32_t begIt = std::clamp((state.camera.y + 0.0f)   / 32.0f, 0.0f, limit);
-    int32_t endIt = std::clamp((state.camera.y + 650.0f) / 32.0f, 0.0f, limit);
+    int32_t begIt = std::max((state.camera.y + 0.0f)   / 32.0f, 0.0f);
+    int32_t endIt = std::max((state.camera.y + 650.0f) / 32.0f, 0.0f);
 
     for (int32_t it = begIt*30; it < endIt*30; ++ it) {
+      if (it >= static_cast<int32_t>(state.mineChasm.rocks.size())) break;
       auto const & rock = state.mineChasm.rocks[it];
 
       int32_t
@@ -245,10 +244,10 @@ void ld::RenderScene(ld::GameState const & state)
         }
 
         if (
-            miner.aiState == ld::Miner::AiState::MineTraversing
+            miner.aiState == ld::Miner::AiState::Traversing
          || miner.aiState == ld::Miner::AiState::Mining
         ) {
-          auto & aiState = miner.aiStateInternal.mineTraversing;
+          auto & aiState = miner.aiStateInternal.traversing;
           ::DrawCircleV(
             ::Vector2{
               static_cast<float>(aiState.targetTileX)*32.0f+16.0f,

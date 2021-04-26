@@ -29,23 +29,7 @@ void ld::MobGroup::Update(ld::GameState & state)
 
     slime.animationIdx = (slime.animationIdx + 5) % (60*5);
 
-    if (slime.pathIdx == 0) {
-      slime.targetTileX = slime.positionX/32 + ::GetRandomValue(-4, +4);
-      slime.targetTileY = slime.positionY/32 + ::GetRandomValue(-4, +4);
-
-      slime.targetTileX = std::clamp(slime.targetTileX, 0, 29);
-      slime.targetTileY = std::clamp(slime.targetTileY, 0, 500);
-
-      slime.pathSize = 0;
-      slime.pathIdx = 0;
-      /* ld::pathFind( */
-      /*   state, */
-      /*   slime.path, slime.pathSize, */
-      /*   slime.positionX/32, slime.positionY/32, */
-      /*   slime.targetTileX, slime.targetTileY, */
-      /*   false // cannot mine */
-      /* ); */
-    }
+    // look for tile near
 
     if (slime.pathSize <= slime.pathIdx) {
       slime.pathIdx = 0;
