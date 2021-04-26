@@ -61,7 +61,7 @@ void ld::MobGroup::Update(ld::GameState & state)
     if (slime.targetTileX < 0 && slime.targetTileY < 0) { continue; }
 
     ::Rectangle rect = {
-      .x = slime.targetTileX, .y = slime.targetTileY,
+      .x = (float)(slime.targetTileX), .y = (float)(slime.targetTileY),
       .width = 32.0f, .height = 32.0f,
     };
 
