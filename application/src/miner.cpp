@@ -403,6 +403,17 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         miner.animationIdx = 0;
       }
     } break;
+    case ld::Miner::AiStateSurfaced::BoughtFromMine:
+      miner.moveTowards(700, -80);
+      miner.applyAnimationState(ld::Miner::AnimationState::Travelling);
+      miner.alpha = miner.alpha == 255 ? 255 : miner.alpha + 1;
+      if (miner.xPosition == 700 && miner.yPosition == -80) {
+        miner.aiState = ld::Miner::AiState::Idling;
+        miner.xPosition = ::GetRandomValue(100, 700);
+        miner.yPosition = ::GetRandomValue(10, 30);
+        miner.alpha = 255;
+      }
+    break;
     case ld::Miner::AiStateSurfaced::BackToMine:
       miner.moveTowards(700, -80);
       if (miner.xPosition == 700 && miner.yPosition == -80) {
@@ -567,27 +578,17 @@ void ld::MinerGroup::addMiner()
   self.miners.push_back(
     ld::Miner {
       .minerId = static_cast<int32_t>(id),
-      .xPosition = 700,
-      .yPosition = -100,
+      .xPosition = 300,
+      .yPosition = -150,
+      .alpha = 0,
 
-      // TODO this is for debug
       .aiState = ld::Miner::AiState::Surfaced,
       .aiStateInternal = {
         .surfaced = {
-          .state = ld::Miner::AiStateSurfaced::BackToMine,
+          .state = ld::Miner::AiStateSurfaced::BoughtFromMine,
           .waitTimer = -1,
         },
       },
-
-
-      // TODO use below on release
-      /* .aiState = ld::Miner::AiState::Surfaced, */
-      /* .aiStateInternal = { */
-      /*   .surfaced = { */
-      /*     .state = ld::Miner::AiStateSurfaced::Surfacing, */
-      /*     .waitTimer = -1, */
-      /*   }, */
-      /* }, */
     }
   );
 }

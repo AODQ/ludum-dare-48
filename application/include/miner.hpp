@@ -24,6 +24,8 @@ namespace ld {
       // he will purchase only what he's contributed
       uint32_t netValue = 0;
 
+      uint8_t alpha = 255;
+
       int32_t minerId;
       // position is in texels, not tiles
       int32_t xPosition = 0, yPosition = 0;
@@ -104,6 +106,7 @@ namespace ld {
         MovingToBase,
         DumpingMaterial,
         PurchasingUpgrades,
+        BoughtFromMine,
         BackToMine,
       };
 
