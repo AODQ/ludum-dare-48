@@ -8,13 +8,13 @@
 
 int32_t ld::PickLevelDamage(int32_t level) {
   switch (level) {
-    default: return 0;
-    case 1:  return 5;
-    case 2:  return 10;
-    case 3:  return 15;
-    case 4:  return 20;
-    case 5:  return 25;
-    case 6:  return 30;
+    default: return 5;
+    case 1:  return 10;
+    case 2:  return 15;
+    case 3:  return 20;
+    case 4:  return 25;
+    case 5:  return 30;
+    case 6:  return 35;
     case 7:  return 40;
     case 8:  return 50;
     case 9:  return 60;
@@ -121,10 +121,8 @@ void ld::Miner::surfaceMiner()
 {
   auto & self = *this;
   if (self.aiState == ld::Miner::AiState::Surfaced) { return; }
-  self.aiState = ld::Miner::AiState::Traversing;
+  self.resetToTraversal();
   self.aiStateInternal.traversing.wantsToSurface = true;
-  self.aiStateInternal.traversing.pathSize = 0;
-  self.aiStateInternal.traversing.pathIdx  = 0;
   self.aiStateInternal.traversing.targetTileX = self.xPosition/32;
   self.aiStateInternal.traversing.targetTileY = 0;
 
@@ -144,10 +142,8 @@ void MinerPickLocation(
   int32_t const targetTileY,
   ld::GameState const & gameState
 ) {
-  miner.aiState = ld::Miner::AiState::Traversing;
+  miner.resetToTraversal();
   auto & state = miner.aiStateInternal.traversing;
-  state.pathSize = 0;
-  state.pathIdx = 0;
 
   ld::pathFind(
     gameState,
@@ -204,7 +200,7 @@ void UpdateMinerAiInventorying(ld::Miner & miner, ld::GameState & gameState) {
   UpdateMinerCargo(miner);
 
   if (miner.currentCargoCapacity <= miner.cargoCapacity) {
-    miner.aiState = ld::Miner::AiState::Traversing;
+    miner.resetToTraversal();
     return;
   }
 
@@ -229,10 +225,25 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
     miner.surfaceMiner();
   }
 
-  // reset back to traversing as before
+  // reset back to traversing as before, no need to clear traversal
   if (rock.isMined()) {
     miner.aiState = ld::Miner::AiState::Traversing;
     return;
+  }
+
+  if (
+      rock.durability
+    / ld::PickLevelDamage(miner.inventory[Idx(ld::ItemType::Pickaxe)].level)
+    > 20
+  )
+  {
+    miner.resetToTraversal();
+
+    // panic if stuck
+    if (!state.mineChasm.rock(miner.xPosition/32, miner.yPosition/32).isMined())
+    {
+      miner.surfaceMiner();
+    }
   }
 
   miner.applyAnimationState(ld::Miner::AnimationState::Mining);
@@ -240,8 +251,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
   if (miner.animationFinishesThisFrame()) {
     miner.reduceEnergy(10);
     rock.receiveDamage(
-        -5
-      - ld::PickLevelDamage(miner.inventory[Idx(ld::ItemType::Pickaxe)].level)
+      -ld::PickLevelDamage(miner.inventory[Idx(ld::ItemType::Pickaxe)].level)
     );
 
     if (rock.isMined()) {
@@ -580,9 +590,7 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
       auto mousePos = ::GetMousePosition();
       miner.animationIdx = 0;
       miner.animationState = ld::Miner::AnimationState::Travelling;
-      miner.aiState = ld::Miner::AiState::Traversing;
-      miner.aiStateInternal.traversing.pathSize = 0;
-      miner.aiStateInternal.traversing.pathIdx = 0;
+      miner.resetToTraversal();
       miner.aiStateInternal.traversing.targetTileX = mousePos.x / 32.0f;
       miner.aiStateInternal.traversing.targetTileY =
         (mousePos.y + gameState.camera.y) / 32.0f;
@@ -592,9 +600,7 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
   {
       miner.animationIdx = 0;
       miner.animationState = ld::Miner::AnimationState::Travelling;
-      miner.aiState = ld::Miner::AiState::Traversing;
-      miner.aiStateInternal.traversing.pathSize = 0;
-      miner.aiStateInternal.traversing.pathIdx = 0;
+      miner.resetToTraversal();
       miner.aiStateInternal.traversing.wantsToSurface = false;
       miner.chooseNewTarget(gameState);
   }

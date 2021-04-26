@@ -180,6 +180,12 @@ namespace ld {
       AiState aiState;
       AiStateInternal aiStateInternal;
 
+      void resetToTraversal() {
+        aiState = ld::Miner::AiState::Traversing;
+        aiStateInternal.traversing.pathIdx = 0;
+        aiStateInternal.traversing.pathSize = 0;
+      }
+
       bool isSurfaced = true;
   };
 

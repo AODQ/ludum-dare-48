@@ -143,7 +143,7 @@ void ld::MobGroup::Update(ld::GameState & state)
       ) {
         slime.chasingMinerId = -1;
         if (attackingMiner && slime.inCombat) {
-          attackingMiner->aiState = ld::Miner::AiState::Traversing;
+          attackingMiner->resetToTraversal();
           slime.inCombat = false;
         }
         attackingMiner = nullptr;
@@ -196,7 +196,7 @@ void ld::MobGroup::Update(ld::GameState & state)
         if (breakChance) {
           slime.chasingMinerId = -1;
           slime.inCombat = false;
-          attackingMiner->aiState = ld::Miner::AiState::Traversing;
+          attackingMiner->resetToTraversal();
         }
       }
 
@@ -211,7 +211,7 @@ void ld::MobGroup::Update(ld::GameState & state)
       ;
 
       if (slime.health <= 0) {
-        miner.aiState = ld::Miner::AiState::Traversing;
+        attackingMiner->resetToTraversal();
         slime.sleepTimer = 120;
         slime.animationIdx = 0;
       }

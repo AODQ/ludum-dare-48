@@ -55,12 +55,26 @@ public:
 
       if (!canMine && !rock.isMined()) { continue; }
 
-      float minerValue = 2.0f;
+      // only allow 30 swings
+      if (
+          !rock.isMined()
+       && miner
+       && (
+            rock.durability
+          / ld::PickLevelDamage(
+              miner->inventory[Idx(ld::ItemType::Pickaxe)].level
+            )
+          > 20
+          )
+      ) {
+        continue;
+      }
+
+      float minerValue = ::GetRandomValue(0.0f, +3.0f);
       if (miner) {
         minerValue += gameState->mineChasm.rockPathDurability(x, y);
         minerValue /=
-            5
-          + ld::PickLevelDamage(
+            ld::PickLevelDamage(
               miner->inventory[Idx(ld::ItemType::Pickaxe)].level
             )
         ;
@@ -69,7 +83,7 @@ public:
 
         minerValue -= gameState->mineChasm.rockPathValue(x, y);
 
-        minerValue = std::clamp(minerValue, isValuable ? 0.1f : 2.0f, 40.0f);
+        minerValue = std::clamp(minerValue, isValuable ? 0.1f : 2.0f, 20.0f);
       }
 
       adjacent->push_back(micropather::StateCost {
