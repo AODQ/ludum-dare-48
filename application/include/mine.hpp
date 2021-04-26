@@ -85,7 +85,7 @@ namespace ld {
     }
 
     int32_t limitY(int32_t y) {
-      if (y < 0) return 0;
+      if (y <= 0) return 1;
       if (y >= static_cast<int32_t>(rocks.size() / columns))
         return (rocks.size() / columns) - 1;
       return y;
