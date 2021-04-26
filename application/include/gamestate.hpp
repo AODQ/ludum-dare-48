@@ -11,6 +11,11 @@ namespace ld {
   struct GameState
   {
       bool showCursor = true;
+
+      // below is in tiles
+      int32_t targetX = -1, targetY = -1;
+      bool targetActive = 0;
+
       int32_t food = 500;
       int32_t gold = 100;
       uint32_t foodEatTimer = 60 * 5;

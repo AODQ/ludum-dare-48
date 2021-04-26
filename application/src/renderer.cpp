@@ -36,6 +36,7 @@ void ld::RenderInitialize()
     ::LoadTexture("resources/cargo.png");
   textures[Idx(ld::TextureType::Upgrades)] =
     ::LoadTexture("resources/upgrades.png");
+  textures[Idx(ld::TextureType::Flag)] = ::LoadTexture("resources/flag.png");
 
   // -- load shaders
 }
@@ -295,5 +296,38 @@ void ld::RenderScene(ld::GameState const & state)
       , { 255, 255, 255, static_cast<uint8_t>(notif.timer / 120.0f * 255) }
       );
     }
+  }
+
+  if (state.targetX >= 0 && state.targetY >= 0)
+  { // -- render flag
+    ::DrawTextureRec(
+      ld::TextureGet(ld::TextureType::Flag)
+    , ::Rectangle {
+        .x = 0.0f,
+        .y = 0.0f,
+        .width = 32.0f,
+        .height = 32.0f,
+      }
+    , ::Vector2{
+        state.targetX*32.0f,
+        state.targetY*32.0f - state.camera.y
+      }
+    , { 255, 255, 255, 255 }
+    );
+  }
+
+  if (state.targetActive)
+  { // -- render flag for mouse
+    ::DrawTextureRec(
+      ld::TextureGet(ld::TextureType::Flag)
+    , ::Rectangle {
+        .x = 0.0f,
+        .y = 0.0f,
+        .width = 32.0f,
+        .height = 32.0f,
+      }
+    , ::GetMousePosition()
+    , { 255, 255, 255, 255 }
+    );
   }
 }

@@ -21,6 +21,7 @@ namespace ld {
     RockDamage,
     Cargo,
     Upgrades,
+    Flag,
     Size,
   };
 

@@ -49,6 +49,8 @@ void ld::Overlay::InitButtons()
     buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
     buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
     buttons.emplace("Idle"    , ld::Button(x, 200, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
+    buttons.emplace("Flag"    , ld::Button(x, 250, 32, 32, ::Fade(::LIGHTGRAY, 0.5f)));
+    buttons.emplace("FlagCan" , ld::Button(x+32, 250, 32, 32, ::Fade(::LIGHTGRAY, 0.5f)));
 }
 
 void ld::Overlay::PauseScreen()
@@ -262,6 +264,60 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         // wrap cycle first in case it corresponds to an invalid index within the list
         cycle = (cycle+1) % idleMiners.size();
         game.minerSelection = idleMiners.at(cycle);
+    }
+
+    // -- flag
+    ::DrawRectangle(
+      scrWidth-100+32,
+      250, 32, 32, ::Fade(::RED, game.targetX>=0?0.5f:0.0f)
+    );
+    auto &  flagCan = buttons.at("FlagCan");
+    flagCan
+      .DrawTexture(
+        "",
+        ld::TextureGet(ld::TextureType::Flag),
+        0, 0,
+        { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(255) : (uint8_t)(0) },
+        true
+      );
+    bool thisFrame = false;
+    if (flagCan.IsClicked()) {
+      game.targetX = -1;
+      game.targetY = -1;
+
+      game.targetActive = 0;
+      game.minerSelection = -1;
+      thisFrame = true;
+    }
+
+    ::DrawRectangle(scrWidth-100, 250, 32, 32, ::Fade(::LIGHTGRAY, 0.5f));
+    auto &  flag = buttons.at("Flag");
+    flag
+      .DrawTexture(
+        "",
+        ld::TextureGet(ld::TextureType::Flag),
+        0, 0,
+        { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(128) : (uint8_t)(255) },
+        true
+      );
+
+    if (flag.IsClicked()) {
+      game.targetX = -1;
+      game.targetY = -1;
+
+      game.targetActive = 1;
+      thisFrame = true;
+      game.minerSelection = -1;
+    }
+
+    if (
+        !thisFrame && game.targetActive
+     && ::IsMouseButtonPressed(MOUSE_LEFT_BUTTON)
+    ) {
+      game.targetX = game.mineChasm.limitX(::GetMousePosition().x / 32);
+      game.targetY =
+        game.mineChasm.limitY((::GetMousePosition().y - game.camera.y) / 32);
+      game.targetActive = 0;
     }
 }
 

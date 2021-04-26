@@ -98,6 +98,8 @@ namespace ld {
         BackToMine,
       };
 
+      void chooseNewTarget(ld::GameState & state);
+
       // struct, not a union, in order to preserve memory to chain commands
       // like mine -> mineTraversing
       struct AiStateInternal {

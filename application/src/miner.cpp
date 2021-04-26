@@ -60,6 +60,30 @@ void ld::Miner::kill()
   self.animationIdx = 0;
 }
 
+void ld::Miner::chooseNewTarget(ld::GameState & gameState)
+{
+  auto & self = *this;
+  auto & state = self.aiStateInternal.traversing;
+
+  int32_t targetX = self.xPosition / 32;
+  int32_t targetY = self.xPosition / 32;
+
+  if (gameState.targetX >= 0 && gameState.targetY >= 0) {
+    targetX = gameState.targetX;
+    targetY = gameState.targetY;
+  }
+
+  state.targetTileX =
+    gameState.mineChasm.limitX(
+      targetX + ::GetRandomValue(-10, +10)
+    );
+
+  state.targetTileY =
+    gameState.mineChasm.limitY(
+      targetY + ::GetRandomValue(-10, +10)
+    );
+}
+
 namespace {
 
 void MinerPickLocation(
@@ -216,15 +240,8 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
         miner.aiStateInternal.traversing.targetTileY = 0;
         return;
       }
-      state.targetTileX =
-        gameState.mineChasm.limitX(
-          state.targetTileX + ::GetRandomValue(-10, +10)
-        );
 
-      state.targetTileY =
-        gameState.mineChasm.limitY(
-          state.targetTileY + ::GetRandomValue(-10, +10)
-        );
+      miner.chooseNewTarget(gameState);
     }
   }
 }
@@ -358,6 +375,16 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
         (mousePos.y + gameState.camera.y) / 32.0f;
       miner.aiStateInternal.traversing.wantsToSurface = false;
     }
+  } else if (gameState.targetX >= 0 && gameState.targetY >= 0)
+  {
+      auto mousePos = ::GetMousePosition();
+      miner.animationIdx = 0;
+      miner.animationState = ld::Miner::AnimationState::Travelling;
+      miner.aiState = ld::Miner::AiState::Traversing;
+      miner.aiStateInternal.traversing.pathSize = 0;
+      miner.aiStateInternal.traversing.pathIdx = 0;
+      miner.aiStateInternal.traversing.wantsToSurface = false;
+      miner.chooseNewTarget(gameState);
   }
 
 }
