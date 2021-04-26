@@ -449,8 +449,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       miner.alpha = miner.alpha == 255 ? 255 : miner.alpha + 1;
       if (miner.xPosition == 700 && miner.yPosition == -80) {
         miner.aiState = ld::Miner::AiState::Idling;
-        miner.xPosition = ::GetRandomValue(100, 700);
-        miner.yPosition = ::GetRandomValue(10, 30);
+        miner.aiStateInternal.idling.waitTimer = -1;
         miner.alpha = 255;
       }
     break;
@@ -458,8 +457,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       miner.moveTowards(700, -80);
       if (miner.xPosition == 700 && miner.yPosition == -80) {
         miner.aiState = ld::Miner::AiState::Idling;
-        miner.xPosition = ::GetRandomValue(100, 700);
-        miner.yPosition = ::GetRandomValue(10, 30);
+        miner.aiStateInternal.idling.waitTimer = -1;
       }
     break;
   }
@@ -472,6 +470,29 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
   if (miner.currentCargoCapacity >= miner.cargoCapacity) {
     miner.surfaceMiner();
   }
+
+  auto & state = miner.aiStateInternal.idling;
+
+  if (miner.yPosition <= 0 && state.waitTimer < 0) {
+    state.waitTimer = 4*60;
+  }
+
+  state.waitTimer -= 1;
+
+  miner.alpha =
+    state.waitTimer > 120
+      ? (1.0f - (120 - state.waitTimer)/120.0f) * 255
+      : (1.0f - state.waitTimer/120.0f) * 255
+  ;
+
+  if (miner.yPosition <= 0 && state.waitTimer <= 120) {
+      miner.xPosition = ::GetRandomValue(100, 700);
+      miner.yPosition = ::GetRandomValue(10, 30);
+  }
+
+  if (state.waitTimer > 0) { return; }
+
+  miner.alpha = 255;
 
   // draw
   if (miner.minerId == gameState.minerSelection) {
@@ -596,7 +617,7 @@ void ld::MinerGroup::Update(ld::GameState & state) {
               )
             )
           , 0.0f, (3*::sqrt(2.0f))
-        )
+        ) * (miner.alpha / 255.0f)
       ;
 
       fow = std::clamp(len/(3.0f), fow, 1.0f);

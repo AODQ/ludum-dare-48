@@ -135,6 +135,7 @@ namespace ld {
         };
 
         struct Idling {
+          int32_t waitTimer = -1;
         };
 
         struct Dying {
