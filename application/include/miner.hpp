@@ -14,6 +14,16 @@ namespace ld { struct GameState; }
 namespace ld {
 
   struct Miner {
+      enum class PurchaseState {
+        BuyHighest,
+        Conserve,
+        Size,
+      } purchaseState;
+
+      // Keep running track of how much miner contributed so that
+      // he will purchase only what he's contributed
+      uint32_t netValue = 0;
+
       int32_t minerId;
       // position is in texels, not tiles
       int32_t xPosition = 0, yPosition = 0;
@@ -22,9 +32,9 @@ namespace ld {
       int32_t energy = 500;
       int32_t foodToEnergyRatio = 100;
       std::array<ld::Item, Idx(ld::ItemType::Size)> inventory = {{
-        { .type = ld::ItemType::Pickaxe1, .owns = false },
-        { .type = ld::ItemType::Pickaxe2, .owns = false },
-        { .type = ld::ItemType::Armor,    .owns = false },
+        { .type = ld::ItemType::Pickaxe, .owns = false, .durability = 10, .level = 0 },
+        { .type = ld::ItemType::Armor,   .owns = false, .durability = 10, .level = 0 },
+        { .type = ld::ItemType::Speed,   .owns = false, .durability = 10, .level = 0 },
       }};
 
       void moveTowards(int32_t x, int32_t y);

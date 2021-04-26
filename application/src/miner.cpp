@@ -152,7 +152,6 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
     miner.aiStateInternal.traversing.targetTileY = 0;
   }
 
-
   // reset back to traversing as before
   if (rock.isMined()) {
     miner.aiState = ld::Miner::AiState::Traversing;
@@ -322,12 +321,12 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
 
       for (auto & cargo : miner.cargo) {
         if (cargo.ownedUnits == 0) { continue; }
-
+        auto value = ld::valuableInfoLookup[Idx(cargo.type)].value;
+        miner.netValue += value;
+        gameState.gold += value;
         hasSold = true;
-
         cargo.ownedUnits -= 1;
         UpdateMinerCargo(miner);
-        gameState.gold += ld::valuableInfoLookup[Idx(cargo.type)].value;
         gameState.notifGroup.AddNotif(
           ld::NotifType::ItemSold, miner.xPosition, miner.yPosition
         );
@@ -360,6 +359,39 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
           ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
         );
       }
+
+      // Find the highest upgrade that they can purchase
+      // and that the bank can afford
+      // TODO add additional purchase states
+      // Buy highest / cheapest
+      // Conserve money, etc
+      bool canBuyUpgrade = false;
+      do {
+        canBuyUpgrade = false;
+        uint32_t highestCost = 0;
+        size_t selectedUpgradeType = -1;
+        for (size_t i = 0; i < Idx(ld::ItemType::Size); ++i) {
+          uint32_t cost = ld::itemInfoLookup[i].cost;
+          if (
+                (miner.netValue >= cost)
+             && (gameState.gold >= static_cast<int32_t>(cost))
+             && (highestCost < cost)
+             && (miner.inventory[i].level < gameState.researchItems[i].level)
+          ) {
+            highestCost = cost;
+            canBuyUpgrade = true;
+            selectedUpgradeType = i;
+          }
+        }
+
+        // Purchase highest upgrade
+        if (canBuyUpgrade) {
+          miner.netValue -= highestCost;
+          gameState.gold -= highestCost;
+          miner.inventory[selectedUpgradeType].owns = true;
+          miner.inventory[selectedUpgradeType].level++;
+        }
+      } while (canBuyUpgrade);
 
       if (readyToContinue) {
         state.state = ld::Miner::AiStateSurfaced::BackToMine;
@@ -428,11 +460,10 @@ void ld::MinerGroup::Update(ld::GameState & state) {
   // Update miner stats based on upgrades
   for (int64_t i = 0; i < self.miners.size(); ++ i) {
     auto & miner = self.miners[i];
+    // Passive buffs that don't need to be purchased
     miner.cargoCapacity = state.MaxCargoCapacity();
-    miner.speed = state.MinerSpeed();
     miner.foodToEnergyRatio = state.FoodToEnergyRatio();
-    // Weapons
-    // Armor
+    // Vision
   }
 
   // selecting a miner via mouse click

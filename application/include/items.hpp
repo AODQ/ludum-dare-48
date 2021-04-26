@@ -9,9 +9,9 @@ namespace ld {
 
   // if this changes, must update below and in miner.hpp inventory
   enum class ItemType {
-    Pickaxe1,
-    Pickaxe2,
+    Pickaxe,
     Armor,
+    Speed,
     Size,
   };
 
@@ -19,18 +19,20 @@ namespace ld {
       ld::ItemType type;
       bool owns;
       int32_t durability;
+      uint32_t level;
   };
 
   struct ItemInfoLookup {
     ld::ItemType type;
+    int32_t cost;
     int32_t value;
   };
 
   constexpr std::array<ld::ItemInfoLookup, Idx(ld::ItemType::Size)>
     itemInfoLookup = {{
-      { .type = ld::ItemType::Pickaxe1, .value = 50 },
-      { .type = ld::ItemType::Pickaxe2, .value = 10'500 },
-      { .type = ld::ItemType::Armor,    .value = 5'000 },
+      { .type = ld::ItemType::Pickaxe, .cost = 20, .value = 50 },
+      { .type = ld::ItemType::Armor,   .cost = 30, .value = 5'000 },
+      { .type = ld::ItemType::Speed,   .cost = 50, .value = 10'500 },
     }};
 
   // if this changes, must update below and in miner.hpp cargo

@@ -48,7 +48,7 @@ namespace ld {
         return 60 * (5 + researchItems[idx].level);
       }
 
-      uint32_t MinerSpeed() const {
+      uint32_t MaxMinerSpeed() const {
         size_t idx = static_cast<size_t>(ld::ResearchType::Speed);
         return 1 + researchItems[idx].level;
       }
@@ -63,13 +63,18 @@ namespace ld {
         return 100 + 10*researchItems[idx].level;
       }
 
+      bool HasArmorUpgrade() const {
+        size_t idx = static_cast<size_t>(ld::ResearchType::Armor);
+        return researchItems[idx].level > 0;
+      }
+
       std::array<ld::ResearchItem, Idx(ld::ResearchType::Size)> researchItems = {{
         { .type = ld::ResearchType::Pickaxe, .level = 0, .name = "Pickaxe"},
         { .type = ld::ResearchType::Armor  , .level = 0, .name = "Armor  "},
+        { .type = ld::ResearchType::Speed  , .level = 0, .name = "Speed  "},
         { .type = ld::ResearchType::Food   , .level = 0, .name = "Food   "},
         { .type = ld::ResearchType::Cargo  , .level = 0, .name = "Cargo  "},
         { .type = ld::ResearchType::Vision , .level = 0, .name = "Vision "},
-        { .type = ld::ResearchType::Speed  , .level = 0, .name = "Speed  "},
       }};
 
       Miner * getSelectedMiner() {

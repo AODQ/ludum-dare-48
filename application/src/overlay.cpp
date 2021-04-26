@@ -94,9 +94,9 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
 {
     // Position of the root panel
     uint32_t w = 500;
-    uint32_t h = 300;
+    uint32_t h = 375;
     uint32_t x = (scrWidth - w) * 0.5f;
-    uint32_t y = (scrHeight - h) * 0.5f;
+    uint32_t y = (scrHeight - h) * 0.5f - 20.0f;
 
     // Root Menu panel
     {
@@ -112,8 +112,21 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
         uint32_t padding = h / numButtons;
         uint32_t offset = (padding-btnHeight)*0.5f + 15;
 
+        uint32_t fontSize = 20;
+        ld::DrawOutlinedText("Equipment Upgrades", x + 5, y + offset, fontSize, ::WHITE, ::BLACK);
+        offset += fontSize + 10;
         std::vector<ld::Button> upgBtns;
-        for (size_t i = 0; i < numButtons; ++i)
+        for (size_t i = 0; i < 3; ++i)
+        {
+            upgBtns.push_back(ld::Button(x + 5, y + offset, btnWidth, btnHeight, ::WHITE));
+            offset += btnHeight + 2;
+        }
+
+        offset += 20;
+        ld::DrawOutlinedText("Passive Upgrades", x + 5, y + offset, fontSize, ::WHITE, ::BLACK);
+
+        offset += fontSize + 10;
+        for (size_t i = 3; i < numButtons; ++i)
         {
             upgBtns.push_back(ld::Button(x + 5, y + offset, btnWidth, btnHeight, ::WHITE));
             offset += btnHeight + 2;
@@ -123,10 +136,10 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
         {
             ::RED,      // pickaxe
             ::DARKBLUE, // Armor
-            ::GREEN,    // Food
-            ::GOLD,     // Cargo
-            ::VIOLET,   // Vision
             ::RAYWHITE, // Speed
+            ::GREEN,    // Food
+            ::SKYBLUE,  // Cargo
+            ::PURPLE,   // Vision
         };
 
         std::string desc = "Hover over each button to learn more";
@@ -167,7 +180,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
         }
 
         // Description of upgrade
-        ld::DrawOutlinedCenteredText(desc.c_str(), x+w*0.5f, y + 230, 20, ::WHITE, ::BLACK);
+        ld::DrawOutlinedCenteredText(desc.c_str(), x+w*0.5f, y + offset, 20, ::WHITE, ::BLACK);
     }
 
     { // -- Close
@@ -426,12 +439,16 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         int i = 0;
         for (auto equip : miner.inventory) {
             ::Color tint = ::DARKGRAY;
-            if (equip.owns) {
+            if (equip.level > 0) {
                 tint = ::WHITE;
             }
 
             ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, tint);
-            itemBtn.DrawTexture("", ld::TextureGet(ld::TextureType::Misc), i, 1, tint);
+            itemBtn.DrawTexture(
+                std::to_string(equip.level).c_str(),
+                ld::TextureGet(ld::TextureType::Misc),
+                i, 1, tint
+            );
             xOffset += xPadding;
 
             i++;
@@ -475,6 +492,12 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         }
 
         std::string valueText = "Cargo Value: " + std::to_string(cargoValue);
+        ld::DrawOutlinedCenteredText(valueText.c_str(), x+w*0.5f, y+padding, 10, ::WHITE);
+    }
+
+    { // -- net value for buying upgrades
+        padding += 15;
+        std::string valueText = "Net Value: " + std::to_string(miner.netValue);
         ld::DrawOutlinedCenteredText(valueText.c_str(), x+w*0.5f, y+padding, 10, ::WHITE);
     }
 
