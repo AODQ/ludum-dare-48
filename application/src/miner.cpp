@@ -338,6 +338,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
 
       if (!hasSold) {
         state.state = ld::Miner::AiStateSurfaced::PurchasingUpgrades;
+        state.hasPurchasedFood = false;
         state.waitTimer = 20;
       }
 
@@ -352,9 +353,15 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       // be conservative ; don't eat unless there is 100% efficiency
       if (
           readyToContinue
-       && miner.energy < miner.maxEnergy - miner.foodToEnergyRatio
+       &&
+          ( // conserve if they have purchased food, otherwise must waste
+            state.hasPurchasedFood
+              ? (miner.energy < miner.maxEnergy)
+              : (miner.energy <= miner.maxEnergy - miner.foodToEnergyRatio)
+          )
        && gameState.food > 0
       ) {
+        state.hasPurchasedFood = true;
         gameState.food -= 1;
         miner.energy =
           std::min(miner.maxEnergy, miner.energy + miner.foodToEnergyRatio);
@@ -362,6 +369,20 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
         gameState.notifGroup.AddNotif(
           ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
         );
+      }
+
+      // top off for free only if they have already purchased
+      if (
+          readyToContinue
+       && state.hasPurchasedFood
+       && miner.energy + miner.foodToEnergyRatio >= miner.maxEnergy
+      ) {
+        miner.energy = miner.maxEnergy;
+        readyToContinue = false;
+        gameState.notifGroup.AddNotif(
+          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
+        );
+        state.hasPurchasedFood = false;
       }
 
       if (readyToContinue) {
