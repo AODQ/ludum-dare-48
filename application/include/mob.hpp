@@ -18,7 +18,12 @@ namespace ld {
     int32_t targetTileX = -1, targetTileY = -1;
     int32_t chasingMinerId = -1;
 
-    int32_t sleepTimer = 0;
+    int32_t health = 5;
+    float alpha = 1.0f;
+
+    bool inCombat = false;
+
+    int32_t sleepTimer = 0; // also kill timer
     int32_t attackTimer = 0;
 
     std::array<::Vector2, 4> path;

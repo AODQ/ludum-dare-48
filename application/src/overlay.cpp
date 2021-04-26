@@ -596,8 +596,10 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
 
     padding+=20;
 
-    if (miner.aiState != ld::Miner::AiState::Surfaced)
-    { // -- Cancel current action
+    if (
+        miner.aiState != ld::Miner::AiState::Surfaced
+     && miner.aiState != ld::Miner::AiState::Fighting
+    ) { // -- Cancel current action
         int btnWidth = 60;
         int btnHeight = 25;
         ld::Button btn(x, y+padding, btnWidth, btnHeight);

@@ -179,7 +179,9 @@ void ld::RenderScene(ld::GameState const & state)
           static_cast<float>(slime.positionX),
           static_cast<float>(slime.positionY) - state.camera.y
         }
-        , Color { fow, fow, fow, fow < (uint8_t)(40) ? (uint8_t)(0) : fow }
+        , Color {
+            fow, fow, fow, (uint8_t)(fow * slime.alpha)
+          }
       );
     }
 

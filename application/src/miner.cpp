@@ -348,7 +348,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       if (!hasSold) {
         state.state = ld::Miner::AiStateSurfaced::PurchasingUpgrades;
         state.hasPurchasedFood = false;
-        state.waitTimer = 20;
+        state.waitTimer = 80;
       }
 
     } break;
@@ -359,48 +359,13 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
 
       bool readyToContinue = true;
 
-      // be conservative ; don't eat unless there is 100% efficiency
-      if (
-          readyToContinue
-       &&
-          ( // conserve if they have purchased food, otherwise must waste
-            state.hasPurchasedFood
-              ? (miner.energy < miner.maxEnergy)
-              : (miner.energy <= miner.maxEnergy - miner.foodToEnergyRatio)
-          )
-       && gameState.food > 0
-      ) {
-        state.hasPurchasedFood = true;
-        gameState.food -= 1;
-        miner.energy =
-          std::min(miner.maxEnergy, miner.energy + miner.foodToEnergyRatio);
-        readyToContinue = false;
-        gameState.notifGroup.AddNotif(
-          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
-        );
-      }
-
-      // top off for free only if they have already purchased
-      if (
-          readyToContinue
-       && state.hasPurchasedFood
-       && miner.energy + miner.foodToEnergyRatio >= miner.maxEnergy
-      ) {
-        miner.energy = miner.maxEnergy;
-        readyToContinue = false;
-        gameState.notifGroup.AddNotif(
-          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
-        );
-        state.hasPurchasedFood = false;
-      }
-
-
       // Find the highest upgrade that they can purchase
       // and that the bank can afford
       // TODO add additional purchase states
       // Buy highest / cheapest
       // Conserve money, etc
       bool canBuyUpgrade = false;
+      if (readyToContinue)
       {
         canBuyUpgrade = false;
         uint32_t highestCost = 0;
@@ -436,6 +401,43 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
           state.waitTimer = 80;
         }
       }
+
+      // be conservative ; don't eat unless there is 100% efficiency
+      if (
+          readyToContinue
+       &&
+          ( // conserve if they have purchased food, otherwise must waste
+            state.hasPurchasedFood
+              ? (miner.energy < miner.maxEnergy)
+              : (miner.energy <= miner.maxEnergy - miner.foodToEnergyRatio)
+          )
+       && gameState.food > 0
+      ) {
+        state.hasPurchasedFood = true;
+        gameState.food -= 1;
+        miner.energy =
+          std::min(miner.maxEnergy, miner.energy + miner.foodToEnergyRatio);
+        readyToContinue = false;
+        gameState.notifGroup.AddNotif(
+          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
+        );
+      }
+
+      // top off for free only if they have already purchased
+      if (
+          readyToContinue
+       && state.hasPurchasedFood
+       && miner.energy + miner.foodToEnergyRatio >= miner.maxEnergy
+      ) {
+        miner.netValue = 0;
+        miner.energy = miner.maxEnergy;
+        readyToContinue = false;
+        gameState.notifGroup.AddNotif(
+          ld::NotifType::FoodGot, miner.xPosition, miner.yPosition
+        );
+        state.hasPurchasedFood = false;
+      }
+
 
       if (readyToContinue) {
         state.state = ld::Miner::AiStateSurfaced::BackToMine;
@@ -557,11 +559,6 @@ void ld::MinerGroup::Update(ld::GameState & state) {
     }
   }
 
-  // TODO update AI
-
-  // TODO update mining / fighting
-
-  // simple dumb ai right now
   for (int64_t i = 0; i < self.miners.size(); ++ i) {
     auto & miner = self.miners[i];
 
@@ -572,6 +569,13 @@ void ld::MinerGroup::Update(ld::GameState & state) {
       case ld::Miner::AiState::Attacking: break;
       case ld::Miner::AiState::Idling:
         UpdateMinerAiIdling(miner, state);
+      break;
+      case ld::Miner::AiState::Fighting:
+        // don't do anything special, let the slime take care of it
+        // this is important since multiple slimes can be fighting at
+        // a time
+        miner.applyAnimationState(ld::Miner::AnimationState::Fighting);
+        miner.aiStateInternal.fighting.hasSwung = false;
       break;
       case ld::Miner::AiState::Surfaced:
         UpdateMinerAiSurfaced(miner, state);

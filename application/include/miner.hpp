@@ -94,6 +94,7 @@ namespace ld {
       enum class AiState {
         Attacking,
         Dying,
+        Fighting,
         Idling,
         Mining,
         Surfaced,
@@ -141,6 +142,10 @@ namespace ld {
         struct Dying {
         };
 
+        struct Fighting {
+          bool hasSwung = false; // to allow only 1 slime hit in multi combat
+        };
+
         struct Surfaced {
           AiStateSurfaced state = AiStateSurfaced::Surfacing;
 
@@ -152,6 +157,7 @@ namespace ld {
         Attacking      attacking;
         Dying          dying;
         Idling         idling;
+        Fighting       fighting;
         Mining         mining;
         Surfaced       surfaced;
         Traversing     traversing;
