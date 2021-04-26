@@ -435,7 +435,7 @@ void ld::MineChasm::Update(ld::GameState & state)
          )
       );
 
-    state.mineChasm.rockFow[i] =1.0f;
+    /* state.mineChasm.rockFow[i] =1.0f; */
   }
 }
 
