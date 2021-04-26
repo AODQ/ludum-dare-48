@@ -43,7 +43,7 @@ for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
     ld::NotifGroup::Update(gameState);
     overlay.Update(gameState);
 
-    int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 5 : 1;
+    int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 120 : 1;
     gameState.foodEatTimer =
       std::clamp(
         (int32_t)(gameState.foodEatTimer - foodDecTimer),
@@ -52,14 +52,17 @@ for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
       );
     if (gameState.foodEatTimer <= 0 && gameState.food > 0) {
       gameState.foodEatTimer = gameState.MaxFoodEatTimer();
-      gameState.food -= 1;
+      gameState.food -= gameState.minerGroup.miners.size() == 0 ? 10 : 1;
     }
 
     if (gameState.food <= 0) {
       gameState.food = 0;
       if (gameState.minerGroup.miners.size() > 0) {
-        for (auto & miner : gameState.minerGroup.miners)
-          miner.reduceEnergy(5);
+        for (auto & miner : gameState.minerGroup.miners) {
+          if (miner.animationFinishesThisFrame()) {
+            miner.reduceEnergy(15);
+          }
+        }
       }
     }
 #if 1
@@ -69,7 +72,7 @@ for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
 
   // -- misc updates
   gameState.camera.Update();
-  ld::SoundUpdate();
+  ld::SoundUpdate(gameState);
 
   // -- render
   BeginDrawing();
@@ -85,7 +88,7 @@ void Entry() {
   ::InitWindow(960, 600, "whatever");
 
   // this only works with 3.7
-  /* ::InitAudioDevice(); */
+  ::InitAudioDevice();
 
   SetTargetFPS(60);
 

@@ -21,7 +21,7 @@ namespace ld {
   };
 
   enum class RockGemType {
-    Empty, Tin, Ruby, Emerald, Sapphire,
+    Empty, Tin, Ruby, Emerald, Sapphire, Food,
     Size,
   };
 
@@ -74,13 +74,14 @@ namespace ld {
     int32_t rockPositionY(uint32_t rockId) const { return rockId / columns; }
 
     int32_t rockPathValue(int32_t x, int32_t y) const;
+    int32_t rockPathDurability(int32_t x, int32_t y) const;
 
     static void Update(ld::GameState & state);
 
-    int32_t limitX(int32_t x) {
+    int32_t limitX(int32_t x, bool weirdOff=false) {
       if (x < 0) return 0;
       if (x >= static_cast<int32_t>(columns))
-        return columns;
+        return columns + (weirdOff ? 0 : -1);
       return x;
     }
 

@@ -55,7 +55,7 @@ namespace {
     }
   }
 
-  // rayblib Perlin noise size
+  // raylib Perlin noise size
   auto perlinSize(ld::MineChasm const& self)
   {
     return std::max(
@@ -172,10 +172,62 @@ namespace { // generate passes
               1 + std::floor(
                 fval(perlin, col, row)
                 * static_cast<float>(row - 20) / (rows - 20)
-                * Idx(ld::RockGemType::Size)
+                * Idx(ld::RockGemType::Food) // dont gen food here
               )
             );
           }
+        }
+      }
+    }
+  }
+
+  // who put food in the walls??
+  void GenerateFood(ld::MineChasm& self)
+  {
+    const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
+    const auto ps = perlinSize(self);
+    auto perlin = ::GenImagePerlinNoise(ps, ps, pc(), pc(), 7.f);
+    auto cells  = ::GenImageCellular(self.columns, rows, 10);
+
+    for (uint32_t row = 0; row < rows; ++row) {
+      for (uint32_t col = 0; col < self.columns; ++col) {
+        auto& rock = self.rock(col, row);
+        const auto vv = average(
+          fval(perlin, col, row),
+          fval(cells , col, row)
+        );
+        if (
+            ::GetRandomValue(0, 100) > 95 && vv < 0.35f && !rock.isMined()
+         && row > 8 // ban from first few rows
+        ) {
+          rock.gem = ld::RockGemType::Food;
+        }
+      }
+    }
+
+    ::UnloadImage(perlin);
+    ::UnloadImage(cells );
+  }
+
+  void GenerateSlimePockets(ld::MineChasm& self, ld::MobGroup & group)
+  {
+    // bluenoise would be noice
+    const auto rows = static_cast<uint32_t>(self.rocks.size() / self.columns);
+
+    int32_t gen = 0;
+
+    for (uint32_t row = 8; row < rows-1; ++row) {
+      for (uint32_t col = 1; col < self.columns-1; ++col) {
+        auto& rock = self.rock(col, row);
+        gen += 1 + row/3;
+        if (::GetRandomValue(0, 100) < (gen/50) && !rock.isMined()) {
+          gen = 0;
+          rock.tier = ld::RockTier::Mined;
+          rock.gem  = ld::RockGemType::Empty;
+          group.slimes.push_back({
+            .positionX = MobPos(col),
+            .positionY = MobPos(row)
+          });
         }
       }
     }
@@ -226,6 +278,9 @@ namespace { // generate passes
     std::vector<std::pair<uint32_t, uint32_t>> const& emptySpaces
   )
   {
+    const auto numTnts = static_cast<uint32_t>(
+      self.rocks.size() / 100
+    );
     const auto numSlimes = static_cast<uint32_t>(
       self.rocks.size() / 375
     );
@@ -233,6 +288,17 @@ namespace { // generate passes
       // half as many clouds
       self.rocks.size() / 750
     );
+
+    for (uint32_t i = 0; i < numTnts; ++i) {
+      auto spot = emptySpaces.begin() + ::GetRandomValue(
+        0,
+        emptySpaces.size() - 1
+      );
+      group.tnts.push_back({
+        .positionX = MobPos(spot->second),
+        .positionY = MobPos(spot->first )
+      });
+    }
 
     for (uint32_t i = 0; i < numSlimes; ++i) {
       auto spot = emptySpaces.begin() + ::GetRandomValue(
@@ -274,6 +340,8 @@ ld::MineChasm ld::MineChasm::Initialize(
 
   GenerateEarth(self);
   GenerateGems (self);
+  GenerateFood (self);
+  GenerateSlimePockets(self, group);
   const auto emptySpaces = GenerateCaves(self);
 
   // first few rows are walkable
@@ -321,24 +389,35 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
 
   auto const & target = self.rock(self.rockId(x, y));
 
-  if (target.isMined()) { return 1.0f; }
+  if (target.isMined()) { return 0.0f; }
 
-  int32_t value = ::GetRandomValue(0.0f, 5.0f);
+  int32_t value = ::GetRandomValue(-5.0f, 5.0f);
 
   // can only see rocks if visible
   if (self.rockFow[rockId] >= 0.1f) {
-    value += target.durability;
     switch (target.gem) {
       default: break;
       case ld::RockGemType::Empty: break;
-      case ld::RockGemType::Tin:      value -= 200; break;
-      case ld::RockGemType::Ruby:     value -= 400; break;
-      case ld::RockGemType::Emerald:  value -= 850; break;
-      case ld::RockGemType::Sapphire: value -= 1500; break;
+      case ld::RockGemType::Tin:      value += 20; break;
+      case ld::RockGemType::Ruby:     value += 200; break;
+      case ld::RockGemType::Emerald:  value += 350; break;
+      case ld::RockGemType::Sapphire: value += 400; break;
+      case ld::RockGemType::Food:     value += 200; break;
     }
   }
 
   return std::clamp(1.0f + value, 0.5f, 500.0f);
+}
+
+int32_t ld::MineChasm::rockPathDurability(int32_t x, int32_t y) const {
+  auto & self = *this;
+
+  if (y < 0) { return 5000; }
+
+  if (x < 0 || x > static_cast<int32_t>(columns)) { return 5000; }
+
+  auto rock = self.rock(x, y);
+  return ld::baseRockDurability(rock.type, rock.tier, rock.gem);
 }
 
 void ld::MineChasm::Update(ld::GameState & state)
@@ -348,8 +427,15 @@ void ld::MineChasm::Update(ld::GameState & state)
     state.mineChasm.rockFow[i] =
       std::max(
         std::clamp(1.0f - std::clamp(i/30, 0ul, 4ul) / 4.0f, 0.05f, 1.0f),
-        state.mineChasm.rockFow[i] - 0.0005f
+        state.mineChasm.rockFow[i]
+       - std::lerp(
+           0.00005f,
+           0.0005f,
+           state.researchItems[Idx(ld::ResearchType::Vision)].level / 10.0f
+         )
       );
+
+    /* state.mineChasm.rockFow[i] =1.0f; */
   }
 }
 
@@ -375,10 +461,11 @@ int32_t ld::baseRockDurability(
   switch (gem) {
     default: break;
     case ld::RockGemType::Empty: break;
-    case ld::RockGemType::Tin:      durability += 10; break;
-    case ld::RockGemType::Ruby:     durability += 30; break;
-    case ld::RockGemType::Emerald:  durability += 80; break;
-    case ld::RockGemType::Sapphire: durability += 130; break;
+    case ld::RockGemType::Tin:      durability += 20; break;
+    case ld::RockGemType::Ruby:     durability += 70; break;
+    case ld::RockGemType::Emerald:  durability += 130; break;
+    case ld::RockGemType::Sapphire: durability += 230; break;
+    case ld::RockGemType::Food:     durability += 20; break;
   }
 
   return durability;

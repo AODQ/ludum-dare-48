@@ -6,6 +6,7 @@
 #include <functional>
 
 namespace ld { struct GameState; }
+namespace ld { struct Miner; }
 
 namespace ld {
   // returns real path length
@@ -14,7 +15,7 @@ namespace ld {
     std::array<::Vector2, 4> & path, size_t & pathSize,
     int32_t const origTileX,   int32_t const origTileY,
     int32_t       targetTileX, int32_t       targetTileY,
-    bool const canMine
+    ld::Miner * miner = nullptr
   );
 
   void pathFindInitialize(ld::GameState * state);

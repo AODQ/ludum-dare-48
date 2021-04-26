@@ -3,8 +3,11 @@
 #include <button.hpp>
 #include <gamestate.hpp>
 #include <miner.hpp>
+#include <stack>
 
 namespace ld {
+
+    void DrawTooltip(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height);
 
     /* Draw a colored text with black outlines */
     void DrawOutlinedText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color mainColor, ::Color outlineColor);
@@ -16,13 +19,15 @@ namespace ld {
     {
         enum class MenuState
         {
-            Title = 0,
-            Pause = 1,
+            None = 0,
+            Title,
+            Pause,
             Research,
             GameOver,
-            None,
+            Instructions,
         } menuState;
 
+        std::stack<MenuState> menuStack;
         Overlay(uint32_t w, uint32_t h)
             : scrWidth(w), scrHeight(h)
         {
@@ -31,10 +36,11 @@ namespace ld {
 
         void Update(ld::GameState & game);
         void Draw(ld::GameState & game);
-        void MinerInfo(ld::Miner & miner);
+        void MinerInfo(ld::GameState & game, ld::Miner & miner);
         void TitleScreen();
+        void Instructions();
         void InitButtons();
-        void PauseScreen();
+        void PauseScreen(ld::GameState & game);
         void GameOverScreen(ld::GameState & game);
         void ResearchMenu(ld::GameState & game);
         void ResourceMenu(ld::GameState & game);

@@ -1,19 +1,24 @@
 #pragma once
 
+namespace ld { struct GameState; }
+
 namespace ld {
   enum class SoundType {
     RockHit,
-    RockHit2,
-    RockHit3,
-    RockHit4,
+    Slime,
+    SlimeDie,
+    MinerDie,
+    Explosion,
     Size,
   };
-
 
   void SoundInitialize();
   void SoundShutdown();
 
-  void SoundUpdate();
+  void SoundUpdate(ld::GameState const & state);
 
   void SoundPlay(SoundType const, float distance);
+
+  void ToggleMuteSound();
+  void ToggleMuteMedia();
 }

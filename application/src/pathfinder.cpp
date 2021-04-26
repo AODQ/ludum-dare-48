@@ -11,6 +11,7 @@ class GraphPathFinder : public micropather::Graph {
 public:
   ld::GameState * gameState;
   bool canMine;
+  ld::Miner * miner = nullptr;
 
   float LeastCostEstimate(void * stateStart, void * stateEnd) {
     uint32_t startId = reinterpret_cast<ld::MineRock *>(stateStart)->rockId;
@@ -54,10 +55,41 @@ public:
 
       if (!canMine && !rock.isMined()) { continue; }
 
+      // only allow 30 swings
+      if (
+          !rock.isMined()
+       && miner
+       && (
+            rock.durability
+          / ld::PickLevelDamage(
+              miner->inventory[Idx(ld::ItemType::Pickaxe)].level
+            )
+          > 20
+          )
+      ) {
+        continue;
+      }
+
+      float minerValue = ::GetRandomValue(0.0f, +3.0f);
+      if (miner) {
+        minerValue += gameState->mineChasm.rockPathDurability(x, y);
+        minerValue /=
+            ld::PickLevelDamage(
+              miner->inventory[Idx(ld::ItemType::Pickaxe)].level
+            )
+        ;
+
+        auto isValuable = rock.gem != ld::RockGemType::Empty;
+
+        minerValue -= gameState->mineChasm.rockPathValue(x, y);
+
+        minerValue = std::clamp(minerValue, isValuable ? 0.1f : 2.0f, 20.0f);
+      }
+
       adjacent->push_back(micropather::StateCost {
         .state = reinterpret_cast<void *>(&rock),
-        .cost =
-          rock.isMined() ? 1.0f : gameState->mineChasm.rockPathValue(x, y), 
+        .cost = rock.isMined() ? 1.0f : (minerValue)
+        ,
       });
     }
   }
@@ -102,7 +134,7 @@ uint32_t ld::pathFind(
   std::array<::Vector2, 4> & path, size_t & pathSize,
   int32_t const origTileX,   int32_t const origTileY,
   int32_t       targetTileX, int32_t       targetTileY,
-  bool const canMine
+  ld::Miner * miner
 ) {
   micropather::MPVector<void *> microPath;
   auto & startTile = state.mineChasm.rock(origTileX, origTileY);
@@ -121,7 +153,9 @@ uint32_t ld::pathFind(
 
   float totalCost;
 
-  (canMine ? patherMinable : patherUnminable)
+  graphMinable.miner = miner;
+
+  (miner ? patherMinable : patherUnminable)
     ->Solve(
       reinterpret_cast<void *>(const_cast<ld::MineRock *>(&startTile)),
       reinterpret_cast<void *>(const_cast<ld::MineRock *>(&endTile)),
@@ -129,7 +163,7 @@ uint32_t ld::pathFind(
       &totalCost
     );
 
-  pathSize = std::min(3u, microPath.size());
+  pathSize = std::min(4u, microPath.size());
   for (uint32_t i = 0u; i < pathSize; ++ i) {
     uint32_t pathId = reinterpret_cast<ld::MineRock *>(microPath[i])->rockId;
     path[i] =

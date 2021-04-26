@@ -13,6 +13,8 @@ namespace ld { struct GameState; }
 
 namespace ld {
 
+  int32_t PickLevelDamage(int32_t level);
+
   struct Miner {
       enum class PurchaseState {
         BuyHighest,
@@ -28,6 +30,7 @@ namespace ld {
       // position is in texels, not tiles
       int32_t xPosition = 0, yPosition = 0;
       int32_t prevXPosition = 0, prevYPosition = 0;
+      uint8_t alpha = 255;
       int32_t maxEnergy = 1'000;
       int32_t energy = 500;
       int32_t foodToEnergyRatio = 100;
@@ -37,6 +40,17 @@ namespace ld {
         { .type = ld::ItemType::Speed,   .owns = false, .durability = 10, .level = 0 },
       }};
 
+      void AddUnit(ld::ValuableType const type, int32_t units);
+
+      uint32_t cargoCapacity = 50u;
+      uint32_t currentCargoCapacity = 0u;
+
+      void damageEquipment(ld::ItemType type);
+
+      bool wantsToSurface() const {
+        return energy <= (currentCargoCapacity > 0 ? (100 + yPosition/5) : 20);
+      }
+
       void moveTowards(int32_t x, int32_t y);
 
       int32_t animationFrames() const;
@@ -44,8 +58,6 @@ namespace ld {
       void reduceEnergy(int32_t units);
       void kill();
 
-      uint32_t cargoCapacity = 50u;
-      uint32_t currentCargoCapacity = 0u;
       std::array<ld::Valuable, Idx(ld::ValuableType::Size)> cargo = {{
         {
           .type = ld::ValuableType::Stone,
@@ -91,9 +103,10 @@ namespace ld {
       }
 
       enum class AiState {
-        Attacking,
         Dying,
+        Fighting,
         Idling,
+        Inventorying,
         Mining,
         Surfaced,
         Traversing,
@@ -104,20 +117,18 @@ namespace ld {
         MovingToBase,
         DumpingMaterial,
         PurchasingUpgrades,
+        BoughtFromMine,
         BackToMine,
       };
 
       void chooseNewTarget(ld::GameState & state);
+      void surfaceMiner();
 
       // struct, not a union, in order to preserve memory to chain commands
       // like mine -> mineTraversing
       struct AiStateInternal {
         struct Mining {
           int32_t targetRockId = 0;
-        };
-
-        struct Attacking {
-          int32_t targetEnemyId = 0;
         };
 
         struct Traversing {
@@ -129,12 +140,24 @@ namespace ld {
           int32_t targetPosOffX = 0, targetPosOffY = 0;
 
           bool wantsToSurface = false;
+
+          int32_t panic = 0;
         };
 
         struct Idling {
+          int32_t waitTimer = -1;
+        };
+
+        struct Inventorying {
+          int32_t waitTimer = -1;
         };
 
         struct Dying {
+        };
+
+        struct Fighting {
+          bool hasSwung = false; // to allow only 1 slime hit in multi combat
+          bool prevFrameFinished = false;
         };
 
         struct Surfaced {
@@ -145,9 +168,10 @@ namespace ld {
           bool hasPurchasedFood = false;
         };
 
-        Attacking      attacking;
+        Inventorying   inventorying;
         Dying          dying;
         Idling         idling;
+        Fighting       fighting;
         Mining         mining;
         Surfaced       surfaced;
         Traversing     traversing;
@@ -155,6 +179,13 @@ namespace ld {
 
       AiState aiState;
       AiStateInternal aiStateInternal;
+
+      void resetToTraversal() {
+        if (aiState == ld::Miner::AiState::Dying) return;
+        aiState = ld::Miner::AiState::Traversing;
+        aiStateInternal.traversing.pathIdx = 0;
+        aiStateInternal.traversing.pathSize = 0;
+      }
 
       bool isSurfaced = true;
   };

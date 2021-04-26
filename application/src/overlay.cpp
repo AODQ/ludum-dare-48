@@ -1,11 +1,68 @@
 #include <overlay.hpp>
-#include <renderer.hpp> // Texture info
-#include <algorithm>
 
-typedef enum {
-    eStorageScore = 0,
-    eStorageHiScore = 1,
-} StorageData;
+#include <renderer.hpp> // Texture info
+#include <sounds.hpp>
+
+#include <algorithm>
+#include <cmath>
+
+namespace {
+}
+
+void ld::DrawTooltip(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height)
+{
+    auto mousePos = ::GetMousePosition();
+    ::Rectangle bounds = {
+        static_cast<float>(xPos), static_cast<float>(yPos),
+        static_cast<float>(width), static_cast<float>(height)
+    };
+
+    // Display tooltip near mouse while area is hovered
+    if (::CheckCollisionPointRec(mousePos, bounds))
+    {
+        float fontSize = 10;
+        uint32_t padding = 3;
+        int textWidth = ::MeasureText(text, fontSize) + 2.0f*padding;
+        TraceLog(LOG_INFO, "TextWidth = %i", textWidth);
+
+        float maxWidth = 120;
+        // Scale box width if text amount is less than maxWidth
+        maxWidth = maxWidth > textWidth ? textWidth : maxWidth;
+        float boxWidth = maxWidth;
+        float boxHeight = fontSize * (std::ceil(textWidth/boxWidth) + 1) + 2.0f*padding;
+        float roundness = 0.05f;
+        int segments = 5;
+        int lineThickness = 2;
+
+        ::Rectangle container = {
+            mousePos.x - 0.5f*boxWidth,
+            mousePos.y - boxHeight - 10,
+            boxWidth, boxHeight
+        };
+
+        // Panel
+        ::DrawRectangleRounded(
+            container, roundness, segments, ::Fade(::WHITE, 0.8f)
+        );
+
+        // Border
+        DrawRectangleRoundedLines(
+            container, roundness, segments, lineThickness, ::DARKGRAY
+        );
+
+        // Tooltip text
+        ::Rectangle textBox = {
+            container.x+padding, container.y+padding,
+            container.width-padding, container.height-padding
+        };
+
+        float spacing = 0.3f;
+        bool wordWrap = true;
+        ::DrawTextRec(::GetFontDefault(), text, textBox,
+            fontSize, spacing, wordWrap, ::BLACK
+        );
+    }
+}
 
 void ld::DrawOutlinedText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color mainColor, ::Color outlineColor)
 {
@@ -33,6 +90,8 @@ void ld::DrawCenteredText(const char* text, uint32_t xPos, uint32_t yPos, uint32
 
 void ld::DrawBar(const char* text, uint32_t xPos, uint32_t yPos, uint32_t width, uint32_t height, uint32_t fontSize, ::Color color, float fillPct)
 {
+    if (fillPct > 1.0f) fillPct = 1.0f;
+    if (fillPct < 0.0f) fillPct = 0.0f;
     int textWidth = ::MeasureText(text, fontSize);
     ::DrawRectangle     (xPos, yPos, width*fillPct, height, color);
     ::DrawRectangleLines(xPos, yPos, width        , height, DARKGRAY);
@@ -47,44 +106,144 @@ void ld::Overlay::InitButtons()
     uint32_t btnWidth = 70;
     uint32_t btnHeight = 50;
 
-    buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
-    buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
-    buttons.emplace("Idle"    , ld::Button(x, 200, btnWidth, btnHeight, ::Fade(::LIGHTGRAY, 0.5f)));
-    buttons.emplace("Flag"    , ld::Button(x, 250, 32, 32, ::Fade(::LIGHTGRAY, 0.5f)));
-    buttons.emplace("FlagCan" , ld::Button(x+32, 250, 32, 32, ::Fade(::LIGHTGRAY, 0.5f)));
+    buttons.emplace("Panic",    ld::Button(x,  25, btnWidth, btnHeight));
+    buttons.emplace("BuyMiner", ld::Button(x,  75, btnWidth, btnHeight));
+    buttons.emplace("Research", ld::Button(x, 125, btnWidth, btnHeight));
+    buttons.emplace("Idle"    , ld::Button(x, 175, btnWidth, btnHeight));
+    buttons.emplace("Surface" , ld::Button(x, 225, btnWidth, btnHeight));
+    buttons.emplace("Flag"    , ld::Button(x, 275, 32, 32));
+    buttons.emplace("FlagCan" , ld::Button(x+32, 275, 32, 32));
 }
 
-void ld::Overlay::PauseScreen()
+void ld::Overlay::Instructions()
 {
-    int fontSize = 30;
+    // Position of the root panel
+    uint32_t w = 500;
+    uint32_t h = 300;
+    uint32_t x = (scrWidth - w) * 0.5f;
+    uint32_t y = (scrHeight - h) * 0.5f - 20.0f;
+    uint32_t yOffset = y;
 
-    int score = ::LoadStorageValue(eStorageScore);
-    int hiScore = ::LoadStorageValue(eStorageHiScore);
+    { // Root Menu panel
+        uint32_t size = 30;
+        DrawRectangle(x, y, w, h, ::BROWN);
+        ld::DrawOutlinedCenteredText("Instructions", x+w*0.5f, y-size, size, ::WHITE, ::BLACK);
+    }
 
-    const char* scoreText = ::TextFormat("Score: %i\t Hi-Score: %i", score, hiScore);
-    int scoreWidth = ::MeasureText(scoreText, fontSize);
-    ::DrawText(scoreText, 0.5f*(scrWidth-scoreWidth), 130, fontSize, BLACK);
+    { // Back
+        uint32_t btnWidth = 55;
+        uint32_t btnHeight = 25;
+        yOffset += h - btnHeight;
+        ld::Button btn(x + w - btnWidth, yOffset, btnWidth, btnHeight);
+        btn.Draw("Back", 12);
+        if (btn.IsClicked())
+        {
+            if (!menuStack.empty()) {
+                menuState = menuStack.top();
+                menuStack.pop();
+            } else {
+                menuState = MenuState::None;
+            }
+        }
+    }
+}
 
+void ld::Overlay::PauseScreen(ld::GameState & game)
+{
+    uint32_t centerX = 0.5f*scrWidth;
+    uint32_t startY = 100;
+    uint32_t yOffset = startY;
+    // Title
+    ld::DrawOutlinedCenteredText("GAME TITLE", centerX, startY, 50, ::WHITE, ::BLACK);
+
+    // Resume
+    yOffset += 100;
     const char* pauseText = "PRESS [TAB] TO RESUME";
-    int pauseWidth = ::MeasureText(pauseText, fontSize);
-    ::DrawText(pauseText, 0.5f*(scrWidth-pauseWidth), 170, fontSize, GRAY);
+    ld::DrawOutlinedCenteredText(pauseText, centerX, yOffset, 30, ::WHITE, ::BLACK);
+
+    { // Instructions
+        yOffset += 100;
+        uint32_t btnWidth = 100;
+        uint32_t btnHeight = 50;
+        ld::Button btn(centerX-btnWidth*0.5f, yOffset, btnWidth, btnHeight);
+        btn.Draw("Instructions", 12);
+        if (btn.IsClicked())
+        {
+            menuStack.push(menuState);
+            menuState = MenuState::Instructions;
+        }
+    }
+
+    { // Restart
+        yOffset += 100;
+        uint32_t btnWidth = 100;
+        uint32_t btnHeight = 50;
+        ld::Button btn(centerX-btnWidth*0.5f, yOffset, btnWidth, btnHeight);
+        btn.Draw("Restart", 20);
+        if (btn.IsClicked())
+        {
+            menuState = ld::Overlay::MenuState::None;
+            game.Restart();
+        }
+    }
+
+    { // audio
+        yOffset += 100;
+        uint32_t btnWidth = 100;
+        uint32_t btnHeight = 50;
+        {
+          ld::Button btn(centerX-btnWidth, yOffset, btnWidth, btnHeight);
+          btn.Draw("Mute Sfx", 20);
+          if (btn.IsClicked())
+          {
+              ld::ToggleMuteSound();
+          }
+        }
+
+        {
+          ld::Button btn(centerX, yOffset, btnWidth, btnHeight);
+          btn.Draw("Audio", 20);
+          if (btn.IsClicked())
+          {
+              ld::ToggleMuteMedia();
+          }
+        }
+    }
+
 }
 
 void ld::Overlay::GameOverScreen(ld::GameState & game)
 {
     ::DrawRectangle(0, 0, scrWidth, scrHeight, ::Fade(::BLACK, 0.8f));
 
-    ld::DrawOutlinedCenteredText("Game Over!", scrWidth*0.5f, scrHeight*0.5f-100, 50, ::RED, ::WHITE);
+    uint32_t startY = scrHeight*0.5f - 200;
+    uint32_t yPadding = startY;
 
-    ld::DrawOutlinedCenteredText("You ran out of food!", scrWidth*0.5f, scrHeight*0.5f, 30, ::WHITE, ::BLACK);
+    ld::DrawOutlinedCenteredText("Game Over!", scrWidth*0.5f, yPadding, 75, ::RED, ::WHITE);
 
+    yPadding += 100;
+    ld::DrawOutlinedCenteredText("You ran out of food!", scrWidth*0.5f, yPadding, 30, ::WHITE, ::BLACK);
+
+    yPadding += 100;
+    const std::vector<std::string> loseTips = {
+        "Passive upgrades will apply to all miners without extra gold",
+        "Equipment is puchased automatically when miner is surfaced",
+        "Having too many miners will deplete food faster",
+    };
+
+    static size_t tipIndex = 0;
+    std::string tipText = "Tip: " + loseTips.at(tipIndex);
+    ld::DrawOutlinedCenteredText(tipText.c_str(), scrWidth*0.5f, yPadding, 25, ::WHITE, ::BLACK);
+
+    yPadding += 50;
     uint32_t btnWidth = 100;
     uint32_t btnHeight = 50;
-    ld::Button replayBtn((scrWidth-btnWidth)*0.5f, scrHeight*0.5f + 100, btnWidth, btnHeight);
+    ld::Button replayBtn((scrWidth-btnWidth)*0.5f, yPadding, btnWidth, btnHeight);
 
     replayBtn.Draw("Replay", 20);
     if (replayBtn.IsClicked())
     {
+        tipIndex = (tipIndex + 1) % loseTips.size(); // cycle tooltip
         menuState = ld::Overlay::MenuState::None;
         game.Restart();
     }
@@ -93,7 +252,7 @@ void ld::Overlay::GameOverScreen(ld::GameState & game)
 void ld::Overlay::ResearchMenu(ld::GameState & game)
 {
     // Position of the root panel
-    uint32_t w = 500;
+    uint32_t w = 520;
     uint32_t h = 375;
     uint32_t x = (scrWidth - w) * 0.5f;
     uint32_t y = (scrHeight - h) * 0.5f - 20.0f;
@@ -102,7 +261,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
     {
         uint32_t size = 30;
         DrawRectangle(x, y, w, h, ::Fade(::DARKGRAY, 0.7f));
-        ld::DrawOutlinedCenteredText("Research", x+w*0.5f, y-size, size, ::WHITE, ::BLACK);
+        ld::DrawOutlinedCenteredText("Upgrades", x+w*0.5f, y-size, size, ::WHITE, ::BLACK);
     }
 
     { // -- Upgrade Buttons
@@ -118,7 +277,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
         std::vector<ld::Button> upgBtns;
         for (size_t i = 0; i < 3; ++i)
         {
-            upgBtns.push_back(ld::Button(x + 5, y + offset, btnWidth, btnHeight, ::WHITE));
+            upgBtns.push_back(ld::Button(x + 5, y + offset, btnWidth, btnHeight));
             offset += btnHeight + 2;
         }
 
@@ -128,7 +287,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
         offset += fontSize + 10;
         for (size_t i = 3; i < numButtons; ++i)
         {
-            upgBtns.push_back(ld::Button(x + 5, y + offset, btnWidth, btnHeight, ::WHITE));
+            upgBtns.push_back(ld::Button(x + 5, y + offset, btnWidth, btnHeight));
             offset += btnHeight + 2;
         }
 
@@ -167,16 +326,41 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
             uint32_t barWidth = 30;
             uint32_t barPosX = upgBtns[i].xPos+upgBtns[i].width + 10;
             uint32_t barPosY = upgBtns[i].yPos;
+            uint32_t maxUpgrades = ld::researchInfoLookup[i].maxLevel;
             ::DrawRectangle(barPosX, barPosY, barWidth*game.researchItems[i].level, upgBtns[i].height, Fade(researchColor[i], 0.5f));
-            for (size_t j = 0; j < ld::researchInfoLookup[i].maxLevel; ++j)
+            for (size_t j = 0; j < maxUpgrades; ++j)
             {
-                ::DrawRectangleLines(barPosX, barPosY, barWidth, upgBtns[i].height, researchColor[i]);
+                // Make the next level bar a button that will upgrade
+                if (j == game.researchItems[i].level)
+                {
+                    ld::Button upgBtn(barPosX, barPosY, barWidth, upgBtns[i].height);
+                    upgBtn.Draw(std::to_string(cost).c_str(), 5, ::Fade(researchColor[i], 0.15f));
+                    if (upgBtn.IsHovered())
+                    {
+                        desc = ld::researchInfoLookup[i].desc;
+                    }
+                    if (upgBtn.IsClicked())
+                    {
+                        if (
+                               (game.researchItems[i].level < ld::researchInfoLookup[i].maxLevel)
+                            && (game.gold >= cost)
+                        ) {
+                            game.gold -= cost;
+                            game.researchItems[i].level++;
+                        }
+                    }
+                }
+                else
+                {
+                    ::DrawRectangleLines(barPosX, barPosY, barWidth, upgBtns[i].height, ::DARKGRAY);
+                }
                 barPosX += barWidth;
             }
 
+            fontSize = 20;
             uint32_t alignTextPos = upgBtns[i].xPos + upgBtns[i].width + 20 + (barWidth)*10;
-            const char* barText = ::TextFormat("%s Level:%i, Cost:%iG", game.researchItems[i].name.c_str(), game.researchItems[i].level, cost);
-            ld::DrawOutlinedText(barText, alignTextPos, barPosY + 0.5f*(upgBtns[i].height-10), 10, researchColor[i], ::BLACK);
+            const char* barText = ::TextFormat("Level:%i %s", game.researchItems[i].level, game.researchItems[i].name.c_str());
+            ld::DrawOutlinedText(barText, alignTextPos, barPosY + 0.5f*(upgBtns[i].height-fontSize), fontSize, researchColor[i], ::BLACK);
         }
 
         // Description of upgrade
@@ -186,7 +370,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
     { // -- Close
         uint32_t btnWidth = 70;
         uint32_t btnHeight = 35;
-        ld::Button closeBtn(x + 0.5f*(w-btnWidth), y+h-btnHeight*0.5f, 70, 35, ::WHITE);
+        ld::Button closeBtn(x + 0.5f*(w-btnWidth), y+h-btnHeight*0.5f, 70, 35);
         closeBtn.Draw("Close", 20);
         if (closeBtn.IsClicked())
         {
@@ -218,13 +402,16 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     {
         uint32_t xPos = 50;
         uint32_t yPos = scrHeight - 50;
-        uint32_t width = 200;
+        uint32_t width = 150;
         uint32_t height = 30;
         uint32_t fontSize = 20;
 
-        float fillPct = game.gold < 100 ? game.gold / 100.0f : 1.0f;
         const char* text = ::TextFormat("Gold: %i", game.gold);
-        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::GOLD, fillPct);
+        ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::GOLD, 1.0f);
+        ld::DrawTooltip(
+            "For hiring miners and upgrades.",
+            xPos, yPos, width, height
+        );
     }
 
     currentFood -= ld::sgn(currentFood - game.food);
@@ -251,15 +438,40 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         );
 
         ld::DrawBar(text, xPos, yPos, width, height, fontSize, ::RED, static_cast<float>(game.food)/static_cast<float>(game.MaxFood()));
+        ld::DrawTooltip(
+            "Lose when this is 0. Replenishes miners' energy levels.",
+            xPos, yPos, width, height
+        );
     }
 
     // Resource related buttons
+    auto panicBtn    = buttons.at("Panic");
+
+    panicBtn.Draw("Panic Return", 10, ::Fade(::RED, 0.5));
+    ld::DrawTooltip(
+        "Send all miners back to the surface.",
+        panicBtn.xPos, panicBtn.yPos, panicBtn.width, panicBtn.height
+    );
+    if (panicBtn.IsClicked()) {
+      for (auto & miner : game.minerGroup.miners)
+        miner.surfaceMiner();
+    }
+
+
     auto buyMinerBtn = buttons.at("BuyMiner");
     auto researchBtn = buttons.at("Research");
     auto idleBtn     = buttons.at("Idle");
-    const char* hireText = ::TextFormat("Hire: %i Gold", game.minerCost);
-    buyMinerBtn.Draw(hireText);
-    researchBtn.Draw("Research");
+    buyMinerBtn.Draw("Hire", 10, ::Fade(::LIGHTGRAY, 0.5f));
+    ld::DrawTooltip(
+        ::TextFormat("Hire a new miner for %i Gold.", game.minerCost),
+        buyMinerBtn.xPos, buyMinerBtn.yPos, buyMinerBtn.width, buyMinerBtn.height
+    );
+
+    researchBtn.Draw("Upgrades", 10, ::Fade(::LIGHTGRAY, 0.5f));
+    ld::DrawTooltip(
+        "Purchase equipment and passive upgrades to improve the miners.",
+        researchBtn.xPos, researchBtn.yPos, researchBtn.width, researchBtn.height
+    );
 
     std::vector<int32_t> idleMiners;
     for (auto miner : game.minerGroup.miners) {
@@ -270,7 +482,12 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
 
     static size_t cycle = 0;
     std::string idleText = "Idle: " + std::to_string(idleMiners.size());
-    idleBtn.Draw(idleText.c_str(), 10);
+    idleBtn.Draw(idleText.c_str(), 10, ::Fade(::LIGHTGRAY, 0.5f));
+    ld::DrawTooltip(
+        "Select the next idle miner (Hotkey: SPACE).",
+        idleBtn.xPos, idleBtn.yPos, idleBtn.width, idleBtn.height
+    );
+    bool wasIdle = game.minerSelection >= 0;
     if (
         (::IsKeyPressed(KEY_SPACE) || idleBtn.IsClicked())
         && !idleMiners.empty()
@@ -278,22 +495,43 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         // wrap cycle first in case it corresponds to an invalid index within the list
         cycle = (cycle+1) % idleMiners.size();
         game.minerSelection = idleMiners.at(cycle);
+
+        if (wasIdle && idleMiners.size() == 1) {
+          game.minerSelection = -1;
+        }
+    }
+
+    auto surfBtn     = buttons.at("Surface");
+    surfBtn.Draw("Surface", 10, ::Fade(::LIGHTGRAY, 0.5f));
+    ld::DrawTooltip(
+        "Set Camera to surface level.",
+        surfBtn.xPos, surfBtn.yPos, surfBtn.width, surfBtn.height
+    );
+    if (surfBtn.IsClicked()) {
+      game.camera.y = -618;
+      game.camera.yVelocity = 0.0f;
     }
 
     // -- flag
     ::DrawRectangle(
       scrWidth-100+32,
-      250, 32, 32, ::Fade(::RED, game.targetX>=0?0.5f:0.0f)
+      275, 32, 32, ::Fade(::RED, (game.targetX>=0?0.5f:0.0f))
     );
     auto &  flagCan = buttons.at("FlagCan");
-    flagCan
-      .DrawTexture(
-        "",
-        ld::TextureGet(ld::TextureType::Flag),
-        0, 0,
-        { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(255) : (uint8_t)(0) },
-        true
+    if (game.targetX>=0) {
+      flagCan
+        .DrawTexture(
+          "",
+          ld::TextureGet(ld::TextureType::Flag),
+          0, 0,
+          { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(255) : (uint8_t)(0) },
+          true
+        );
+      ld::DrawTooltip(
+          "Remove current rally point.",
+          flagCan.xPos, flagCan.yPos, flagCan.width, flagCan.height
       );
+    }
     bool thisFrame = false;
     if (flagCan.IsClicked()) {
       game.targetX = -1;
@@ -304,7 +542,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
       thisFrame = true;
     }
 
-    ::DrawRectangle(scrWidth-100, 250, 32, 32, ::Fade(::LIGHTGRAY, 0.5f));
+    ::DrawRectangle(scrWidth-100, 275, 32, 32, ::Fade(::LIGHTGRAY, 0.5f));
     auto &  flag = buttons.at("Flag");
     flag
       .DrawTexture(
@@ -314,6 +552,10 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(128) : (uint8_t)(255) },
         true
       );
+    ld::DrawTooltip(
+        "Set a rally point that all idle miners will head to.",
+        flag.xPos, flag.yPos, flag.width, flag.height
+    );
 
     if (flag.IsClicked()) {
       game.targetX = -1;
@@ -364,7 +606,7 @@ void ld::Overlay::Update(ld::GameState & game)
 
 }
 
-void ld::Overlay::MinerInfo(ld::Miner & miner)
+void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
 {
     // Position of the root panel
     uint32_t w = 120;
@@ -390,8 +632,8 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         std::string action = "Action: ";
         switch (miner.aiState)
         {
-            case Miner::AiState::Attacking:
-                action += "Attacking";
+            case Miner::AiState::Fighting:
+                action += "Fighting";
                 break;
             case Miner::AiState::Dying:
                 action += "Dying";
@@ -408,23 +650,32 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
             case Miner::AiState::Surfaced:
                 action += "Surfaced";
                 break;
+            case Miner::AiState::Inventorying:
+                action += "Inventorying";
+                break;
             default:
-                action = "";
+                action = "N/A BROKE!";
                 break;
         }
-        ld::DrawOutlinedText(action.c_str(), x, y+padding, 10, ::WHITE, ::BLACK);
+        ld::DrawOutlinedText(action.c_str(), x+5, y+padding, 10, ::WHITE, ::BLACK);
     }
 
     { // -- Energy
         padding += 15;
         const char* energyText = ::TextFormat("Energy: %i/%i", miner.energy, miner.maxEnergy);
         ld::DrawBar(energyText, x, y+padding, w, 20, 10, ::GREEN, static_cast<float>(miner.energy) / static_cast<float>(miner.maxEnergy));
+        ld::DrawTooltip(
+          "Available energy for actions and replenished by food. This miner will die if his energy is fully depleted.",
+          x, y+padding, w, 20);
     }
 
     { // -- Weight
         padding += 20;
         const char* cargo = ::TextFormat("Weight: %i/%i", miner.currentCargoCapacity, miner.cargoCapacity);
         ld::DrawBar(cargo, x, y+padding, w, 20, 10, ::BLUE, static_cast<float>(miner.currentCargoCapacity) / static_cast<float>(miner.cargoCapacity));
+        ld::DrawTooltip(
+          "Max weight a miner can hold. This can be upgraded.",
+          x, y+padding, w, 20);
     }
 
     { // -- Equipment
@@ -436,6 +687,12 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         float xPadding = w / 3.0f;
         uint32_t xOffset = x + 0.5f*(xPadding - btnSize);
 
+        const std::array<std::string, Idx(ld::ItemType::Size)> equipDesc = {
+            "Pickaxe determines attack power. Higher levels can be purchased from the 'Upgrades' Menu.",
+            "Armor lowers the energy drain from monster fights. Must first be unlocked from the 'Upgrades' Menu.",
+            "Speed determines the miner's walking speed. Higher levels can be purchased from 'Upgrades' Menu.",
+        };
+
         int i = 0;
         for (auto equip : miner.inventory) {
             ::Color tint = ::DARKGRAY;
@@ -443,12 +700,17 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
                 tint = ::WHITE;
             }
 
-            ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, tint);
+            ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize);
             itemBtn.DrawTexture(
                 std::to_string(equip.level).c_str(),
                 ld::TextureGet(ld::TextureType::Misc),
                 i, 1, tint
             );
+            // Equipment descriptions
+            ld::DrawTooltip(
+              equipDesc.at(i).c_str(),
+              xOffset, y+padding, btnSize, btnSize);
+
             xOffset += xPadding;
 
             i++;
@@ -464,6 +726,16 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         padding+=20;
         float xPadding = static_cast<float>(w) / 3.0f;
 
+
+        const std::array<std::string, Idx(ld::ValuableType::Size)> cargoDesc = {
+            "Stone",
+            "Food",
+            "Tin",
+            "Ruby",
+            "Emerald",
+            "Sapphire",
+        };
+
         for (uint32_t row = 0u; row < 2; ++row) {
 
             uint32_t xOffset = x + 0.5f*(xPadding - btnSize);
@@ -471,7 +743,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
             for (uint32_t col = 0u; col < 3; ++col) {
                 size_t it = row * 3 + col;
 
-                ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, ::WHITE);
+                ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize);
                 // Display count of item
                 auto itemCount = miner.cargo[it].ownedUnits;
                 Color tint = itemCount > 0
@@ -483,6 +755,11 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
                     std::to_string(miner.cargo[it].ownedUnits).c_str(),
                     ld::TextureGet(ld::TextureType::Cargo), row, col, tint
                 );
+
+                // Cargo descriptions
+                ld::DrawTooltip(
+                    cargoDesc.at(it).c_str(),
+                    xOffset, y+padding, btnSize, btnSize);
 
                 xOffset += xPadding;
                 cargoValue += miner.cargo[it].ownedUnits* ld::valuableInfoLookup[it].value;
@@ -501,15 +778,48 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         ld::DrawOutlinedCenteredText(valueText.c_str(), x+w*0.5f, y+padding, 10, ::WHITE);
     }
 
-    { // -- Cancel current action
-        padding+=20;
+    padding+=20;
+
+    if (
+        miner.aiState != ld::Miner::AiState::Surfaced
+     && miner.aiState != ld::Miner::AiState::Fighting
+    ) { // -- Cancel current action
         int btnWidth = 60;
         int btnHeight = 25;
-        ld::Button btn(x + (w-btnWidth)*0.5f, y+padding, btnWidth, btnHeight, ::WHITE);
-        btn.Draw("Set Idle", 7);
+        ld::Button btn(x, y+padding, btnWidth, btnHeight);
+        btn.Draw("Return", 7, ::WHITE);
         if (btn.IsClicked())
         {
-            miner.aiState = ld::Miner::AiState::Idling;
+          miner.surfaceMiner();
+        }
+    }
+
+    { // -- Kill
+        int btnWidth = 60;
+        int btnHeight = 25;
+        ld::Button btn(x + (w-btnWidth), y+padding, btnWidth, btnHeight);
+        // sorry this is shit
+        static int32_t hasClickedKill = 0;
+        btn.Draw(hasClickedKill > 0 ? "Confirm" : "Kill", 7, ::RED);
+
+        if (btn.IsClicked() && hasClickedKill == 0)
+          hasClickedKill = 1;
+
+        if (btn.IsClicked() && hasClickedKill == 2)
+        {
+          hasClickedKill = 0; // clicked off screen
+          miner.kill();
+          game.minerSelection = -1;
+        }
+
+        if (!btn.IsHovered()) {
+          hasClickedKill = 0;
+        }
+
+        if (hasClickedKill == 1) {
+          if (!::IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            hasClickedKill = 2;
+          }
         }
     }
 
@@ -520,7 +830,27 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
 void ld::Overlay::Draw(ld::GameState & game)
 {
     // if game paused, then that should override every other menu
-    //menuState = game.isPaused ? MenuState::Pause : menuState;
+    if (game.isPaused && menuState != MenuState::Pause) {
+        if (!menuStack.empty() && menuStack.top() != MenuState::Pause) {
+            // Hacky, but checks that we weren't coming from a pause state
+            // to prevent pushing another pause menu on top causing it to be
+            // stuck on the pause and other pause related menus like instruction
+            menuStack.push(menuState);
+            menuState = MenuState::Pause;
+        }
+        else if (menuStack.empty()) {
+            menuStack.push(menuState);
+            menuState = MenuState::Pause;
+        }
+    }
+    else if (!game.isPaused && menuState == MenuState::Pause) {
+        if (!menuStack.empty()) {
+            menuState = menuStack.top();
+            menuStack.pop();
+        } else {
+            menuState = MenuState::None;
+        }
+    }
 
     switch (menuState)
     {
@@ -531,30 +861,31 @@ void ld::Overlay::Draw(ld::GameState & game)
             //return; // return to Avoid rendering resources
         case ld::Overlay::MenuState::Research:
             ResearchMenu(game);
+            ResourceMenu(game);
             break;
         case ld::Overlay::MenuState::GameOver:
             GameOverScreen(game);
             break;
+        case ld::Overlay::MenuState::Instructions:
+            Instructions();
+            break;
         case ld::Overlay::MenuState::Pause:
-            PauseScreen();
+            PauseScreen(game);
+            break;
         case ld::Overlay::MenuState::None:
         default:
+            ResourceMenu(game);
             break;
     }
 
-    if (game.isPaused)
-    {
-        PauseScreen();
-    }
-
-    if (game.minerSelection >= 0)
+    if (game.minerSelection >= 0 && !game.isPaused)
     {
         bool found = false;
         // find miner & check if still alive
         for (auto & miner : game.minerGroup.miners) {
           if (miner.minerId == game.minerSelection) {
             found = true;
-            MinerInfo(miner);
+            MinerInfo(game, miner);
             break;
           }
         }
@@ -563,8 +894,6 @@ void ld::Overlay::Draw(ld::GameState & game)
           game.minerSelection = 0;
         }
     }
-
-    ResourceMenu(game);
 
     // Cursor should be drawn last
     if (game.showCursor)
