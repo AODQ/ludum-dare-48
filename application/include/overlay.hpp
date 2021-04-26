@@ -35,7 +35,7 @@ namespace ld {
         void TitleScreen();
         void InitButtons();
         void PauseScreen();
-        void GameOverScreen();
+        void GameOverScreen(ld::GameState & game);
         void ResearchMenu(ld::GameState & game);
         void ResourceMenu(ld::GameState & game);
 

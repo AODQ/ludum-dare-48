@@ -42,6 +42,7 @@ bool ld::Miner::animationFinishesThisFrame()
 
 void ld::Miner::reduceEnergy(int32_t units)
 {
+
   auto & self = *this;
   self.energy = std::max(0, self.energy - std::abs(units));
 
@@ -387,6 +388,7 @@ void ld::MinerGroup::Update(ld::GameState & state) {
     auto & miner = self.miners[i];
     miner.cargoCapacity = state.MaxCargoCapacity();
     miner.speed = state.MinerSpeed();
+    miner.foodToEnergyRatio = state.FoodToEnergyRatio();
     // Weapons
     // Armor
   }

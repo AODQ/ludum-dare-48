@@ -67,10 +67,24 @@ void ld::Overlay::PauseScreen()
     ::DrawText(pauseText, 0.5f*(scrWidth-pauseWidth), 170, fontSize, GRAY);
 }
 
-void ld::Overlay::GameOverScreen()
+void ld::Overlay::GameOverScreen(ld::GameState & game)
 {
-    ::DrawRectangle(0, 0, scrWidth, scrHeight, ::Fade(::DARKGRAY, 0.9f));
-    ld::DrawCenteredText("Game Over!", scrWidth*0.5f, scrHeight*0.5f, 30, ::WHITE);
+    ::DrawRectangle(0, 0, scrWidth, scrHeight, ::Fade(::BLACK, 0.8f));
+
+    ld::DrawOutlinedCenteredText("Game Over!", scrWidth*0.5f, scrHeight*0.5f-100, 50, ::RED, ::WHITE);
+
+    ld::DrawOutlinedCenteredText("You ran out of food!", scrWidth*0.5f, scrHeight*0.5f, 30, ::WHITE, ::BLACK);
+
+    uint32_t btnWidth = 100;
+    uint32_t btnHeight = 50;
+    ld::Button replayBtn((scrWidth-btnWidth)*0.5f, scrHeight*0.5f + 100, btnWidth, btnHeight);
+
+    replayBtn.Draw("Replay", 20);
+    if (replayBtn.IsClicked())
+    {
+        menuState = ld::Overlay::MenuState::None;
+        game.Restart();
+    }
 }
 
 void ld::Overlay::ResearchMenu(ld::GameState & game)
@@ -112,6 +126,8 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
             ::RAYWHITE, // Speed
         };
 
+        uint32_t maxUpgrades = 10;
+
         std::string desc = "Hover over each button to learn more";
         for (size_t i = 0; i < numButtons; ++i)
         {
@@ -120,8 +136,10 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
             {
                 desc = ld::researchInfoLookup[i].desc;
             }
-            if (upgBtns[i].IsClicked())
-            {
+            if (
+                   upgBtns[i].IsClicked()
+                && game.researchItems[i].level < maxUpgrades
+            ) {
                 if (game.gold >= cost)
                 {
                     game.gold -= cost;
@@ -131,8 +149,6 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
 
             upgBtns[i].DrawTexture("", ld::TextureGet(ld::TextureType::Upgrades), 0, i, ::WHITE, true);
 
-            // Draw upgrade bars
-            uint32_t maxUpgrades = 10;
             //uint32_t barWidth = (w-btnWidth-20) / maxUpgrades;
             uint32_t barWidth = 30;
             uint32_t barPosX = upgBtns[i].xPos+upgBtns[i].width + 10;
@@ -252,6 +268,15 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
 // Update any gamestate changes from button usage
 void ld::Overlay::Update(ld::GameState & game)
 {
+    // End game when we're out of food, don't have miners, and out of gold
+    if (game.food <= 0
+        && game.minerGroup.miners.empty()
+        && game.gold < static_cast<int32_t>(game.minerCost)
+    ) {
+        menuState = ld::Overlay::MenuState::GameOver;
+    }
+
+
     auto buyMinerBtn = buttons.at("BuyMiner");
     if (buyMinerBtn.IsClicked())
     {
@@ -432,7 +457,7 @@ void ld::Overlay::Draw(ld::GameState & game)
             ResearchMenu(game);
             break;
         case ld::Overlay::MenuState::GameOver:
-            GameOverScreen();
+            GameOverScreen(game);
             break;
         case ld::Overlay::MenuState::Pause:
             PauseScreen();

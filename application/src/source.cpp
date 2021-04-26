@@ -24,6 +24,7 @@ ld::GameState gameState;
 ld::Overlay overlay(scrWidth, scrHeight);
 
 void UpdateFrame() {
+
   if (IsKeyPressed(KEY_TAB)) {
       gameState.isPaused ^= 1;
   }
