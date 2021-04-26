@@ -1,5 +1,6 @@
 #include <overlay.hpp>
 #include <renderer.hpp> // Texture info
+#include <algorithm>
 
 typedef enum {
     eStorageScore = 0,
@@ -545,6 +546,12 @@ void ld::Overlay::Draw(ld::GameState & game)
     // Cursor should be drawn last
     if (game.showCursor)
     {
+        auto mousePos = ::GetMousePosition();
+        // Clamp mouse
+        ::SetMousePosition(
+            std::clamp(mousePos.x, 0.0f, static_cast<float>(scrWidth)),
+            std::clamp(mousePos.y, 0.0f, static_cast<float>(scrHeight))
+        );
         ::DrawCircleV(GetMousePosition(), 2, RED);
     }
 }
