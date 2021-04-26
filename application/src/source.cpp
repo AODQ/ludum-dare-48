@@ -32,42 +32,37 @@ void UpdateFrame() {
   // -- update
   if (!gameState.isPaused) {
 
-// DEBUG CODE!!!
-#if 1
-bool isZPressed = ::IsKeyDown(KEY_Z);
-for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
-#endif
-    ld::MinerGroup::Update(gameState);
-    ld::MobGroup::Update(gameState);
-    ld::MineChasm::Update(gameState);
-    ld::NotifGroup::Update(gameState);
     overlay.Update(gameState);
 
-    int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 120 : 1;
-    gameState.foodEatTimer =
-      std::clamp(
-        (int32_t)(gameState.foodEatTimer - foodDecTimer),
-        (int32_t)(0),
-        (int32_t)(gameState.MaxFoodEatTimer())
-      );
-    if (gameState.foodEatTimer <= 0 && gameState.food > 0) {
-      gameState.foodEatTimer = gameState.MaxFoodEatTimer();
-      gameState.food -= gameState.minerGroup.miners.size() == 0 ? 10 : 1;
-    }
+    for (int32_t ddd = 0; ddd < gameState.timeScale; ++ ddd) {
+      ld::MinerGroup::Update(gameState);
+      ld::MobGroup::Update(gameState);
+      ld::MineChasm::Update(gameState);
+      ld::NotifGroup::Update(gameState);
 
-    if (gameState.food <= 0) {
-      gameState.food = 0;
-      if (gameState.minerGroup.miners.size() > 0) {
-        for (auto & miner : gameState.minerGroup.miners) {
-          if (miner.animationFinishesThisFrame()) {
-            miner.reduceEnergy(15);
+      int32_t foodDecTimer = gameState.minerGroup.miners.size() == 0 ? 120 : 1;
+      gameState.foodEatTimer =
+        std::clamp(
+          (int32_t)(gameState.foodEatTimer - foodDecTimer),
+          (int32_t)(0),
+          (int32_t)(gameState.MaxFoodEatTimer())
+        );
+      if (gameState.foodEatTimer <= 0 && gameState.food > 0) {
+        gameState.foodEatTimer = gameState.MaxFoodEatTimer();
+        gameState.food -= gameState.minerGroup.miners.size() == 0 ? 10 : 1;
+      }
+
+      if (gameState.food <= 0) {
+        gameState.food = 0;
+        if (gameState.minerGroup.miners.size() > 0) {
+          for (auto & miner : gameState.minerGroup.miners) {
+            if (miner.animationFinishesThisFrame()) {
+              miner.reduceEnergy(15);
+            }
           }
         }
       }
     }
-#if 1
-}
-#endif
   }
 
   // -- misc updates

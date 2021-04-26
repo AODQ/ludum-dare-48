@@ -226,9 +226,10 @@ void ld::Overlay::GameOverScreen(ld::GameState & game)
 
     yPadding += 100;
     const std::vector<std::string> loseTips = {
-        "Passive upgrades will apply to all miners without extra gold",
-        "Equipment is puchased automatically when miner is surfaced",
-        "Having too many miners will deplete food faster",
+        "Passive upgrades will apply to all miners without extra gold.",
+        "Equipment is puchased automatically when miner is surfaced.",
+        "Having too many miners will deplete food faster.",
+        "Use the rally flag to direct large groups of miners quickly.",
     };
 
     static size_t tipIndex = 0;
@@ -444,6 +445,38 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
         );
     }
 
+    { // Time scale buttons
+        uint32_t xPos = 500;
+        uint32_t yPos = scrHeight - 50;
+        ld::Button dt1xBtn(xPos,    yPos, 32, 32);
+        ld::Button dt2xBtn(xPos+32, yPos, 32, 32);
+
+        if (::IsKeyPressed(KEY_F))
+        {
+            game.timeScale = game.timeScale == 1
+                ? 2
+                : 1
+            ;
+        }
+
+        if (dt1xBtn.IsClicked()) {  game.timeScale = 1; }
+        if (dt2xBtn.IsClicked()) {  game.timeScale = 2; }
+
+        ::Color clicked = ::Fade(::DARKBLUE, 0.8f);
+        if (game.timeScale > 1) {
+            dt1xBtn.Draw("1x", 10, ::Fade(::LIGHTGRAY, 0.5f));
+            dt2xBtn.Draw("2x", 10, clicked);
+        } else {
+            dt1xBtn.Draw("1x", 10, clicked);
+            dt2xBtn.Draw("2x", 10, ::Fade(::LIGHTGRAY, 0.5f));
+        }
+
+        ld::DrawTooltip(
+            "Change timescale. Press 'F' to toggle.",
+            xPos, yPos, 64, 32
+        );
+    }
+
     // Resource related buttons
     auto panicBtn    = buttons.at("Panic");
 
@@ -603,7 +636,6 @@ void ld::Overlay::Update(ld::GameState & game)
     {
         menuState = MenuState::Research;
     }
-
 }
 
 void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)

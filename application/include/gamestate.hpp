@@ -10,6 +10,7 @@
 namespace ld {
   struct GameState
   {
+      int timeScale = 1;
       bool showCursor = true;
       // below is in tiles
       int32_t targetX = -1, targetY = -1;
