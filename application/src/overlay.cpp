@@ -152,16 +152,18 @@ void ld::Overlay::PauseScreen(ld::GameState & game)
     uint32_t centerX = 0.5f*scrWidth;
     uint32_t startY = 100;
     uint32_t yOffset = startY;
-    // Title
-    ld::DrawOutlinedCenteredText("GAME TITLE", centerX, startY, 50, ::WHITE, ::BLACK);
 
-    // Resume
-    yOffset += 100;
-    const char* pauseText = "PRESS [TAB] TO RESUME";
-    ld::DrawOutlinedCenteredText(pauseText, centerX, yOffset, 30, ::WHITE, ::BLACK);
+    // Title
+    ld::DrawOutlinedCenteredText("LD48", centerX, startY, 50, ::WHITE, ::BLACK);
+
+    if (!isFirstPlay) { // Resume
+        yOffset += 100;
+        const char* pauseText = "PRESS [TAB] TO RESUME";
+        ld::DrawOutlinedCenteredText(pauseText, centerX, yOffset, 30, ::WHITE, ::BLACK);
+    }
 
     { // Instructions
-        yOffset += 100;
+        yOffset += 120;
         uint32_t btnWidth = 100;
         uint32_t btnHeight = 50;
         ld::Button btn(centerX-btnWidth*0.5f, yOffset, btnWidth, btnHeight);
@@ -178,9 +180,13 @@ void ld::Overlay::PauseScreen(ld::GameState & game)
         uint32_t btnWidth = 100;
         uint32_t btnHeight = 50;
         ld::Button btn(centerX-btnWidth*0.5f, yOffset, btnWidth, btnHeight);
-        btn.Draw("Restart", 20);
-        if (btn.IsClicked())
-        {
+        if (!isFirstPlay) {
+            btn.Draw("Restart", 20);
+        } else {
+            btn.Draw("Play", 20);
+        }
+        if (btn.IsClicked()) {
+            isFirstPlay = false;
             menuState = ld::Overlay::MenuState::None;
             game.Restart();
         }
@@ -376,21 +382,6 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
         {
             menuState = MenuState::None;
         }
-    }
-}
-
-void ld::Overlay::TitleScreen()
-{
-    uint32_t xPos = scrWidth / 2.0f;
-    uint32_t yPos = 100;
-    uint32_t width = 50;
-    DrawCenteredText("Game Title", xPos, yPos, 100, BLACK);
-
-    ld::Button playBtn(xPos - 0.5*width, yPos + 250, 100, 50);
-    playBtn.Draw("PLAY", 35);
-    if (playBtn.IsClicked())
-    {
-        menuState = MenuState::None;
     }
 }
 
@@ -869,6 +860,10 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
 
 void ld::Overlay::Draw(ld::GameState & game)
 {
+    if (isFirstPlay) {
+        game.isPaused = true;
+    }
+
     // if game paused, then that should override every other menu
     if (game.isPaused && menuState != MenuState::Pause) {
         if (!menuStack.empty() && menuStack.top() != MenuState::Pause) {
@@ -894,11 +889,6 @@ void ld::Overlay::Draw(ld::GameState & game)
 
     switch (menuState)
     {
-        case ld::Overlay::MenuState::Title:
-            break;
-            // TODO Reenable upon submission
-            //TitleScreen();
-            //return; // return to Avoid rendering resources
         case ld::Overlay::MenuState::Research:
             ResearchMenu(game);
             ResourceMenu(game);

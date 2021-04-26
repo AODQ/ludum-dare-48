@@ -17,10 +17,11 @@ namespace ld {
 
     struct Overlay
     {
+        bool isFirstPlay = true;
+
         enum class MenuState
         {
             None = 0,
-            Title,
             Pause,
             Research,
             GameOver,
@@ -37,7 +38,6 @@ namespace ld {
         void Update(ld::GameState & game);
         void Draw(ld::GameState & game);
         void MinerInfo(ld::GameState & game, ld::Miner & miner);
-        void TitleScreen();
         void Instructions();
         void InitButtons();
         void PauseScreen(ld::GameState & game);
