@@ -129,7 +129,7 @@ void ld::Overlay::ResearchMenu(ld::GameState & game)
                 }
             }
 
-            upgBtns[i].DrawTexture("", ld::TextureGet(ld::TextureType::Misc), i, 0, ::WHITE, true);
+            upgBtns[i].DrawTexture("", ld::TextureGet(ld::TextureType::Upgrades), 0, i, ::WHITE, true);
 
             // Draw upgrade bars
             uint32_t maxUpgrades = 10;
@@ -274,7 +274,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
 {
     // Position of the root panel
     uint32_t w = 120;
-    uint32_t h = 220;
+    uint32_t h = 260;
     uint32_t x = scrWidth - w - 20;
     uint32_t y = scrHeight - h - 20;
 
@@ -367,27 +367,36 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
 
         uint32_t btnSize = 30;
         padding+=20;
-        float xPadding = w / 3.0f;
-        uint32_t xOffset = x + 0.5f*(xPadding - btnSize);
-        for (size_t it = 0u; it < miner.cargo.size(); ++ it) {
-            // TODO display texture
-            ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, ::WHITE);
-            // Display count of item
-            auto itemCount = miner.cargo[it].ownedUnits;
-            Color tint = itemCount > 0
-                ? ::WHITE
-                : ::Fade(::DARKGRAY, 0.5f)
-            ;
-            itemBtn.DrawTexture(
-                std::to_string(miner.cargo[it].ownedUnits).c_str(),
-                ld::TextureGet(ld::TextureType::Rock), it, 2, tint
-            );
+        float xPadding = static_cast<float>(w) / 3.0f;
 
-            xOffset += xPadding;
-            cargoValue += miner.cargo[it].ownedUnits* ld::valuableInfoLookup[it].value;
+        for (uint32_t row = 0u; row < 2; ++row) {
+
+            uint32_t xOffset = x + 0.5f*(xPadding - btnSize);
+
+            for (uint32_t col = 0u; col < 3; ++col) {
+                size_t it = row * 3 + col;
+
+                ld::Button itemBtn(xOffset, y+padding, btnSize, btnSize, ::WHITE);
+                // Display count of item
+                auto itemCount = miner.cargo[it].ownedUnits;
+                Color tint = itemCount > 0
+                    ? ::WHITE
+                    : ::Fade(::DARKGRAY, 0.5f)
+                ;
+
+                itemBtn.DrawTexture(
+                    std::to_string(miner.cargo[it].ownedUnits).c_str(),
+                    ld::TextureGet(ld::TextureType::Cargo), row, col, tint
+                );
+
+                xOffset += xPadding;
+                cargoValue += miner.cargo[it].ownedUnits* ld::valuableInfoLookup[it].value;
+            }
+
+            padding += btnSize;
         }
+
         std::string valueText = "Cargo Value: " + std::to_string(cargoValue);
-        padding += 30;
         ld::DrawOutlinedCenteredText(valueText.c_str(), x+w*0.5f, y+padding, 10, ::WHITE);
     }
 

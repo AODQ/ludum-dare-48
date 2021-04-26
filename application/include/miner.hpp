@@ -42,10 +42,19 @@ namespace ld {
           .type = ld::ValuableType::Stone,
           .ownedUnits = 0,
         }, {
+          .type = ld::ValuableType::Food,
+          .ownedUnits = 0,
+        }, {
           .type = ld::ValuableType::Tin,
           .ownedUnits = 0,
         }, {
-          .type = ld::ValuableType::Food,
+          .type = ld::ValuableType::Ruby,
+          .ownedUnits = 0,
+        }, {
+          .type = ld::ValuableType::Emerald,
+          .ownedUnits = 0,
+        }, {
+          .type = ld::ValuableType::Sapphire,
           .ownedUnits = 0,
         },
       }};

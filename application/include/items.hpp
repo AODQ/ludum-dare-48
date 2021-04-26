@@ -36,8 +36,11 @@ namespace ld {
   // if this changes, must update below and in miner.hpp cargo
   enum class ValuableType {
     Stone,
-    Tin,
     Food,
+    Tin,
+    Ruby,
+    Emerald,
+    Sapphire,
     Size,
   };
 
@@ -60,16 +63,33 @@ namespace ld {
         .value = 1,
         .currencyType = ld::ValuableCurrencyType::Gold,
       }, {
+        .type = ld::ValuableType::Food,
+        .weightUnitMultiplier = 5.0f,
+        .value = 500,
+        .currencyType = ld::ValuableCurrencyType::Food,
+      }, {
         .type = ld::ValuableType::Tin,
         .weightUnitMultiplier = 1.0f,
         .value = 10,
         .currencyType = ld::ValuableCurrencyType::Gold,
       }, {
-        .type = ld::ValuableType::Food,
+        .type = ld::ValuableType::Ruby,
         .weightUnitMultiplier = 5.0f,
-        .value = 500,
+        .value = 50,
+        .currencyType = ld::ValuableCurrencyType::Food,
+      }, {
+        .type = ld::ValuableType::Emerald,
+        .weightUnitMultiplier = 5.0f,
+        .value = 100,
+        .currencyType = ld::ValuableCurrencyType::Food,
+      }, {
+        .type = ld::ValuableType::Sapphire,
+        .weightUnitMultiplier = 5.0f,
+        .value = 150,
         .currencyType = ld::ValuableCurrencyType::Food,
       },
+
+
     }};
 
   struct Valuable {

@@ -19,6 +19,8 @@ namespace ld {
     SurfacedFg,
     Misc,
     RockDamage,
+    Cargo,
+    Upgrades,
     Size,
   };
 

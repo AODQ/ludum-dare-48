@@ -32,6 +32,10 @@ void ld::RenderInitialize()
     ::LoadTexture("resources/misc.png");
   textures[Idx(ld::TextureType::RockDamage)] =
     ::LoadTexture("resources/rock-damage.png");
+  textures[Idx(ld::TextureType::Cargo)] =
+    ::LoadTexture("resources/cargo.png");
+  textures[Idx(ld::TextureType::Upgrades)] =
+    ::LoadTexture("resources/upgrades.png");
 
   // -- load shaders
 }
