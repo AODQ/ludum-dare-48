@@ -321,22 +321,23 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
 
   auto const & target = self.rock(self.rockId(x, y));
 
-  if (self.rockFow[rockId] <= 0.05f) { return 2.0f; } // unknown
-
   if (target.isMined()) { return 1.0f; }
 
   int32_t value = target.durability*10;
 
-  switch (target.gem) {
-    default: break;
-    case ld::RockGemType::Empty: break;
-    case ld::RockGemType::Tin:      value -= 200; break;
-    case ld::RockGemType::Ruby:     value -= 400; break;
-    case ld::RockGemType::Emerald:  value -= 850; break;
-    case ld::RockGemType::Sapphire: value -= 1500; break;
+  // can only see gems if visible
+  if (self.rockFow[rockId] >= 0.25f) {
+    switch (target.gem) {
+      default: break;
+      case ld::RockGemType::Empty: break;
+      case ld::RockGemType::Tin:      value -= 200; break;
+      case ld::RockGemType::Ruby:     value -= 400; break;
+      case ld::RockGemType::Emerald:  value -= 850; break;
+      case ld::RockGemType::Sapphire: value -= 1500; break;
+    }
   }
 
-  return std::clamp(1.0f + value / 20.0f, 0.5f, 20.0f);
+  return std::clamp(1.0f + value / 10.0f, 0.5f, 500.0f);
 }
 
 void ld::MineChasm::Update(ld::GameState & state)

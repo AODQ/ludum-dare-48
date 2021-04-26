@@ -57,22 +57,16 @@ void ld::RenderOverlay(
 
 void ld::RenderScene(ld::GameState const & state)
 {
-  // render background TODO
-
   if (state.camera.y < 0.0f)
   { // -- render surface
     ::DrawTextureV(
       ld::TextureGet(ld::TextureType::SurfacedFg)
-    , ::Vector2{0.0f, -612.0f - state.camera.y}
+    , ::Vector2{0.0f, -600.0f - state.camera.y}
     , Color { 255, 255, 255, 255 }
     );
   }
 
-  // render surfaced miners TODO
-
   { // -- render foreground rocks & gems
-
-    // TODO only render in view instead of all
 
     int32_t begIt = std::max((state.camera.y + 0.0f)   / 32.0f, 0.0f);
     int32_t endIt = std::max((state.camera.y + 650.0f) / 32.0f, 0.0f);
@@ -146,17 +140,25 @@ void ld::RenderScene(ld::GameState const & state)
             .height = 32.0f,
           }
         , ::Vector2{x*32.0f, y*32.0f - state.camera.y}
-        , Color { fow, fow, fow, 255 }
+        , Color { fow, fow, fow, fow < (uint8_t)(40) ? (uint8_t)(0) : fow }
         );
       }
     }
   }
 
-  // render gems TODO
-
   { // -- render mobs
-    // TODO optimize
     for (auto & slime : state.mobGroup.slimes) {
+
+      uint8_t const fow = state.mineChasm.fowU8(slime);
+
+      if (
+          slime.positionY+8.0f < state.camera.y
+       || slime.positionY-8.0f > state.camera.y+600
+       || fow < 40
+      ) {
+        continue;
+      }
+
       constexpr std::array<::Vector2, Idx(ld::RockGemType::Size)> offsets = {
         ::Vector2 { 4, 0, },
         ::Vector2 { 4, 1, },
@@ -164,8 +166,6 @@ void ld::RenderScene(ld::GameState const & state)
         ::Vector2 { 4, 1, },
         ::Vector2 { 4, 0, },
       };
-
-      uint8_t const fow = state.mineChasm.fowU8(slime);
 
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
@@ -179,17 +179,26 @@ void ld::RenderScene(ld::GameState const & state)
           static_cast<float>(slime.positionX),
           static_cast<float>(slime.positionY) - state.camera.y
         }
-      , Color { fow, fow, fow, 255 }
+        , Color { fow, fow, fow, fow < (uint8_t)(40) ? (uint8_t)(0) : fow }
       );
     }
 
     for (auto & cloud : state.mobGroup.poisonClouds) {
+
+      uint8_t const fow = state.mineChasm.fowU8(cloud);
+
+      if (
+          cloud.positionY+8.0f < state.camera.y
+       || cloud.positionY-8.0f > state.camera.y+600
+       || fow < 40
+      ) {
+        continue;
+      }
+
       constexpr std::array<::Vector2, Idx(ld::RockGemType::Size)> offsets = {
         ::Vector2 { 4, 3, },
         ::Vector2 { 4, 4, },
       };
-
-      uint8_t const fow = state.mineChasm.fowU8(cloud);
 
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
@@ -203,14 +212,19 @@ void ld::RenderScene(ld::GameState const & state)
           static_cast<float>(cloud.positionX),
           static_cast<float>(cloud.positionY) - state.camera.y
         }
-      , Color { fow, fow, fow, 255 }
+        , Color { fow, fow, fow, fow < (uint8_t)(40) ? (uint8_t)(0) : fow }
       );
     }
   }
 
   { // -- render miners
-    // TODO optimize
     for (auto & miner : state.minerGroup.miners) {
+
+      if (
+          miner.yPosition+8.0f < state.camera.y
+       || miner.yPosition-8.0f > state.camera.y+600
+      ) { continue; }
+
       ::DrawTextureRec(
         ld::TextureGet(ld::TextureType::Miner)
       , ::Rectangle {
