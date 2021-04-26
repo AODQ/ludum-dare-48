@@ -402,7 +402,6 @@ void ld::MineChasm::Update(ld::GameState & state)
         std::clamp(1.0f - std::clamp(i/30, 0ul, 4ul) / 4.0f, 0.05f, 1.0f),
         state.mineChasm.rockFow[i] - 0.0005f
       );
-    state.mineChasm.rockFow[i] =1.0f;
   }
 }
 
