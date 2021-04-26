@@ -40,6 +40,8 @@ namespace ld {
         { .type = ld::ItemType::Speed,   .owns = false, .durability = 10, .level = 0 },
       }};
 
+      void AddUnit(ld::ValuableType const type, int32_t units);
+
       uint32_t cargoCapacity = 50u;
       uint32_t currentCargoCapacity = 0u;
 
@@ -101,7 +103,6 @@ namespace ld {
       }
 
       enum class AiState {
-        Attacking,
         Dying,
         Fighting,
         Idling,
@@ -130,10 +131,6 @@ namespace ld {
           int32_t targetRockId = 0;
         };
 
-        struct Attacking {
-          int32_t targetEnemyId = 0;
-        };
-
         struct Traversing {
           std::array<::Vector2, 4> path;
           size_t pathIdx;
@@ -143,6 +140,8 @@ namespace ld {
           int32_t targetPosOffX = 0, targetPosOffY = 0;
 
           bool wantsToSurface = false;
+
+          int32_t panic = 0;
         };
 
         struct Idling {
@@ -158,6 +157,7 @@ namespace ld {
 
         struct Fighting {
           bool hasSwung = false; // to allow only 1 slime hit in multi combat
+          bool prevFrameFinished = false;
         };
 
         struct Surfaced {
@@ -168,7 +168,6 @@ namespace ld {
           bool hasPurchasedFood = false;
         };
 
-        Attacking      attacking;
         Inventorying   inventorying;
         Dying          dying;
         Idling         idling;
@@ -182,6 +181,7 @@ namespace ld {
       AiStateInternal aiStateInternal;
 
       void resetToTraversal() {
+        if (aiState == ld::Miner::AiState::Dying) return;
         aiState = ld::Miner::AiState::Traversing;
         aiStateInternal.traversing.pathIdx = 0;
         aiStateInternal.traversing.pathSize = 0;

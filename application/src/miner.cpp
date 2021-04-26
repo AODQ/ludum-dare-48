@@ -88,9 +88,14 @@ void ld::Miner::kill()
   if (self.aiState == ld::Miner::AiState::Dying) { return; }
 
   self.aiState = ld::Miner::AiState::Dying;
+  self.energy = -1; //  state doesnt matter if energy is 0
   self.aiStateInternal.dying = {};
-  self.animationState = ld::Miner::AnimationState::Dying;
-  self.animationIdx = 0;
+  self.applyAnimationState(ld::Miner::AnimationState::Dying);
+
+  ld::SoundPlay(
+    ld::SoundType::MinerDie,
+    1.0f // always audible
+  );
 }
 
 void ld::Miner::chooseNewTarget(ld::GameState & gameState)
@@ -253,6 +258,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
 
   if (miner.animationFinishesThisFrame()) {
     miner.reduceEnergy(10);
+    miner.damageEquipment(ld::ItemType::Pickaxe);
     rock.receiveDamage(
       -ld::PickLevelDamage(miner.inventory[Idx(ld::ItemType::Pickaxe)].level)
     );
@@ -291,7 +297,13 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
     // if no path was selected just change target
     if (state.pathIdx >= state.pathSize) {
       miner.chooseNewTarget(gameState);
+      state.panic += 1;
+      if (state.panic + 1 > 5) {
+        miner.surfaceMiner();
+      }
       return;
+    } else {
+      state.panic = 0;
     }
   }
 
@@ -305,6 +317,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
 
   if (miner.animationFinishesThisFrame()) {
     miner.reduceEnergy(5);
+    miner.damageEquipment(ld::ItemType::Speed);
   }
 
   ::Rectangle rect = {
@@ -400,6 +413,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
 
       if (miner.animationFinishesThisFrame()) {
         miner.reduceEnergy(5);
+        miner.damageEquipment(ld::ItemType::Speed);
       }
 
       if (
@@ -608,6 +622,10 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
       miner.yPosition = ::GetRandomValue(10, 30);
   }
 
+  if (miner.animationFinishesThisFrame()) {
+    miner.reduceEnergy(1);
+  }
+
   if (state.waitTimer > 0) { return; }
 
   miner.alpha = 255;
@@ -637,6 +655,14 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
 }
 
 } // -- namespace
+
+
+void ld::Miner::AddUnit(ld::ValuableType const type, int32_t units) {
+  auto & self = *this;
+  self.cargo[Idx(type)].ownedUnits += units;
+
+  UpdateMinerCargo(self);
+}
 
 void ld::MinerGroup::Update(ld::GameState & state) {
   auto & self = state.minerGroup;
@@ -686,6 +712,7 @@ void ld::MinerGroup::Update(ld::GameState & state) {
     // force dying state (in case overriden by inventorying / fighting)
     if (miner.energy <= 0) {
       miner.aiState = ld::Miner::AiState::Dying;
+      miner.applyAnimationState(ld::Miner::AnimationState::Dying);
     }
 
     switch (miner.aiState) {
@@ -695,7 +722,6 @@ void ld::MinerGroup::Update(ld::GameState & state) {
       case ld::Miner::AiState::Mining:
         UpdateMinerAiMining(miner, state);
       break;
-      case ld::Miner::AiState::Attacking: break;
       case ld::Miner::AiState::Idling:
         UpdateMinerAiIdling(miner, state);
       break;
@@ -705,6 +731,14 @@ void ld::MinerGroup::Update(ld::GameState & state) {
         // a time
         miner.applyAnimationState(ld::Miner::AnimationState::Fighting);
         miner.aiStateInternal.fighting.hasSwung = false;
+        miner.alpha = 255; // in case slime attacks miner while surfacing
+
+        // force break off after one swing
+        if (miner.aiStateInternal.fighting.prevFrameFinished) {
+          miner.resetToTraversal();
+        }
+        miner.aiStateInternal.fighting.prevFrameFinished =
+          miner.animationFinishesThisFrame();
       break;
       case ld::Miner::AiState::Surfaced:
         UpdateMinerAiSurfaced(miner, state);
