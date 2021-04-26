@@ -55,7 +55,7 @@ void ld::RenderOverlay(
     }
 }
 
-void ld::RenderScene(ld::GameState const & state)
+void ld::RenderScene(ld::GameState & state)
 {
   if (state.camera.y < 0.0f)
   { // -- render surface
@@ -274,6 +274,46 @@ void ld::RenderScene(ld::GameState const & state)
         }
       , Color { 255, 255, 255, miner.alpha }
       );
+
+      // render on UI
+      if (state.minerSelection == miner.minerId) {
+
+        ::Rectangle cont = {
+          775, 550, 16, 16
+        };
+
+        // Panel
+        ::DrawRectangleRounded(
+          cont, 0.05f, 5, ::Fade(state.lockOnMiner ? ::GREEN : ::WHITE, 0.8f)
+        );
+
+        // Border
+        DrawRectangleRoundedLines(
+          cont, 0.05f, 5, 1.0f, ::DARKGRAY
+        );
+
+        ::DrawTextureRec(
+          ld::TextureGet(ld::TextureType::Miner)
+        , ::Rectangle {
+            .x = static_cast<float>(miner.animationIdx / 60) * 16.0f,
+            .y = static_cast<float>(miner.animationState) * 16.0f,
+            .width = 16.0f - 32.0f*(miner.xPosition < miner.prevXPosition),
+            .height = 16.0f,
+          }
+        , ::Vector2{
+            775,
+            550
+          }
+        , Color { 255, 255, 255, miner.alpha }
+        );
+
+        if (
+            ::IsMouseButtonPressed(MOUSE_LEFT_BUTTON)
+         && ::CheckCollisionPointRec(::GetMousePosition(), cont)
+        ) {
+          state.lockOnMiner ^= 1;
+        }
+      }
 
       // circle around highlighted miner
       if (miner.minerId == state.minerSelection) {

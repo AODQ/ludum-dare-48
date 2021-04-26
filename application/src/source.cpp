@@ -71,7 +71,7 @@ for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
   }
 
   // -- misc updates
-  gameState.camera.Update();
+  gameState.camera.Update(gameState);
   ld::SoundUpdate(gameState);
 
   // -- render

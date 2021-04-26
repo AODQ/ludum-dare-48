@@ -498,6 +498,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
 
         if (wasIdle && idleMiners.size() == 1) {
           game.minerSelection = -1;
+          game.lockOnMiner = false;
         }
     }
 
@@ -539,6 +540,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
 
       game.targetActive = 0;
       game.minerSelection = -1;
+      game.lockOnMiner = false;
       thisFrame = true;
     }
 
@@ -564,6 +566,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
       game.targetActive = 1;
       thisFrame = true;
       game.minerSelection = -1;
+      game.lockOnMiner = false;
     }
 
     if (
@@ -810,6 +813,7 @@ void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
           hasClickedKill = 0; // clicked off screen
           miner.kill();
           game.minerSelection = -1;
+          game.lockOnMiner = false;
         }
 
         if (!btn.IsHovered()) {
