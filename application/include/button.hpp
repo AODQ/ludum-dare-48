@@ -4,6 +4,8 @@
 #include <string>
 #include <map>
 
+namespace ld { struct GameState; }
+
 namespace ld
 {
     struct Button

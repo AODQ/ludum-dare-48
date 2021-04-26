@@ -237,7 +237,7 @@ void ld::RenderScene(ld::GameState const & state)
           static_cast<float>(miner.xPosition),
           static_cast<float>(miner.yPosition) - state.camera.y
         }
-      , Color { 255, 255, 255, 255 }
+      , Color { 255, 255, 255, miner.alpha }
       );
 
       // circle around highlighted miner
