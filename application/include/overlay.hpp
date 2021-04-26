@@ -3,7 +3,6 @@
 #include <button.hpp>
 #include <gamestate.hpp>
 #include <miner.hpp>
-#include <stack>
 
 namespace ld {
 
@@ -17,15 +16,12 @@ namespace ld {
     {
         enum class MenuState
         {
-            None = 0,
-            Title,
-            Pause,
+            Title = 0,
+            Pause = 1,
             Research,
             GameOver,
-            Instructions,
+            None,
         } menuState;
-
-        std::stack<MenuState> menuStack;
 
         Overlay(uint32_t w, uint32_t h)
             : scrWidth(w), scrHeight(h)
@@ -37,9 +33,8 @@ namespace ld {
         void Draw(ld::GameState & game);
         void MinerInfo(ld::GameState & game, ld::Miner & miner);
         void TitleScreen();
-        void Instructions();
         void InitButtons();
-        void PauseScreen(ld::GameState & game);
+        void PauseScreen();
         void GameOverScreen(ld::GameState & game);
         void ResearchMenu(ld::GameState & game);
         void ResourceMenu(ld::GameState & game);

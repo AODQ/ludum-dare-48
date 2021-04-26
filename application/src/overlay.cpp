@@ -2,10 +2,8 @@
 #include <renderer.hpp> // Texture info
 #include <algorithm>
 
-typedef enum {
-    eStorageScore = 0,
-    eStorageHiScore = 1,
-} StorageData;
+namespace {
+}
 
 void ld::DrawOutlinedText(const char* text, uint32_t xPos, uint32_t yPos, uint32_t fontSize, ::Color mainColor, ::Color outlineColor)
 {
@@ -47,6 +45,7 @@ void ld::Overlay::InitButtons()
     uint32_t btnWidth = 70;
     uint32_t btnHeight = 50;
 
+    buttons.emplace("Panic",    ld::Button(x,  50, btnWidth, btnHeight));
     buttons.emplace("BuyMiner", ld::Button(x, 100, btnWidth, btnHeight));
     buttons.emplace("Research", ld::Button(x, 150, btnWidth, btnHeight));
     buttons.emplace("Idle"    , ld::Button(x, 200, btnWidth, btnHeight));
@@ -54,78 +53,13 @@ void ld::Overlay::InitButtons()
     buttons.emplace("FlagCan" , ld::Button(x+32, 250, 32, 32));
 }
 
-void ld::Overlay::Instructions()
+void ld::Overlay::PauseScreen()
 {
-    // Position of the root panel
-    uint32_t w = 500;
-    uint32_t h = 300;
-    uint32_t x = (scrWidth - w) * 0.5f;
-    uint32_t y = (scrHeight - h) * 0.5f - 20.0f;
-    uint32_t yOffset = y;
+    int fontSize = 30;
 
-    { // Root Menu panel
-        uint32_t size = 30;
-        DrawRectangle(x, y, w, h, ::BROWN);
-        ld::DrawOutlinedCenteredText("Instructions", x+w*0.5f, y-size, size, ::WHITE, ::BLACK);
-    }
-
-    { // Back
-        uint32_t btnWidth = 55;
-        uint32_t btnHeight = 25;
-        yOffset += h - btnHeight;
-        ld::Button btn(x + w - btnWidth, yOffset, btnWidth, btnHeight);
-        btn.Draw("Back", 12);
-        if (btn.IsClicked())
-        {
-            if (!menuStack.empty()) {
-                menuState = menuStack.top();
-                menuStack.pop();
-            } else {
-                menuState = MenuState::None;
-            }
-        }
-    }
-}
-
-void ld::Overlay::PauseScreen(ld::GameState & game)
-{
-    uint32_t centerX = 0.5f*scrWidth;
-    uint32_t startY = 100;
-    uint32_t yOffset = startY;
-    // Title
-    ld::DrawOutlinedCenteredText("GAME TITLE", centerX, startY, 50, ::WHITE, ::BLACK);
-
-    // Resume
-    yOffset += 100;
     const char* pauseText = "PRESS [TAB] TO RESUME";
-    ld::DrawOutlinedCenteredText(pauseText, centerX, yOffset, 30, ::WHITE, ::BLACK);
-
-    { // Instructions
-        yOffset += 100;
-        uint32_t btnWidth = 100;
-        uint32_t btnHeight = 50;
-        ld::Button btn(centerX-btnWidth*0.5f, yOffset, btnWidth, btnHeight);
-        btn.Draw("Instructions", 12);
-        if (btn.IsClicked())
-        {
-            menuStack.push(menuState);
-            menuState = MenuState::Instructions;
-        }
-    }
-
-    { // Restart
-        yOffset += 100;
-        uint32_t btnWidth = 100;
-        uint32_t btnHeight = 50;
-        ld::Button btn(centerX-btnWidth*0.5f, yOffset, btnWidth, btnHeight);
-        btn.Draw("Restart", 20);
-        if (btn.IsClicked())
-        {
-            menuState = ld::Overlay::MenuState::None;
-            game.Restart();
-        }
-    }
-
+    int pauseWidth = ::MeasureText(pauseText, fontSize);
+    ::DrawText(pauseText, 0.5f*(scrWidth-pauseWidth), 170, fontSize, GRAY);
 }
 
 void ld::Overlay::GameOverScreen(ld::GameState & game)
@@ -337,6 +271,15 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     }
 
     // Resource related buttons
+    auto panicBtn    = buttons.at("Panic");
+
+    panicBtn.Draw("Panic Return", 10, ::Fade(::RED, 0.5));
+    if (panicBtn.IsClicked()) {
+      for (auto & miner : game.minerGroup.miners)
+        miner.surfaceMiner();
+    }
+
+
     auto buyMinerBtn = buttons.at("BuyMiner");
     auto researchBtn = buttons.at("Research");
     auto idleBtn     = buttons.at("Idle");
@@ -366,17 +309,19 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     // -- flag
     ::DrawRectangle(
       scrWidth-100+32,
-      250, 32, 32, ::Fade(::RED, game.targetX>=0?0.5f:0.0f)
+      250, 32, 32, ::Fade(::RED, (game.targetX>=0?0.5f:0.0f))
     );
     auto &  flagCan = buttons.at("FlagCan");
-    flagCan
-      .DrawTexture(
-        "",
-        ld::TextureGet(ld::TextureType::Flag),
-        0, 0,
-        { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(255) : (uint8_t)(0) },
-        true
-      );
+    if (game.targetX>=0) {
+      flagCan
+        .DrawTexture(
+          "",
+          ld::TextureGet(ld::TextureType::Flag),
+          0, 0,
+          { 255, 255, 255, (game.targetX>=0) ? (uint8_t)(255) : (uint8_t)(0) },
+          true
+        );
+    }
     bool thisFrame = false;
     if (flagCan.IsClicked()) {
       game.targetX = -1;
@@ -447,7 +392,7 @@ void ld::Overlay::Update(ld::GameState & game)
 
 }
 
-void ld::Overlay::MinerInfo(ld::Miner & miner)
+void ld::Overlay::MinerInfo(ld::GameState & game, ld::Miner & miner)
 {
     // Position of the root panel
     uint32_t w = 120;
@@ -584,15 +529,46 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
         ld::DrawOutlinedCenteredText(valueText.c_str(), x+w*0.5f, y+padding, 10, ::WHITE);
     }
 
+    padding+=20;
+
+    if (miner.aiState != ld::Miner::AiState::Surfaced)
     { // -- Cancel current action
-        padding+=20;
         int btnWidth = 60;
         int btnHeight = 25;
-        ld::Button btn(x + (w-btnWidth)*0.5f, y+padding, btnWidth, btnHeight);
-        btn.Draw("Set Idle", 7, ::WHITE);
+        ld::Button btn(x, y+padding, btnWidth, btnHeight);
+        btn.Draw("Return", 7, ::WHITE);
         if (btn.IsClicked())
         {
-            miner.aiState = ld::Miner::AiState::Idling;
+          miner.surfaceMiner();
+        }
+    }
+
+    { // -- Kill
+        int btnWidth = 60;
+        int btnHeight = 25;
+        ld::Button btn(x + (w-btnWidth), y+padding, btnWidth, btnHeight);
+        // sorry this is shit
+        static int32_t hasClickedKill = 0;
+        btn.Draw(hasClickedKill > 0 ? "Confirm" : "Kill", 7, ::RED);
+
+        if (btn.IsClicked() && hasClickedKill == 0)
+          hasClickedKill = 1;
+
+        if (btn.IsClicked() && hasClickedKill == 2)
+        {
+          hasClickedKill = 0; // clicked off screen
+          miner.kill();
+          game.minerSelection = -1;
+        }
+
+        if (!btn.IsHovered()) {
+          hasClickedKill = 0;
+        }
+
+        if (hasClickedKill == 1) {
+          if (!::IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            hasClickedKill = 2;
+          }
         }
     }
 
@@ -603,27 +579,7 @@ void ld::Overlay::MinerInfo(ld::Miner & miner)
 void ld::Overlay::Draw(ld::GameState & game)
 {
     // if game paused, then that should override every other menu
-    if (game.isPaused && menuState != MenuState::Pause) {
-        if (!menuStack.empty() && menuStack.top() != MenuState::Pause) {
-            // Hacky, but checks that we weren't coming from a pause state
-            // to prevent pushing another pause menu on top causing it to be
-            // stuck on the pause and other pause related menus like instruction
-            menuStack.push(menuState);
-            menuState = MenuState::Pause;
-        }
-        else if (menuStack.empty()) {
-            menuStack.push(menuState);
-            menuState = MenuState::Pause;
-        }
-    }
-    else if (!game.isPaused && menuState == MenuState::Pause) {
-        if (!menuStack.empty()) {
-            menuState = menuStack.top();
-            menuStack.pop();
-        } else {
-            menuState = MenuState::None;
-        }
-    }
+    //menuState = game.isPaused ? MenuState::Pause : menuState;
 
     switch (menuState)
     {
@@ -634,31 +590,30 @@ void ld::Overlay::Draw(ld::GameState & game)
             //return; // return to Avoid rendering resources
         case ld::Overlay::MenuState::Research:
             ResearchMenu(game);
-            ResourceMenu(game);
             break;
         case ld::Overlay::MenuState::GameOver:
             GameOverScreen(game);
             break;
-        case ld::Overlay::MenuState::Instructions:
-            Instructions();
-            break;
         case ld::Overlay::MenuState::Pause:
-            PauseScreen(game);
-            break;
+            PauseScreen();
         case ld::Overlay::MenuState::None:
         default:
-            ResourceMenu(game);
             break;
     }
 
-    if (game.minerSelection >= 0 && !game.isPaused)
+    if (game.isPaused)
+    {
+        PauseScreen();
+    }
+
+    if (game.minerSelection >= 0)
     {
         bool found = false;
         // find miner & check if still alive
         for (auto & miner : game.minerGroup.miners) {
           if (miner.minerId == game.minerSelection) {
             found = true;
-            MinerInfo(miner);
+            MinerInfo(game, miner);
             break;
           }
         }
@@ -667,6 +622,8 @@ void ld::Overlay::Draw(ld::GameState & game)
           game.minerSelection = 0;
         }
     }
+
+    ResourceMenu(game);
 
     // Cursor should be drawn last
     if (game.showCursor)
