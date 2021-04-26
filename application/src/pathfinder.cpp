@@ -71,8 +71,8 @@ GraphPathFinder graphMinable;
 GraphPathFinder graphUnminable;
 
 // couldnt use unique ptr here?
-micropather::MicroPather * patherMinable;
-micropather::MicroPather * patherUnminable;
+micropather::MicroPather * patherMinable = nullptr;
+micropather::MicroPather * patherUnminable = nullptr;
 } // -- namespace
 
 void ld::pathFindInitialize(ld::GameState * state) {
@@ -81,6 +81,14 @@ void ld::pathFindInitialize(ld::GameState * state) {
 
   graphMinable.canMine = true;
   graphUnminable.canMine = false;
+
+  if (patherMinable) {
+    delete patherMinable;
+  }
+
+  if (patherUnminable) {
+    delete patherUnminable;
+  }
 
   // couldnt use make_unique
   patherMinable =
