@@ -80,7 +80,7 @@ namespace ld {
     int32_t limitX(int32_t x) {
       if (x < 0) return 0;
       if (x >= static_cast<int32_t>(columns))
-        return columns - 1;
+        return columns;
       return x;
     }
 

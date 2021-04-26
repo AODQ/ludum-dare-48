@@ -37,13 +37,31 @@ void ld::MobGroup::Update(ld::GameState & state)
       continue;
     }
 
-    auto & path = slime.path[slime.pathIdx];
+    struct Offsets {
+      int32_t x, y;
+    };
 
-    slime.positionX -= ld::sgn(slime.positionX - path.x*32.0f);
-    slime.positionY -= ld::sgn(slime.positionY - path.y*32.0f);
+    constexpr std::array<Offsets, 4> offsets = {{
+      { -1, 0 }, { +1, 0 }, {  0, +1 }, {  0, -1 },
+    }};
+
+    auto offsetCheck = ::GetRandomValue(0, 3);
+    if (
+      state.mineChasm.rock(
+        slime.positionX/32 + offsets[offsetCheck].x,
+        slime.positionY/32 + offsets[offsetCheck].y
+      ).isMined()
+    ) {
+      slime.targetTileX =
+        slime.positionX + offsets[offsetCheck].x + ::GetRandomValue(0, +16);
+      slime.targetTileY =
+        slime.positionY + offsets[offsetCheck].y + ::GetRandomValue(0, +16);
+    }
+
+    if (slime.targetTileX < 0 && slime.targetTileY < 0) { continue; }
 
     ::Rectangle rect = {
-      .x = path.x*32.0f, .y = path.y*32.0f,
+      .x = slime.targetTileX, .y = slime.targetTileY,
       .width = 32.0f, .height = 32.0f,
     };
 
@@ -57,11 +75,8 @@ void ld::MobGroup::Update(ld::GameState & state)
         rect
       )
     ) {
-      slime.pathIdx += 1;
-
-      if (slime.targetTileX == path.x && slime.targetTileY == path.y) {
-        slime.pathIdx = 0;
-      }
+      slime.targetTileX = -1;
+      slime.targetTileY = -1;
     }
 
     // TODO add to FOW if this is detected

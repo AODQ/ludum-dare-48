@@ -50,7 +50,7 @@ for (int32_t ddd = 0; ddd < (isZPressed ? 10 : 1); ++ ddd) {
         (int32_t)(0),
         (int32_t)(gameState.MaxFoodEatTimer())
       );
-    if (gameState.foodEatTimer <= 0) {
+    if (gameState.foodEatTimer <= 0 && gameState.food > 0) {
       gameState.foodEatTimer = gameState.MaxFoodEatTimer();
       gameState.food -= 1;
     }

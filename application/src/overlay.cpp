@@ -316,7 +316,7 @@ void ld::Overlay::ResourceMenu(ld::GameState & game)
     ) {
       game.targetX = game.mineChasm.limitX(::GetMousePosition().x / 32);
       game.targetY =
-        game.mineChasm.limitY((::GetMousePosition().y - game.camera.y) / 32);
+        game.mineChasm.limitY((::GetMousePosition().y + game.camera.y) / 32);
       game.targetActive = 0;
     }
 }

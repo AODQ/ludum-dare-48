@@ -29,13 +29,7 @@ namespace ld {
       NotifGroup notifGroup;
 
       void Restart() {
-        showCursor = true;
-        food = 500;
-        gold = 100;
-        foodEatTimer = 60 * 5;
-        minerCost = 5;
-        minerSelection = -1;
-        isPaused = false;
+        *this = GameState {};
 
         for (auto & item : researchItems) { item.level = 0; }
         mobGroup   = ld::MobGroup::Initialize();
