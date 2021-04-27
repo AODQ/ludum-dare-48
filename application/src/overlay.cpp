@@ -129,6 +129,24 @@ void ld::Overlay::Instructions()
         ld::DrawOutlinedCenteredText("Instructions", x+w*0.5f, y-size, size, ::WHITE, ::BLACK);
     }
 
+    { // How to play
+        // Just create a tex and show that
+        //std::string text =
+        //    "Win condition: Send a miner all the way to the bottom of the map\n"
+        //;
+
+        //::Rectangle textBox = {
+        //    container.x+padding, container.y+padding,
+        //    container.width-padding, container.height-padding
+        //};
+
+        //float spacing = 0.3f;
+        //bool wordWrap = true;
+        //::DrawTextRec(::GetFontDefault(), text, textBox,
+        //    fontSize, spacing, wordWrap, ::BLACK
+        //);
+    }
+
     { // Back
         uint32_t btnWidth = 55;
         uint32_t btnHeight = 25;
@@ -224,10 +242,18 @@ void ld::Overlay::GameOverScreen(ld::GameState & game)
     uint32_t startY = scrHeight*0.5f - 200;
     uint32_t yPadding = startY;
 
-    ld::DrawOutlinedCenteredText("Game Over!", scrWidth*0.5f, yPadding, 75, ::RED, ::WHITE);
+    if (game.hasWon) {
+        ld::DrawOutlinedCenteredText("You Win!", scrWidth*0.5f, yPadding, 75, ::GREEN, ::WHITE);
+    } else {
+        ld::DrawOutlinedCenteredText("Game Over!", scrWidth*0.5f, yPadding, 75, ::RED, ::WHITE);
+    }
 
     yPadding += 100;
-    ld::DrawOutlinedCenteredText("You ran out of food!", scrWidth*0.5f, yPadding, 30, ::WHITE, ::BLACK);
+    if (game.hasWon) {
+        ld::DrawOutlinedCenteredText("A miner made it through the mine's deepest layer!", scrWidth*0.5f, yPadding, 30, ::WHITE, ::BLACK);
+    } else {
+        ld::DrawOutlinedCenteredText("You ran out of food!", scrWidth*0.5f, yPadding, 30, ::WHITE, ::BLACK);
+    }
 
     yPadding += 100;
     const std::vector<std::string> loseTips = {
@@ -238,8 +264,10 @@ void ld::Overlay::GameOverScreen(ld::GameState & game)
     };
 
     static size_t tipIndex = 0;
-    std::string tipText = "Tip: " + loseTips.at(tipIndex);
-    ld::DrawOutlinedCenteredText(tipText.c_str(), scrWidth*0.5f, yPadding, 25, ::WHITE, ::BLACK);
+    if (!game.hasWon) {
+        std::string tipText = "Tip: " + loseTips.at(tipIndex);
+        ld::DrawOutlinedCenteredText(tipText.c_str(), scrWidth*0.5f, yPadding, 25, ::WHITE, ::BLACK);
+    }
 
     yPadding += 50;
     uint32_t btnWidth = 100;
@@ -617,6 +645,14 @@ void ld::Overlay::Update(ld::GameState & game)
         menuState = ld::Overlay::MenuState::GameOver;
     }
 
+    // Player wins when a miner digs through the final row
+    for (auto miner : game.minerGroup.miners)
+    {
+        if (miner.yPosition > game.finalRow * 32) {
+            menuState = ld::Overlay::MenuState::GameOver;
+            game.hasWon = true;
+        }
+    }
 
     auto buyMinerBtn = buttons.at("BuyMiner");
     if (buyMinerBtn.IsClicked())

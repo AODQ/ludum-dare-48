@@ -10,6 +10,8 @@
 namespace ld {
   struct GameState
   {
+      int32_t finalRow = 250;
+      bool hasWon = false;
       int timeScale = 1;
       bool showCursor = true;
       // below is in tiles
