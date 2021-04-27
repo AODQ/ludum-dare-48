@@ -125,8 +125,6 @@ void ld::Overlay::Instructions()
 
     { // Root Menu panel
         uint32_t size = 30;
-        DrawRectangle(x, y, w, h, ::BROWN);
-        ld::DrawOutlinedCenteredText("Instructions", x+w*0.5f, y-size, size, ::WHITE, ::BLACK);
     }
 
     { // How to play
@@ -179,13 +177,6 @@ void ld::Overlay::PauseScreen(ld::GameState & game)
         yOffset += 120;
         uint32_t btnWidth = 100;
         uint32_t btnHeight = 50;
-        ld::Button btn(centerX-btnWidth*0.5f, yOffset, btnWidth, btnHeight);
-        btn.Draw("Instructions", 12, color);
-        if (btn.IsClicked())
-        {
-            menuStack.push(menuState);
-            menuState = MenuState::Instructions;
-        }
     }
 
     { // Restart
