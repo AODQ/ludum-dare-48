@@ -83,7 +83,7 @@ void Entry() {
   ::InitWindow(960, 600, "whatever");
 
   // this only works with 3.7
-  //::InitAudioDevice();
+  ::InitAudioDevice();
 
   SetTargetFPS(60);
 
