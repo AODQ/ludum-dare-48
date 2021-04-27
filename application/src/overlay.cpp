@@ -197,11 +197,14 @@ void ld::Overlay::PauseScreen(ld::GameState & game)
             btn.Draw("Restart", 20, color);
         } else {
             btn.Draw("Play", 20, color);
+            game.camera.y = -618;
+            game.camera.yVelocity = 0;
         }
         if (btn.IsClicked()) {
             isFirstPlay = false;
             menuState = ld::Overlay::MenuState::None;
             game.Restart();
+            game.camera.yVelocity = -16;
         }
     }
 
