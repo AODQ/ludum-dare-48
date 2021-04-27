@@ -350,6 +350,14 @@ ld::MineChasm ld::MineChasm::Initialize(
   for (uint32_t i = 0; i < columns * startingRows; ++i) {
     self.rock(i).type = ld::RockType::Sand;
     self.rock(i).tier = ld::RockTier::Mined;
+    self.rock(i).gem = ld::RockGemType::Empty;
+  }
+
+  // and very last is walkable
+  for (uint32_t i = (rows-2)*columns; i < rows*columns; ++i) {
+    self.rock(i).type = ld::RockType::Sand;
+    self.rock(i).tier = ld::RockTier::Mined;
+    self.rock(i).gem = ld::RockGemType::Empty;
   }
 
   GenerateMobs (self, group, emptySpaces);
