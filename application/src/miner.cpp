@@ -52,7 +52,7 @@ bool ld::Miner::wantsToSurface(ld::GameState const & state) const {
   ;
 
   // yeah just return
-  if (yPosition/32 > 50) { return true; }
+  if (yPosition/32 > 50) { return false; }
 
   // only return if theres enough food
   if (
