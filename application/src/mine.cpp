@@ -221,7 +221,7 @@ namespace { // generate passes
       for (uint32_t col = 1; col < self.columns-1; ++col) {
         auto& rock = self.rock(col, row);
         gen += 1 + row/3;
-        if (::GetRandomValue(0, 100) < (gen/50) && !rock.isMined()) {
+        if (::GetRandomValue(0, 100) < (gen/100) && !rock.isMined()) {
           gen = 0;
           rock.tier = ld::RockTier::Mined;
           rock.gem  = ld::RockGemType::Empty;

@@ -47,9 +47,7 @@ namespace ld {
 
       void damageEquipment(ld::ItemType type);
 
-      bool wantsToSurface() const {
-        return energy <= (currentCargoCapacity > 0 ? (100 + yPosition/5) : 20);
-      }
+      bool wantsToSurface(ld::GameState const & state) const;
 
       void moveTowards(int32_t x, int32_t y);
 

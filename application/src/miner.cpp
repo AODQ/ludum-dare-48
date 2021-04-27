@@ -46,6 +46,25 @@ void ld::Miner::damageEquipment(ld::ItemType type)
   }
 }
 
+bool ld::Miner::wantsToSurface(ld::GameState const & state) const {
+  bool notEnufEnergy =
+    energy <= (currentCargoCapacity > 0 ? (100 + yPosition/5) : 20)
+  ;
+
+  // yeah just return
+  if (yPosition/32 > 50) { return true; }
+
+  // only return if theres enough food
+  if (
+      this->cargo[Idx(ld::ValuableType::Food)].ownedUnits > 0
+   || state.food > 10
+  ) {
+    return notEnufEnergy;
+  }
+
+  return false;
+}
+
 void ld::Miner::moveTowards(int32_t x, int32_t y)
 {
   auto & self = *this;
@@ -278,7 +297,7 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
 
     if (
         miner.currentCargoCapacity >= miner.cargoCapacity
-     || miner.wantsToSurface()
+     || miner.wantsToSurface(state)
     ) {
       miner.surfaceMiner();
     }
@@ -329,7 +348,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
     .width = 32.0f, .height = 32.0f,
   };
 
-  if (!state.wantsToSurface && miner.wantsToSurface()) {
+  if (!state.wantsToSurface && miner.wantsToSurface(gameState)) {
     miner.surfaceMiner();
     return;
   }
@@ -367,7 +386,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
     if (state.targetTileX == path.x && state.targetTileY == path.y) {
 
       // should just leave
-      if (miner.wantsToSurface()) {
+      if (miner.wantsToSurface(gameState)) {
         miner.surfaceMiner();
         return;
       }
@@ -605,7 +624,7 @@ void UpdateMinerAiIdling(ld::Miner & miner, ld::GameState & gameState)
 
   if (
       miner.currentCargoCapacity >= miner.cargoCapacity
-   || miner.wantsToSurface()
+   || miner.wantsToSurface(gameState)
   ) {
     miner.surfaceMiner();
   }
