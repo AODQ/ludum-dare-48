@@ -438,11 +438,15 @@ void ld::MineChasm::Update(ld::GameState & state)
       std::max(
         std::clamp(1.0f - std::clamp(i/30, 0ul, 4ul) / 4.0f, 0.05f, 1.0f),
         state.mineChasm.rockFow[i]
-       - (
-         0.00005f
-
-         + 0.005f * (1.0f - state.researchItems[Idx(ld::ResearchType::Vision)].level / 10.0f)
-         )
+       -
+        std::lerp(
+          0.01f,
+          0.00001f,
+          std::pow(
+            state.researchItems[Idx(ld::ResearchType::Vision)].level/10.0f,
+            0.1f
+          )
+        )
       );
   }
 }
