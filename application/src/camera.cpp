@@ -24,13 +24,19 @@ void ld::Camera::Update(ld::GameState & state) {
   {
       self.yVelocity += 16;
       forcenVelocity = true;
-    }
+      state.lockOnMiner = false;
+  }
   else if (::IsKeyDown(KEY_S) || ::IsKeyDown(KEY_DOWN))
   {
     self.yVelocity -= 16;
     forcenVelocity = true;
+    state.lockOnMiner = false;
   }
-  self.yVelocity += GetMouseWheelMove()*16.0f;
+  self.yVelocity += ::GetMouseWheelMove()*16.0f;
+
+  if (abs(::GetMouseWheelMove()) > 0.1f) {
+    state.lockOnMiner = false;
+  }
 
   self.y -= self.yVelocity;
 
