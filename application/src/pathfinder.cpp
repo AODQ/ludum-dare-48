@@ -55,20 +55,20 @@ public:
 
       if (!canMine && !rock.isMined()) { continue; }
 
-      // only allow 30 swings
-      if (
-          !rock.isMined()
-       && miner
-       && (
-            rock.durability
-          / ld::PickLevelDamage(
-              miner->inventory[Idx(ld::ItemType::Pickaxe)].level
-            )
-          > 20
-          )
-      ) {
-        continue;
-      }
+      /* // only allow 30 swings */
+      /* if ( */
+      /*     !rock.isMined() */
+      /*  && miner */
+      /*  && ( */
+      /*       rock.durability */
+      /*     / ld::PickLevelDamage( */
+      /*         miner->inventory[Idx(ld::ItemType::Pickaxe)].level */
+      /*       ) */
+      /*     > 20 */
+      /*     ) */
+      /* ) { */
+      /*   continue; */
+      /* } */
 
       float minerValue = ::GetRandomValue(0.0f, +3.0f);
       if (miner) {

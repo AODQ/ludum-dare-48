@@ -247,7 +247,10 @@ void ld::RenderScene(ld::GameState & state)
           static_cast<float>(cloud.positionX),
           static_cast<float>(cloud.positionY) - state.camera.y
         }
-        , Color { fow, fow, fow, fow < (uint8_t)(40) ? (uint8_t)(0) : fow }
+        , Color {
+          fow, fow, (uint8_t)(255*cloud.potency),
+          (uint8_t)(fow * cloud.potency)
+          }
       );
     }
   }
@@ -328,8 +331,11 @@ void ld::RenderScene(ld::GameState & state)
     for (auto & miner : state.minerGroup.miners) {
 
       if (
-          miner.yPosition+8.0f < state.camera.y
-       || miner.yPosition-8.0f > state.camera.y+600
+        (
+            miner.yPosition+8.0f < state.camera.y
+         || miner.yPosition-8.0f > state.camera.y+600
+        )
+      && miner.minerId != state.minerSelection
       ) { continue; }
 
       ::DrawTextureRec(

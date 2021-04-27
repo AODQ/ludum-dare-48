@@ -488,25 +488,49 @@ void ld::MobGroup::Update(ld::GameState & state)
   // -- clouds -------------------------------------------
 
   const auto spread = --cloudSpreadTimer == 0;
-  std::set<std::pair<int32_t, int32_t>> spreading;
-  for (auto & cloud : state.mobGroup.poisonClouds) {
-    cloud.animationIdx = (cloud.animationIdx + 5) % (60*2);
-
-    // spread only if fully visible
-    if (spread && state.mineChasm.fowU8(cloud) > 127) {
-      spreading.emplace(
-        cloud.positionY / 32,
-        cloud.positionX / 32
-      );
-    }
-
-    // TODO add to FOW if this is detected
-  }
   if (spread) cloudSpreadTimer = cloudSpreadFrame;
 
-  const auto rows = state.mineChasm.rocks.size() / state.mineChasm.columns;
-  const auto spreadingCopy = spreading;
-  for (auto [thisRow, thisCol] : spreadingCopy) {
+  std::vector<MobPoisonCloud> toAdd = {};
+  for (int32_t it = 0; it < (int32_t)state.mobGroup.poisonClouds.size(); ++ it) {
+    auto & cloud = state.mobGroup.poisonClouds[it];
+    cloud.animationIdx = (cloud.animationIdx + 5) % (60*2);
+
+    // odd
+    if (!cloud.numInstances) {
+      state.mobGroup.poisonClouds.erase(
+        state.mobGroup.poisonClouds.begin() + it
+      );
+      state.mineChasm.isPoisoned(cloud.positionX/32, cloud.positionY/32) = 0.0f;
+      -- it;
+      continue;
+    }
+
+    cloud.potency =
+      std::clamp(
+        0.2f + ((16 - *cloud.numInstances) / 16.0f)*0.8f,
+        0.2f, 1.0f
+      );
+    state.mineChasm.isPoisoned(
+      cloud.positionX/32, cloud.positionY/32
+    ) = cloud.potency;
+
+    // spread only if fully visible, has been activated & on spread timer
+    if (spread && (cloud.activated || state.mineChasm.fowU8(cloud) > 80)) {
+      cloud.activated = true;
+    } else {
+      continue; // iknow i know wtf is this
+    }
+
+    if (*cloud.numInstances >= 16) {
+      state.mobGroup.poisonClouds.erase(
+        state.mobGroup.poisonClouds.begin() + it
+      );
+      state.mineChasm.isPoisoned(cloud.positionX/32, cloud.positionY/32) = 0.0f;
+      -- it;
+      continue;
+    }
+
+    int32_t nIdx = 0;
     for (auto [rowOff, colOff] : {
       std::tuple
       { 1,  0},
@@ -515,25 +539,34 @@ void ld::MobGroup::Update(ld::GameState & state)
       { 0, -1},
     })
     {
-      if ((thisRow + rowOff) < 0 || (thisCol + colOff) < 0) continue;
-      const auto row = static_cast<uint32_t>(thisRow + rowOff);
-      const auto col = static_cast<uint32_t>(thisCol + colOff);
-      if (row >= rows || col >= state.mineChasm.columns) continue;
+      ++ nIdx ; // fuuuuuuuuuuuck c++ not having iters for ranges
+
+      auto col = (cloud.positionX + colOff*32)/32;
+      auto row = (cloud.positionY + rowOff*32)/32;
+
+      if (col < 0 || row < 0 || row >= 250 || col >= 30) continue;
+
       const auto& rock = state.mineChasm.rock(col, row);
+
       if (
         rock.tier != ld::RockTier::Mined
-        || spreading.count({row, col})
+        || state.mineChasm.isPoisoned(col, row) > 0.0f
       ) {
         continue;
       }
 
-      state.mobGroup.poisonClouds.push_back({
-        .positionX = static_cast<int32_t>(col * 32 + 16 / 2),
-        .positionY = static_cast<int32_t>(row * 32 + 16 / 2)
+      state.mineChasm.isPoisoned(col, row) = 0.5f;
+      toAdd.push_back({
+        .positionX = static_cast<int32_t>(cloud.positionX + colOff*32),
+        .positionY = static_cast<int32_t>(cloud.positionY + rowOff*32),
+        .numInstances = cloud.numInstances
       });
-      spreading.emplace(row, col);
+      (*cloud.numInstances) += 1;
     }
   }
+
+  for (auto & add : toAdd)
+    state.mobGroup.poisonClouds.push_back(add);
 }
 
 ld::MobGroup ld::MobGroup::Initialize()

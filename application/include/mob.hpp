@@ -44,7 +44,11 @@ namespace ld {
 
     int32_t positionX, positionY;
 
-    int32_t targetTileX = -1, targetTileY = -1;
+    std::shared_ptr<int32_t> numInstances = nullptr;
+
+    bool activated = false;
+
+    float potency = 1.0f;
   };
 
   struct MobGroup {

@@ -45,6 +45,11 @@ namespace ld {
     uint32_t columns;
     std::vector<ld::MineRock> rocks;
     std::vector<float> rockFow;
+    std::vector<float> poison;
+
+    float & isPoisoned(int32_t x, int32_t y) {
+      return poison[y*columns + x];
+    }
 
     template <typename T>
     uint8_t fowU8(T const & thing) const {

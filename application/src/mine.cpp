@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cmath>    // round, floor
+#include <memory>
 
 namespace {
   constexpr ld::MineRock basicDirt{
@@ -285,8 +286,7 @@ namespace { // generate passes
       self.rocks.size() / 375
     );
     const auto numClouds = static_cast<uint32_t>(
-      // half as many clouds
-      self.rocks.size() / 750
+      self.rocks.size() / 375
     );
 
     for (uint32_t i = 0; i < numTnts; ++i) {
@@ -314,12 +314,13 @@ namespace { // generate passes
     // poison clouds only in lower half
     for (uint32_t i = 0; i < numClouds; ++i) {
       auto spot = emptySpaces.begin() + ::GetRandomValue(
-        emptySpaces.size() / 2,
+        emptySpaces.size()/2,
         emptySpaces.size() - 1
       );
       group.poisonClouds.push_back({
-        .positionX = MobPos(spot->second),
-        .positionY = MobPos(spot->first )
+        .positionX = (int32_t)(spot->second)*32,
+        .positionY = (int32_t)(spot->first )*32,
+        .numInstances = std::make_shared<int32_t>(1),
       });
     }
   }
@@ -335,7 +336,8 @@ ld::MineChasm ld::MineChasm::Initialize(
   auto self = ld::MineChasm{
     columns,
     decltype(ld::MineChasm::rocks  )(columns * rows, basicDirt),
-    decltype(ld::MineChasm::rockFow)(columns * rows, 0.0f     )
+    decltype(ld::MineChasm::rockFow)(columns * rows, 0.0f     ),
+    decltype(ld::MineChasm::poison )(columns * rows, 0.0f     )
   };
 
   GenerateEarth(self);
@@ -406,7 +408,7 @@ int32_t ld::MineChasm::rockPathValue(int32_t x, int32_t y) const {
     }
   }
 
-  return std::clamp(1.0f + value, 0.5f, 500.0f);
+  return std::clamp(1.0f + value, 0.5f, 60.0f);
 }
 
 int32_t ld::MineChasm::rockPathDurability(int32_t x, int32_t y) const {
@@ -434,8 +436,6 @@ void ld::MineChasm::Update(ld::GameState & state)
            state.researchItems[Idx(ld::ResearchType::Vision)].level / 10.0f
          )
       );
-
-    /* state.mineChasm.rockFow[i] =1.0f; */
   }
 }
 

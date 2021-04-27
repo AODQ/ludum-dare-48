@@ -243,6 +243,10 @@ void UpdateMinerAiMining(ld::Miner & miner, ld::GameState & state) {
       rock.durability
     / ld::PickLevelDamage(miner.inventory[Idx(ld::ItemType::Pickaxe)].level)
     > 20
+  && (
+      miner.animationFinishesThisFrame()
+   && ::GetRandomValue(0, 100) > 20 // allow breaking out 
+      )
   )
   {
     miner.resetToTraversal();
@@ -316,7 +320,7 @@ void UpdateMinerAiTraversing(ld::Miner & miner, ld::GameState & gameState)
   );
 
   if (miner.animationFinishesThisFrame()) {
-    miner.reduceEnergy(5);
+    miner.reduceEnergy(3);
     miner.damageEquipment(ld::ItemType::Speed);
   }
 
@@ -412,7 +416,7 @@ void UpdateMinerAiSurfaced(ld::Miner & miner, ld::GameState & gameState)
       miner.moveTowards(state.targetX, state.targetY);
 
       if (miner.animationFinishesThisFrame()) {
-        miner.reduceEnergy(5);
+        miner.reduceEnergy(2);
         miner.damageEquipment(ld::ItemType::Speed);
       }
 
@@ -703,6 +707,10 @@ void ld::MinerGroup::Update(ld::GameState & state) {
   for (int64_t i = 0; i < self.miners.size(); ++ i) {
     auto & miner = self.miners[i];
 
+    miner.maxEnergy =
+      1'000 + miner.inventory[Idx(ld::ItemType::Speed)].level*1'000
+    ;
+
     if (
         miner.aiState != ld::Miner::AiState::Dying
      && miner.aiState != ld::Miner::AiState::Fighting
@@ -716,6 +724,20 @@ void ld::MinerGroup::Update(ld::GameState & state) {
     if (miner.energy <= 0) {
       miner.aiState = ld::Miner::AiState::Dying;
       miner.applyAnimationState(ld::Miner::AnimationState::Dying);
+    }
+
+    // no matter what if youre in poison youre fricked
+    if (
+        miner.aiState != ld::Miner::AiState::Surfaced
+      && miner.xPosition >= 0 && miner.yPosition >= 0
+      && miner.xPosition/32 < 30 && miner.yPosition/32 < 250
+    ) {
+      auto poisonLevel =
+        state.mineChasm.isPoisoned(miner.xPosition/32, miner.yPosition/32);
+
+      if (poisonLevel > 0.0f && miner.animationFinishesThisFrame()) {
+        miner.reduceEnergy(poisonLevel > 0.1f ? 5 : 0);
+      }
     }
 
     switch (miner.aiState) {

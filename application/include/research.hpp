@@ -20,7 +20,7 @@ namespace ld {
     researchInfoLookup = {{
         { .type = ld::ResearchType::Pickaxe, .cost = 100, .maxLevel = 10, .desc = "Increase mining power and pickaxe durability" },
         { .type = ld::ResearchType::Armor  , .cost = 300, .maxLevel = 1 , .desc = "Increase armor defense and durability"        },
-        { .type = ld::ResearchType::Speed  , .cost = 200, .maxLevel = 3 , .desc = "Increase miners' walking speed"               },
+        { .type = ld::ResearchType::Speed  , .cost = 200, .maxLevel = 3 , .desc = "Increase miners' walking speed & energy"               },
         { .type = ld::ResearchType::Food   , .cost = 100, .maxLevel = 10, .desc = "Increase max food capacity and energy gain"   },
         { .type = ld::ResearchType::Cargo  , .cost = 100, .maxLevel = 10, .desc = "Increase miners' max cargo"                   },
         { .type = ld::ResearchType::Vision , .cost = 100, .maxLevel = 10, .desc = "Increase vision duration in fog"              },
